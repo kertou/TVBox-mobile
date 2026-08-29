@@ -31,6 +31,7 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -308,6 +309,7 @@ public class DownloadActivity extends BaseVbActivity<ActivityDownloadBinding> {
             finish();
             return;
         }
+        Collections.sort(eps, (a, b) -> Integer.compare(a.episodeIndex, b.episodeIndex));
         if (detailSeriesName == null) {
             detailSeriesName = eps.get(0).vodName == null ? "" : eps.get(0).vodName;
             mBinding.titleBar.setTitle(detailSeriesName);
@@ -375,6 +377,8 @@ public class DownloadActivity extends BaseVbActivity<ActivityDownloadBinding> {
             loadData();
             return;
         }
+        // 按集号正序构建播放列表,保证"上一集/下一集"和自动连播沿集数推进
+        Collections.sort(doneList, (a, b) -> Integer.compare(a.episodeIndex, b.episodeIndex));
         List<VideoInfo> videoList = new ArrayList<>();
         int position = 0;
         for (int i = 0; i < doneList.size(); i++) {

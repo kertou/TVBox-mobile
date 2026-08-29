@@ -13,6 +13,7 @@ import com.github.tvbox.osc.base.BaseVbActivity;
 import com.github.tvbox.osc.bean.ParseBean;
 import com.github.tvbox.osc.bean.VideoInfo;
 import com.github.tvbox.osc.bean.VodInfo;
+import com.github.tvbox.osc.cache.CacheManager;
 import com.github.tvbox.osc.cache.DownloadEpisode;
 import com.github.tvbox.osc.cache.RoomDataManger;
 import com.github.tvbox.osc.constant.CacheConst;
@@ -23,6 +24,7 @@ import com.github.tvbox.osc.player.controller.LocalVideoController;
 import com.github.tvbox.osc.receiver.BatteryReceiver;
 import com.github.tvbox.osc.ui.dialog.AllLocalSeriesDialog;
 import com.github.tvbox.osc.util.HawkConfig;
+import com.github.tvbox.osc.util.MD5;
 import com.github.tvbox.osc.util.PlayerHelper;
 import com.google.common.reflect.TypeToken;
 import com.lxj.xpopup.XPopup;
@@ -53,6 +55,14 @@ public class LocalPlayActivity extends BaseVbActivity<ActivityLocalPlayBinding> 
     private int mPosition;
     BatteryReceiver mBatteryReceiver = new BatteryReceiver();
     private BasePopupView mAllSeriesRightDialog;
+    /** 当前播放集对应的缓存任务(离线播放写历史/统一进度键用) */
+    private DownloadEpisode mEpisode;
+    /** 全屏播放器,不做默认的底部手势条避让 */
+    @Override
+    protected boolean autoNavigationBarInset() {
+        return false;
+    }
+
     @Override
     protected void init() {
         registerReceiver(mBatteryReceiver,new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
@@ -104,16 +114,31 @@ public class LocalPlayActivity extends BaseVbActivity<ActivityLocalPlayBinding> 
         mController.setTitle(videoInfo.getDisplayName());
         mVideoView.setUrl(uri); //设置视频地址
 
+        // 与在线播放(PlayFragment)统一的进度键: sourceKey+vodId+flag+集号+集名,
+        // 进度写同一张 CacheManager 表,缓存播放和在线/观看历史两个入口互相续得上
+        mEpisode = findDoneEpisodeByPath(path);
+        final String progressKey = mEpisode == null ? null
+                : mEpisode.sourceKey + mEpisode.vodId + mEpisode.flag + mEpisode.episodeIndex + mEpisode.episodeName;
+
         mVideoView.setProgressManager(new ProgressManager() {
             @Override
             public void saveProgress(String url, long progress) {// 就本地视频页面用sp,其余用Hawk
                 //有点本地文件确实总时长,设置下总时长,为什么用path,因为电影列表要通过媒体文件的path获取缓存的时长/进度,存取报纸缓存的key一直
                 SPUtils.getInstance(CacheConst.VIDEO_DURATION_SP).put(path, mVideoView.getDuration());
                 SPUtils.getInstance(CacheConst.VIDEO_PROGRESS_SP).put(path, progress);
+                if (progressKey != null) {//同步到在线播放的进度存储
+                    CacheManager.save(MD5.string2MD5(progressKey), progress);
+                }
             }
 
             @Override
             public long getSavedProgress(String url) {
+                if (progressKey != null) {//优先读在线/缓存共用的进度,读不到再回退旧的本地path记录
+                    Object cache = CacheManager.getCache(MD5.string2MD5(progressKey));
+                    if (cache instanceof Number) {
+                        return ((Number) cache).longValue();
+                    }
+                }
                 return SPUtils.getInstance(CacheConst.VIDEO_PROGRESS_SP).getLong(path);
             }
         });
@@ -126,37 +151,47 @@ public class LocalPlayActivity extends BaseVbActivity<ActivityLocalPlayBinding> 
             mVideoView.start(); //开始播放，不调用则不自动播放
         }
 
-        saveVodHistory(path);
+        saveVodHistory(mEpisode);
     }
 
     /**
      * 离线播放也写入观看历史(与在线播放共用 vodRecord 表)
-     * 按本地文件路径反查缓存任务, 初始播放/上下一集/选集跳集都会经过 play() 统一覆盖
+     * 初始播放/上下一集/选集跳集都会经过 play() 统一覆盖
      */
-    private void saveVodHistory(String path) {
+    private void saveVodHistory(DownloadEpisode episode) {
         if (Hawk.get(HawkConfig.PRIVATE_BROWSING, false)) {//无痕浏览
             return;
         }
         try {
-            if (path == null || path.isEmpty()) return;
+            if (episode == null) return;
+            VodInfo vodInfo = new VodInfo();
+            vodInfo.id = episode.vodId;
+            vodInfo.name = episode.vodName;
+            vodInfo.pic = episode.vodPic;
+            vodInfo.sourceKey = episode.sourceKey;
+            vodInfo.playFlag = episode.flag;
+            vodInfo.playIndex = episode.episodeIndex;
+            vodInfo.playNote = episode.episodeName == null ? "" : episode.episodeName;
+            RoomDataManger.insertVodRecord(episode.sourceKey, vodInfo);
+            EventBus.getDefault().post(new RefreshEvent(RefreshEvent.TYPE_HISTORY_REFRESH));
+        } catch (Throwable th) {
+            th.printStackTrace();
+        }
+    }
+
+    /** 按本地文件路径反查已完成缓存的集数 */
+    private DownloadEpisode findDoneEpisodeByPath(String path) {
+        if (path == null || path.isEmpty()) return null;
+        try {
             for (DownloadEpisode episode : RoomDataManger.getAllDownloadEpisodes()) {
                 if (episode.status != DownloadEpisode.STATUS_DONE
                         || !path.equals(episode.localFilePath)) continue;
-                VodInfo vodInfo = new VodInfo();
-                vodInfo.id = episode.vodId;
-                vodInfo.name = episode.vodName;
-                vodInfo.pic = episode.vodPic;
-                vodInfo.sourceKey = episode.sourceKey;
-                vodInfo.playFlag = episode.flag;
-                vodInfo.playIndex = episode.episodeIndex;
-                vodInfo.playNote = episode.episodeName == null ? "" : episode.episodeName;
-                RoomDataManger.insertVodRecord(episode.sourceKey, vodInfo);
-                EventBus.getDefault().post(new RefreshEvent(RefreshEvent.TYPE_HISTORY_REFRESH));
-                break;
+                return episode;
             }
         } catch (Throwable th) {
             th.printStackTrace();
         }
+        return null;
     }
 
     private void initController() {
@@ -308,7 +343,6 @@ public class LocalPlayActivity extends BaseVbActivity<ActivityLocalPlayBinding> 
     public void showAllSeriesDialog(){
         mAllSeriesRightDialog = new XPopup.Builder(this)
                 .isViewMode(true)//隐藏导航栏(手势条)在dialog模式下会闪一下,改为view模式,但需处理onBackPress的隐藏,下方同理
-                .hasNavigationBar(false)
                 .popupHeight(com.blankj.utilcode.util.ScreenUtils.getScreenHeight())
                 .popupPosition(PopupPosition.Right)
                 .asCustom(new AllLocalSeriesDialog(this, convertLocalVideo(), (position, text) -> {
