@@ -3,6 +3,7 @@ package com.github.tvbox.osc.ui.activity;
 import android.content.Intent;
 import android.view.View;
 
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -18,6 +19,7 @@ import com.github.tvbox.osc.databinding.ActivityDownloadBinding;
 import com.github.tvbox.osc.download.DownloadStorage;
 import com.github.tvbox.osc.download.DownloadTaskManager;
 import com.github.tvbox.osc.event.DownloadEvent;
+import com.github.tvbox.osc.ui.adapter.CacheGridAdapter;
 import com.github.tvbox.osc.ui.adapter.DownloadAdapter;
 import com.github.tvbox.osc.ui.adapter.DownloadSection;
 import com.github.tvbox.osc.util.FastClickCheckUtil;
@@ -37,32 +39,63 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * 我的缓存:按剧集分组展示应用内缓存,支持离线播放、暂停/继续/重试/删除。
+ * 我的缓存,双模式:
+ * - 网格模式(无 EXTRA_GROUP_KEY):每部剧一张大海报(与主页同款外观),点卡片进详情,长按删剧
+ * - 详情模式(带 EXTRA_GROUP_KEY):该剧的集数列表,支持离线播放、暂停/继续/重试/删除
  */
 public class DownloadActivity extends BaseVbActivity<ActivityDownloadBinding> {
 
+    public static final String EXTRA_GROUP_KEY = "groupKey";
+
     private DownloadAdapter mAdapter;
+    private CacheGridAdapter mGridAdapter;
+    /** null = 网格模式;非 null = 详情模式,只显示该剧 */
+    private String detailGroupKey;
+    private String detailSeriesName;
     private long lastReloadTime = 0;
     /** 下载中集数的实时进度(来自 EventBus 事件,数据库不落盘,避免频繁写库) */
     private final Map<Integer, DownloadAdapter.Live> liveProgress = new HashMap<>();
+    /** 分组大小缓存:进度事件触发的频繁刷新不做磁盘遍历,仅结构变化时重算 */
+    private final Map<String, Long> groupSizeCache = new HashMap<>();
+    private boolean sizeDirty = true;
 
     @Override
     protected void init() {
+        detailGroupKey = getIntent().getStringExtra(EXTRA_GROUP_KEY);
         initView();
         loadData();
     }
 
     private void initView() {
         RecyclerView rv = mBinding.rvList;
-        rv.setLayoutManager(new LinearLayoutManager(this));
-        mAdapter = new DownloadAdapter();
-        mAdapter.setLiveProgress(liveProgress);
-        rv.setAdapter(mAdapter);
-
-        mAdapter.setOnItemClickListener(mItemClickListener);
-        mAdapter.setOnItemChildClickListener(mEpisodeChildClick);
         mBinding.titleBar.getLeftView().setOnClickListener(v -> finish());
-        mBinding.titleBar.getRightView().setOnClickListener(v -> confirmClearAll());
+        if (detailGroupKey == null) {
+            rv.setLayoutManager(new GridLayoutManager(this, 3));
+            mGridAdapter = new CacheGridAdapter();
+            rv.setAdapter(mGridAdapter);
+            mGridAdapter.setOnItemClickListener((adapter, view, position) -> {
+                CacheGridAdapter.Item item = mGridAdapter.getData().get(position);
+                FastClickCheckUtil.check(view);
+                Intent intent = new Intent(this, DownloadActivity.class);
+                intent.putExtra(EXTRA_GROUP_KEY, item.groupKey);
+                startActivity(intent);
+            });
+            mGridAdapter.setOnItemLongClickListener((adapter, view, position) -> {
+                CacheGridAdapter.Item item = mGridAdapter.getData().get(position);
+                FastClickCheckUtil.check(view);
+                confirmDeleteSeries(item.groupKey, item.name);
+                return true;
+            });
+            mBinding.titleBar.getRightView().setOnClickListener(v -> confirmClearAll());
+        } else {
+            rv.setLayoutManager(new LinearLayoutManager(this));
+            mAdapter = new DownloadAdapter();
+            mAdapter.setLiveProgress(liveProgress);
+            rv.setAdapter(mAdapter);
+            mAdapter.setOnItemClickListener(mItemClickListener);
+            mAdapter.setOnItemChildClickListener(mEpisodeChildClick);
+            mBinding.titleBar.getRightView().setOnClickListener(v -> confirmDeleteSeries(detailGroupKey, detailSeriesName));
+        }
     }
 
     private final BaseQuickAdapter.OnItemClickListener mItemClickListener = (adapter, view, position) -> {
@@ -80,12 +113,16 @@ public class DownloadActivity extends BaseVbActivity<ActivityDownloadBinding> {
             if (view.getId() == R.id.btnPlayAll) {
                 playFirstOfGroup(section.groupKey);
             } else if (view.getId() == R.id.btnDeleteSeries) {
-                confirmDeleteSeries(section);
+                confirmDeleteSeries(section.groupKey, seriesNameOf(section));
             }
         } else if (view.getId() == R.id.btnAction) {
             handleEpisodeAction(section.t);
         }
     };
+
+    private String seriesNameOf(DownloadSection section) {
+        return section.seriesName == null ? "" : section.seriesName;
+    }
 
     private void playFirstOfGroup(String groupKey) {
         List<DownloadEpisode> eps = RoomDataManger.getAllDownloadEpisodes();
@@ -98,20 +135,27 @@ public class DownloadActivity extends BaseVbActivity<ActivityDownloadBinding> {
         ToastUtils.showShort("还没有缓存完成的剧集");
     }
 
-    private void confirmDeleteSeries(DownloadSection section) {
+    private void confirmDeleteSeries(String groupKey, String seriesName) {
         new XPopup.Builder(this)
                 .isDarkTheme(Utils.isDarkTheme())
-                .asConfirm("删除缓存", "确定删除《" + section.seriesName + "》的全部缓存文件吗?", "取消", "确定", () -> {
+                .asConfirm("删除缓存", "确定删除《" + (seriesName == null ? "" : seriesName) + "》的全部缓存文件吗?", "取消", "确定", () -> {
                     List<DownloadEpisode> eps = RoomDataManger.getAllDownloadEpisodes();
                     for (DownloadEpisode ep : eps) {
-                        if (!section.groupKey.equals(ep.groupKey())) continue;
+                        if (!groupKey.equals(ep.groupKey())) continue;
                         DownloadTaskManager.get().cancel(ep.getId());
                         if (ep.localDir != null) {
                             DownloadStorage.deleteRecursive(new File(ep.localDir));
                         }
                         RoomDataManger.deleteDownloadEpisode(ep);
                     }
-                    loadData();
+                    groupSizeCache.remove(groupKey);
+                    sizeDirty = true;
+                    if (detailGroupKey != null) {
+                        // 详情页删的是自己,回到网格
+                        finish();
+                    } else {
+                        loadData();
+                    }
                 }, null, false).show();
     }
 
@@ -141,6 +185,7 @@ public class DownloadActivity extends BaseVbActivity<ActivityDownloadBinding> {
         long now = System.currentTimeMillis();
         if (event.type == DownloadEvent.TYPE_DONE) {
             liveProgress.remove(event.episodeId);
+            sizeDirty = true;
             loadData();
             return;
         }
@@ -165,6 +210,16 @@ public class DownloadActivity extends BaseVbActivity<ActivityDownloadBinding> {
 
     private void loadData() {
         List<DownloadEpisode> all = RoomDataManger.getAllDownloadEpisodes();
+        if (detailGroupKey != null) {
+            loadDetail(all);
+        } else {
+            loadGrid(all);
+        }
+        mBinding.tvStorage.setText("已占用: " + DownloadStorage.formatSize(DownloadStorage.totalUsedBytes()));
+    }
+
+    /** 网格模式:按剧聚合,每部一张海报卡 */
+    private void loadGrid(List<DownloadEpisode> all) {
         LinkedHashMap<String, List<DownloadEpisode>> groups = new LinkedHashMap<>();
         for (DownloadEpisode ep : all) {
             List<DownloadEpisode> list = groups.get(ep.groupKey());
@@ -174,30 +229,6 @@ public class DownloadActivity extends BaseVbActivity<ActivityDownloadBinding> {
             }
             list.add(ep);
         }
-        List<DownloadSection> sections = new ArrayList<>();
-        for (Map.Entry<String, List<DownloadEpisode>> entry : groups.entrySet()) {
-            List<DownloadEpisode> eps = entry.getValue();
-            DownloadEpisode first = eps.get(0);
-            DownloadSection header = new DownloadSection(true);
-            header.seriesName = first.vodName == null ? "" : first.vodName + " · " + first.flag;
-            header.pic = first.vodPic;
-            header.groupKey = first.groupKey();
-            int done = 0;
-            long size = 0;
-            for (DownloadEpisode ep : eps) {
-                if (ep.status == DownloadEpisode.STATUS_DONE) {
-                    done++;
-                    size += episodeSize(ep);
-                }
-            }
-            header.doneCount = done;
-            header.totalCount = eps.size();
-            header.sizeBytes = size;
-            sections.add(header);
-            for (DownloadEpisode ep : eps) {
-                sections.add(new DownloadSection(ep));
-            }
-        }
         // 清掉已不存在条目的实时进度,防止串位
         Set<Integer> aliveIds = new HashSet<>();
         for (List<DownloadEpisode> list : groups.values()) {
@@ -206,9 +237,106 @@ public class DownloadActivity extends BaseVbActivity<ActivityDownloadBinding> {
             }
         }
         liveProgress.keySet().retainAll(aliveIds);
+
+        List<CacheGridAdapter.Item> items = new ArrayList<>();
+        for (Map.Entry<String, List<DownloadEpisode>> entry : groups.entrySet()) {
+            List<DownloadEpisode> eps = entry.getValue();
+            CacheGridAdapter.Item item = new CacheGridAdapter.Item();
+            item.groupKey = entry.getKey();
+            item.name = eps.get(0).vodName == null ? "" : eps.get(0).vodName;
+            item.pic = eps.get(0).vodPic;
+            int done = 0, waiting = 0, resolving = 0, downloading = 0, paused = 0, failed = 0;
+            for (DownloadEpisode ep : eps) {
+                switch (ep.status) {
+                    case DownloadEpisode.STATUS_WAITING:
+                        waiting++;
+                        break;
+                    case DownloadEpisode.STATUS_RESOLVING:
+                        resolving++;
+                        break;
+                    case DownloadEpisode.STATUS_DOWNLOADING:
+                        downloading++;
+                        break;
+                    case DownloadEpisode.STATUS_PAUSED:
+                        paused++;
+                        break;
+                    case DownloadEpisode.STATUS_FAILED:
+                        failed++;
+                        break;
+                    case DownloadEpisode.STATUS_DONE:
+                    default:
+                        done++;
+                        break;
+                }
+            }
+            long size = groupSize(entry.getKey(), eps);
+            item.note = CacheGridAdapter.buildNote(done, eps.size(), waiting, resolving,
+                    downloading, paused, failed);
+            item.sizeText = size > 0 ? DownloadStorage.formatSize(size) : null;
+            items.add(item);
+        }
+        mGridAdapter.setNewData(items);
+        mBinding.tvEmpty.setVisibility(items.isEmpty() ? View.VISIBLE : View.GONE);
+    }
+
+    /** 分组占用:结构变化后重算(磁盘遍历),进度刷新走缓存 */
+    private long groupSize(String groupKey, List<DownloadEpisode> eps) {
+        Long cached = groupSizeCache.get(groupKey);
+        if (!sizeDirty && cached != null) {
+            return cached;
+        }
+        long size = 0;
+        for (DownloadEpisode ep : eps) {
+            if (ep.status == DownloadEpisode.STATUS_DONE) {
+                size += episodeSize(ep);
+            }
+        }
+        groupSizeCache.put(groupKey, size);
+        return size;
+    }
+
+    /** 详情模式:只显示该剧的分组头 + 集数列表(原列表 UI) */
+    private void loadDetail(List<DownloadEpisode> all) {
+        List<DownloadEpisode> eps = new ArrayList<>();
+        for (DownloadEpisode ep : all) {
+            if (detailGroupKey.equals(ep.groupKey())) {
+                eps.add(ep);
+            }
+        }
+        if (eps.isEmpty()) {
+            // 该剧已无任何缓存条目(被删除),直接回到网格
+            finish();
+            return;
+        }
+        if (detailSeriesName == null) {
+            detailSeriesName = eps.get(0).vodName == null ? "" : eps.get(0).vodName;
+            mBinding.titleBar.setTitle(detailSeriesName);
+            mBinding.titleBar.setRightTitle("删除");
+            mBinding.tvStorage.setVisibility(View.GONE);
+        }
+        DownloadEpisode first = eps.get(0);
+        DownloadSection header = new DownloadSection(true);
+        header.seriesName = first.vodName == null ? "" : first.vodName + " · " + first.flag;
+        header.pic = first.vodPic;
+        header.groupKey = first.groupKey();
+        int done = 0;
+        long size = 0;
+        for (DownloadEpisode ep : eps) {
+            if (ep.status == DownloadEpisode.STATUS_DONE) {
+                done++;
+                size += episodeSize(ep);
+            }
+        }
+        header.doneCount = done;
+        header.totalCount = eps.size();
+        header.sizeBytes = size;
+        List<DownloadSection> sections = new ArrayList<>();
+        sections.add(header);
+        for (DownloadEpisode ep : eps) {
+            sections.add(new DownloadSection(ep));
+        }
         mAdapter.setNewData(sections);
-        mBinding.tvStorage.setText("已占用: " + DownloadStorage.formatSize(DownloadStorage.totalUsedBytes()));
-        mBinding.tvEmpty.setVisibility(sections.isEmpty() ? View.VISIBLE : View.GONE);
+        mBinding.tvEmpty.setVisibility(View.GONE);
     }
 
     /** 单集实际磁盘占用:分片模式(m3u8)统计整个集目录,直链模式统计文件本身 */
@@ -279,6 +407,7 @@ public class DownloadActivity extends BaseVbActivity<ActivityDownloadBinding> {
                         }
                         RoomDataManger.deleteDownloadEpisode(task);
                     }
+                    sizeDirty = true;
                     loadData();
                 }, null, false).show();
     }
@@ -298,6 +427,8 @@ public class DownloadActivity extends BaseVbActivity<ActivityDownloadBinding> {
                         RoomDataManger.deleteDownloadEpisode(ep);
                     }
                     DownloadStorage.deleteRecursive(DownloadStorage.baseDir());
+                    groupSizeCache.clear();
+                    sizeDirty = true;
                     loadData();
                 }, null, false).show();
     }
