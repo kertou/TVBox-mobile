@@ -1,7 +1,5 @@
 package com.github.tvbox.osc.download;
 
-import com.github.tvbox.osc.util.OkGoHelper;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -29,6 +27,8 @@ public class ProgressiveDownloader {
         public boolean success;
         public boolean paused;
         public boolean cancelled;
+        /** 416 且本地文件与远端不一致时置位,由 download() 清零重下一次 */
+        boolean restart;
         public String errMsg;
         public String localFilePath;
         public long totalBytes;
@@ -41,9 +41,25 @@ public class ProgressiveDownloader {
      */
     public static Result download(String url, Map<String, String> headers, File target,
                                   AbortChecker abort, ProgressListener listener) {
-        Result result = new Result();
-        OkHttpClient client = OkGoHelper.getDefaultClient();
         long downloaded = target.exists() && target.length() > 0 ? target.length() : 0;
+        // 最多清零重下一次:再次 416 直接失败,防止"Range 越界→416→重试"死循环
+        for (int attempt = 0; attempt < 2; attempt++) {
+            Result result = downloadOnce(url, headers, target, abort, listener, downloaded);
+            if (result.restart) {
+                downloaded = 0;
+                continue;
+            }
+            return result;
+        }
+        Result result = new Result();
+        result.errMsg = "下载请求失败: HTTP 416";
+        return result;
+    }
+
+    private static Result downloadOnce(String url, Map<String, String> headers, File target,
+                                       AbortChecker abort, ProgressListener listener, long downloaded) {
+        Result result = new Result();
+        OkHttpClient client = DownloadHttp.client();
         try {
             Request.Builder builder = new Request.Builder().url(url);
             builder.header("User-Agent", DEFAULT_UA);
@@ -60,8 +76,24 @@ public class ProgressiveDownloader {
                 builder.header("Range", "bytes=" + downloaded + "-");
             }
             Response response = client.newCall(builder.build()).execute();
+            if (response.code() == 416) {
+                // 断点越界:常见于"字节已下满但未合并"瞬间进程被杀后恢复,也可能是本地文件损坏
+                long total = totalFromContentRange(response.header("Content-Range"));
+                if (total >= 0 && downloaded >= total) {
+                    // 已下满:跳过下载直接成功,由上层走合并/收尾
+                    result.success = true;
+                    result.totalBytes = Math.max(total, target.length());
+                    result.localFilePath = target.getAbsolutePath();
+                } else {
+                    // 本地文件比远端大或拿不到远端大小:清零重下
+                    result.restart = true;
+                }
+                response.close();
+                return result;
+            }
             if (!response.isSuccessful() || response.body() == null) {
                 result.errMsg = "下载请求失败: HTTP " + response.code();
+                response.close();
                 return result;
             }
             String range = response.header("Content-Range");
@@ -128,6 +160,18 @@ public class ProgressiveDownloader {
         } catch (Throwable th) {
             result.errMsg = "下载异常: " + th.getMessage();
             return result;
+        }
+    }
+
+    /** 解析 416 响应的 Content-Range: bytes *\/12345 → 12345,拿不到返回 -1 */
+    private static long totalFromContentRange(String range) {
+        if (range == null) return -1;
+        int slash = range.lastIndexOf('/');
+        if (slash < 0) return -1;
+        try {
+            return Long.parseLong(range.substring(slash + 1).trim());
+        } catch (NumberFormatException e) {
+            return -1;
         }
     }
 
