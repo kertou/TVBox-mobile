@@ -13,6 +13,8 @@ import com.github.tvbox.osc.base.BaseVbActivity;
 import com.github.tvbox.osc.bean.ParseBean;
 import com.github.tvbox.osc.bean.VideoInfo;
 import com.github.tvbox.osc.bean.VodInfo;
+import com.github.tvbox.osc.cache.DownloadEpisode;
+import com.github.tvbox.osc.cache.RoomDataManger;
 import com.github.tvbox.osc.constant.CacheConst;
 import com.github.tvbox.osc.databinding.ActivityLocalPlayBinding;
 import com.github.tvbox.osc.event.RefreshEvent;
@@ -122,6 +124,38 @@ public class LocalPlayActivity extends BaseVbActivity<ActivityLocalPlayBinding> 
             mVideoView.replay(true);
         }else {
             mVideoView.start(); //开始播放，不调用则不自动播放
+        }
+
+        saveVodHistory(path);
+    }
+
+    /**
+     * 离线播放也写入观看历史(与在线播放共用 vodRecord 表)
+     * 按本地文件路径反查缓存任务, 初始播放/上下一集/选集跳集都会经过 play() 统一覆盖
+     */
+    private void saveVodHistory(String path) {
+        if (Hawk.get(HawkConfig.PRIVATE_BROWSING, false)) {//无痕浏览
+            return;
+        }
+        try {
+            if (path == null || path.isEmpty()) return;
+            for (DownloadEpisode episode : RoomDataManger.getAllDownloadEpisodes()) {
+                if (episode.status != DownloadEpisode.STATUS_DONE
+                        || !path.equals(episode.localFilePath)) continue;
+                VodInfo vodInfo = new VodInfo();
+                vodInfo.id = episode.vodId;
+                vodInfo.name = episode.vodName;
+                vodInfo.pic = episode.vodPic;
+                vodInfo.sourceKey = episode.sourceKey;
+                vodInfo.playFlag = episode.flag;
+                vodInfo.playIndex = episode.episodeIndex;
+                vodInfo.playNote = episode.episodeName == null ? "" : episode.episodeName;
+                RoomDataManger.insertVodRecord(episode.sourceKey, vodInfo);
+                EventBus.getDefault().post(new RefreshEvent(RefreshEvent.TYPE_HISTORY_REFRESH));
+                break;
+            }
+        } catch (Throwable th) {
+            th.printStackTrace();
         }
     }
 
