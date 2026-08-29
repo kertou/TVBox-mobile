@@ -21,13 +21,22 @@ public class MediaMerger {
 
     private static final int MAX_SAMPLE_SIZE = 8 * 1024 * 1024;
 
+    private static volatile String lastError = null;
+
+    /** 最近一次 mergeToMp4/remuxToMp4 失败原因,便于排查真实流合并回退 */
+    public static String lastError() {
+        return lastError;
+    }
+
     /**
      * 将输入容器(ts/mkv/fmp4...)无损封装为 MP4
      *
      * @return 成功返回 true;out 为输出文件
      */
     public static boolean mergeToMp4(File src, File outFile) {
+        lastError = null;
         if (src == null || !src.exists() || src.length() <= 0) {
+            lastError = "输入文件不存在或为空";
             return false;
         }
         MediaExtractor extractor = new MediaExtractor();
@@ -49,6 +58,7 @@ public class MediaMerger {
                 muxer.release();
                 muxer = null;
                 outFile.delete();
+                lastError = "未找到可封装的音视频轨道(轨道数 " + extractor.getTrackCount() + ")";
                 return false;
             }
             muxer.start();
@@ -75,7 +85,18 @@ public class MediaMerger {
             muxer.stop();
             return verifyMp4(outFile);
         } catch (Throwable th) {
-            th.printStackTrace();
+            lastError = th.getClass().getSimpleName() + ": " + th.getMessage();
+            // 带上输入文件与轨道信息,定位真实源合并失败的具体原因(时间戳/编码参数等)
+            StringBuilder tracks = new StringBuilder();
+            try {
+                for (int i = 0; i < extractor.getTrackCount(); i++) {
+                    String mime = extractor.getTrackFormat(i).getString(MediaFormat.KEY_MIME);
+                    tracks.append(i == 0 ? "" : ",").append(mime);
+                }
+            } catch (Throwable ignored) {
+            }
+            android.util.Log.e("MediaMerger", "mergeToMp4 失败: " + src.getName()
+                    + " len=" + src.length() + " tracks=[" + tracks + "]", th);
             try {
                 if (muxer != null) {
                     muxer.stop();
