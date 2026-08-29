@@ -183,6 +183,7 @@ public class CacheSelectDialog extends BottomPopupView {
                                 "2. 缓存的视频仅供您本人在本应用内离线观看,严禁传播、分发或用于任何商业用途;\n\n" +
                                 "3. 请尊重内容版权,支持正版;因使用本功能产生的任何法律责任由您自行承担。\n\n" +
                                 "点击\"同意\"即表示您已阅读并接受以上条款。",
+                        "取消", "同意",
                         () -> {
                             Hawk.put(HawkConfig.DOWNLOAD_DISCLAIMER_AGREED, true);
                             // 用户同意后再真正入队
@@ -193,7 +194,7 @@ public class CacheSelectDialog extends BottomPopupView {
                             if (!selected.isEmpty()) {
                                 startDownload(selected);
                             }
-                        }).show();
+                        }, null, false).show();
         return false;
     }
 

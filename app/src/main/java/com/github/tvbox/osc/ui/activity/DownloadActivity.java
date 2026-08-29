@@ -29,9 +29,12 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * 我的缓存:按剧集分组展示应用内缓存,支持离线播放、暂停/继续/重试/删除。
@@ -40,6 +43,8 @@ public class DownloadActivity extends BaseVbActivity<ActivityDownloadBinding> {
 
     private DownloadAdapter mAdapter;
     private long lastReloadTime = 0;
+    /** 下载中集数的实时进度(来自 EventBus 事件,数据库不落盘,避免频繁写库) */
+    private final Map<Integer, DownloadAdapter.Live> liveProgress = new HashMap<>();
 
     @Override
     protected void init() {
@@ -51,6 +56,7 @@ public class DownloadActivity extends BaseVbActivity<ActivityDownloadBinding> {
         RecyclerView rv = mBinding.rvList;
         rv.setLayoutManager(new LinearLayoutManager(this));
         mAdapter = new DownloadAdapter();
+        mAdapter.setLiveProgress(liveProgress);
         rv.setAdapter(mAdapter);
 
         mAdapter.setOnItemClickListener(mItemClickListener);
@@ -95,7 +101,7 @@ public class DownloadActivity extends BaseVbActivity<ActivityDownloadBinding> {
     private void confirmDeleteSeries(DownloadSection section) {
         new XPopup.Builder(this)
                 .isDarkTheme(Utils.isDarkTheme())
-                .asConfirm("删除缓存", "确定删除《" + section.seriesName + "》的全部缓存文件吗?", () -> {
+                .asConfirm("删除缓存", "确定删除《" + section.seriesName + "》的全部缓存文件吗?", "取消", "确定", () -> {
                     List<DownloadEpisode> eps = RoomDataManger.getAllDownloadEpisodes();
                     for (DownloadEpisode ep : eps) {
                         if (!section.groupKey.equals(ep.groupKey())) continue;
@@ -106,7 +112,7 @@ public class DownloadActivity extends BaseVbActivity<ActivityDownloadBinding> {
                         RoomDataManger.deleteDownloadEpisode(ep);
                     }
                     loadData();
-                }).show();
+                }, null, false).show();
     }
 
     private void handleEpisodeAction(DownloadEpisode ep) {
@@ -134,8 +140,21 @@ public class DownloadActivity extends BaseVbActivity<ActivityDownloadBinding> {
     public void onDownloadEvent(DownloadEvent event) {
         long now = System.currentTimeMillis();
         if (event.type == DownloadEvent.TYPE_DONE) {
+            liveProgress.remove(event.episodeId);
             loadData();
             return;
+        }
+        if (event.type == DownloadEvent.TYPE_PROGRESS) {
+            DownloadAdapter.Live live = liveProgress.get(event.episodeId);
+            if (live == null) {
+                live = new DownloadAdapter.Live();
+                liveProgress.put(event.episodeId, live);
+            }
+            live.downloadedBytes = event.downloadedBytes;
+            live.totalBytes = event.totalBytes;
+            live.speedBytes = event.speedBytes;
+            live.segmentsDone = event.segmentsDone;
+            live.segmentsTotal = event.segmentsTotal;
         }
         if (now - lastReloadTime < 400) {
             return;
@@ -168,12 +187,7 @@ public class DownloadActivity extends BaseVbActivity<ActivityDownloadBinding> {
             for (DownloadEpisode ep : eps) {
                 if (ep.status == DownloadEpisode.STATUS_DONE) {
                     done++;
-                    if (ep.localFilePath != null) {
-                        File f = new File(ep.localFilePath);
-                        size += f.exists() ? f.length() : ep.totalBytes;
-                    } else {
-                        size += ep.totalBytes;
-                    }
+                    size += episodeSize(ep);
                 }
             }
             header.doneCount = done;
@@ -184,9 +198,35 @@ public class DownloadActivity extends BaseVbActivity<ActivityDownloadBinding> {
                 sections.add(new DownloadSection(ep));
             }
         }
+        // 清掉已不存在条目的实时进度,防止串位
+        Set<Integer> aliveIds = new HashSet<>();
+        for (List<DownloadEpisode> list : groups.values()) {
+            for (DownloadEpisode ep : list) {
+                aliveIds.add(ep.getId());
+            }
+        }
+        liveProgress.keySet().retainAll(aliveIds);
         mAdapter.setNewData(sections);
         mBinding.tvStorage.setText("已占用: " + DownloadStorage.formatSize(DownloadStorage.totalUsedBytes()));
         mBinding.tvEmpty.setVisibility(sections.isEmpty() ? View.VISIBLE : View.GONE);
+    }
+
+    /** 单集实际磁盘占用:分片模式(m3u8)统计整个集目录,直链模式统计文件本身 */
+    private long episodeSize(DownloadEpisode ep) {
+        if (ep.localFilePath != null) {
+            File f = new File(ep.localFilePath);
+            if (f.exists()) {
+                if (f.getName().endsWith(".m3u8") && ep.localDir != null) {
+                    return Math.max(f.length(), DownloadStorage.dirSize(new File(ep.localDir)));
+                }
+                return f.length();
+            }
+        }
+        if (ep.localDir != null) {
+            File d = new File(ep.localDir);
+            if (d.exists()) return DownloadStorage.dirSize(d);
+        }
+        return ep.totalBytes;
     }
 
     /** 从同一剧集组中已完成的集数构建离线播放列表(复用本地播放器) */
@@ -229,7 +269,7 @@ public class DownloadActivity extends BaseVbActivity<ActivityDownloadBinding> {
     private void confirmDelete(DownloadEpisode ep) {
         new XPopup.Builder(this)
                 .isDarkTheme(Utils.isDarkTheme())
-                .asConfirm("删除缓存", "确定删除 " + ep.displayTitle() + " 的缓存文件吗?", () -> {
+                .asConfirm("删除缓存", "确定删除 " + ep.displayTitle() + " 的缓存文件吗?", "取消", "确定", () -> {
                     DownloadTaskManager.get().cancel(ep.getId());
                     DownloadEpisode task = RoomDataManger.getDownloadEpisode(ep.getId());
                     if (task != null) {
@@ -240,13 +280,13 @@ public class DownloadActivity extends BaseVbActivity<ActivityDownloadBinding> {
                         RoomDataManger.deleteDownloadEpisode(task);
                     }
                     loadData();
-                }).show();
+                }, null, false).show();
     }
 
     private void confirmClearAll() {
         new XPopup.Builder(this)
                 .isDarkTheme(Utils.isDarkTheme())
-                .asConfirm("清空缓存", "确定删除全部缓存文件吗?", () -> {
+                .asConfirm("清空缓存", "确定删除全部缓存文件吗?", "取消", "确定", () -> {
                     DownloadTaskManager.get().pauseAll();
                     List<DownloadEpisode> all = RoomDataManger.getAllDownloadEpisodes();
                     for (DownloadEpisode ep : all) {
@@ -258,6 +298,6 @@ public class DownloadActivity extends BaseVbActivity<ActivityDownloadBinding> {
                     }
                     DownloadStorage.deleteRecursive(DownloadStorage.baseDir());
                     loadData();
-                }).show();
+                }, null, false).show();
     }
 }

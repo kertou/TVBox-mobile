@@ -17,11 +17,27 @@ import com.github.tvbox.osc.cache.DownloadEpisode;
 import com.github.tvbox.osc.download.DownloadStorage;
 
 import java.util.ArrayList;
+import java.util.Map;
 
 /**
  * 我的缓存列表:剧集分组(头) + 集数条目
  */
 public class DownloadAdapter extends BaseSectionQuickAdapter<DownloadSection, BaseViewHolder> {
+
+    /** 下载中的实时进度(EventBus 事件驱动,不走数据库) */
+    public static class Live {
+        public long downloadedBytes;
+        public long totalBytes;
+        public long speedBytes;
+        public int segmentsDone = -1;
+        public int segmentsTotal = -1;
+    }
+
+    private Map<Integer, Live> liveMap;
+
+    public void setLiveProgress(Map<Integer, Live> map) {
+        this.liveMap = map;
+    }
 
     public DownloadAdapter() {
         super(R.layout.item_cache_episode, R.layout.item_cache_series, new ArrayList<>());
@@ -48,28 +64,43 @@ public class DownloadAdapter extends BaseSectionQuickAdapter<DownloadSection, Ba
                 pb.setVisibility(View.VISIBLE);
                 pb.setIndeterminate(true);
                 break;
-            case DownloadEpisode.STATUS_DOWNLOADING:
+            case DownloadEpisode.STATUS_DOWNLOADING: {
                 pb.setVisibility(View.VISIBLE);
+                Live live = liveMap != null ? liveMap.get(ep.getId()) : null;
+                long done = live != null && live.downloadedBytes > 0 ? live.downloadedBytes : ep.downloadedBytes;
+                long speed = live != null ? live.speedBytes : 0;
+                String speedText = speed > 0 ? " · " + DownloadStorage.formatSize(speed) + "/s" : "";
                 if (ep.totalBytes > 0) {
-                    progress = (int) Math.min(100, ep.downloadedBytes * 100 / ep.totalBytes);
-                    tvState.setText(DownloadStorage.formatSize(ep.downloadedBytes) + "/"
-                            + DownloadStorage.formatSize(ep.totalBytes));
+                    progress = (int) Math.min(100, done * 100 / ep.totalBytes);
+                    tvState.setText(DownloadStorage.formatSize(done) + "/"
+                            + DownloadStorage.formatSize(ep.totalBytes) + speedText);
+                    pb.setIndeterminate(false);
+                } else if (live != null && live.segmentsTotal > 0) {
+                    // HLS 分片模式:显示分片进度代替无限动画
+                    progress = (int) Math.min(100, live.segmentsDone * 100 / live.segmentsTotal);
+                    tvState.setText("分片 " + live.segmentsDone + "/" + live.segmentsTotal
+                            + " · 已下载 " + DownloadStorage.formatSize(done) + speedText);
                     pb.setIndeterminate(false);
                 } else {
-                    tvState.setText(ep.downloadedBytes > 0
-                            ? "已下载 " + DownloadStorage.formatSize(ep.downloadedBytes)
+                    tvState.setText(done > 0
+                            ? "已下载 " + DownloadStorage.formatSize(done)
                             : "正在下载…");
                     pb.setIndeterminate(true);
                 }
                 btnAction.setText("暂停");
                 pb.setProgress(progress);
                 break;
+            }
             case DownloadEpisode.STATUS_PAUSED:
                 pb.setVisibility(View.VISIBLE);
                 pb.setIndeterminate(false);
                 progress = ep.totalBytes > 0 ? (int) Math.min(100, ep.downloadedBytes * 100 / ep.totalBytes) : 0;
                 pb.setProgress(progress);
-                tvState.setText("已暂停 " + progress + "%" + (TextUtils.isEmpty(ep.errMsg) ? "" : " · " + ep.errMsg));
+                String pausedText = ep.totalBytes > 0 ? "已暂停 " + progress + "%" : "已暂停";
+                if (ep.totalBytes <= 0 && ep.downloadedBytes > 0) {
+                    pausedText += " · 已下载 " + DownloadStorage.formatSize(ep.downloadedBytes);
+                }
+                tvState.setText(pausedText + (TextUtils.isEmpty(ep.errMsg) ? "" : " · " + ep.errMsg));
                 btnAction.setText("继续");
                 break;
             case DownloadEpisode.STATUS_FAILED:
