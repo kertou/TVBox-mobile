@@ -385,7 +385,7 @@ public class PlayFragment extends BaseLazyFragment {
 
             ImmersionBar.with(mActivity)
                     .hideBar(BarHide.FLAG_SHOW_BAR)
-                    .navigationBarColor(Color.TRANSPARENT)
+                    .navigationBarColor(android.R.color.transparent)
                     .fitsSystemWindows(true)
                     .init();
         }

@@ -12,7 +12,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
-import android.graphics.Color;
 import android.graphics.drawable.Icon;
 import android.net.Uri;
 import android.os.Build;
@@ -158,7 +157,7 @@ public class DetailActivity extends BaseVbActivity<ActivityDetailBinding> {
         registerReceiver(mBatteryReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         ImmersionBar.with(this)
                 .statusBarColor(R.color.black)
-                .navigationBarColor(Color.TRANSPARENT)
+                .navigationBarColor(android.R.color.transparent)
                 .fitsSystemWindows(true)
                 .statusBarDarkFont(false)
                 .init();

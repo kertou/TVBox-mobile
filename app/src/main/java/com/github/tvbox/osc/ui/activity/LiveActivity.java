@@ -5,7 +5,6 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.IntEvaluator;
 import android.animation.ObjectAnimator;
 import android.content.Context;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.CountDownTimer;
 import android.os.Handler;
@@ -156,7 +155,7 @@ public class LiveActivity extends BaseActivity {
         ImmersionBar.with(this)
                 .statusBarColor(R.color.black)
                 .statusBarDarkFont(false)
-                .navigationBarColor(Color.TRANSPARENT)
+                .navigationBarColor(android.R.color.transparent)
                 .fitsSystemWindows(true)
                 .init();
         context = this;

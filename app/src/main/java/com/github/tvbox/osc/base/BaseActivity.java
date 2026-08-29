@@ -3,7 +3,6 @@ package com.github.tvbox.osc.base;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.AssetManager;
-import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -86,7 +85,7 @@ public abstract class BaseActivity extends AppCompatActivity implements CustomAd
         ImmersionBar.with(this)
                 .statusBarDarkFont(!Utils.isDarkTheme())
                 .titleBar(findTitleBar(getWindow().getDecorView().findViewById(android.R.id.content)))
-                .navigationBarColor(Color.TRANSPARENT)
+                .navigationBarColor(android.R.color.transparent)
                 .init();
         // 全面屏(手势小白条)适配:内容延伸到导航栏下,导航栏透明,由各页面用 insets 避让
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
