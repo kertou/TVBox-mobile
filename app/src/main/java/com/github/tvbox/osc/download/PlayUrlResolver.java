@@ -14,12 +14,25 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 后台解析某一集的真实播放地址(与 SourceViewModel.getPlay 的判定规则保持一致)。
  * 仅支持直连地址;需要网页嗅探(parse=1)的集数无法离线缓存。
  */
 public class PlayUrlResolver {
+
+    /** spider 解析线程池:与调度线程隔离,卡死的解析不会阻塞下载队列 */
+    private static final ExecutorService PARSE_POOL = Executors.newCachedThreadPool(r -> {
+        Thread t = new Thread(r, "spider-parse");
+        t.setDaemon(true);
+        return t;
+    });
+    /** spider 解析超时:QuickJS 内部卡死时兜底置失败,防止队头永久阻塞 */
+    private static final long PARSE_TIMEOUT_MS = 30_000;
 
     public static class Result {
         public boolean ok;
@@ -64,7 +77,23 @@ public class PlayUrlResolver {
                 if (sp == null) {
                     return Result.fail("数据源插件加载失败");
                 }
-                String json = sp.playerContent(flag, rawUrl, ApiConfig.get().getVipParseFlags());
+                // spider 解析放独立线程并限时:超时兜底置失败,队列不被队头卡死
+                Future<String> future = PARSE_POOL.submit(
+                        () -> sp.playerContent(flag, rawUrl, ApiConfig.get().getVipParseFlags()));
+                String json;
+                try {
+                    json = future.get(PARSE_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+                } catch (java.util.concurrent.TimeoutException te) {
+                    future.cancel(true);
+                    return Result.fail("解析超时(" + PARSE_TIMEOUT_MS / 1000 + "秒),数据源无响应");
+                } catch (java.util.concurrent.ExecutionException ee) {
+                    Throwable cause = ee.getCause() == null ? ee : ee.getCause();
+                    return Result.fail("解析失败:" + cause.getMessage());
+                } catch (InterruptedException ie) {
+                    future.cancel(true);
+                    Thread.currentThread().interrupt();
+                    return Result.fail("解析被取消");
+                }
                 if (TextUtils.isEmpty(json)) {
                     return Result.fail("数据源未返回播放信息");
                 }
@@ -140,14 +169,19 @@ public class PlayUrlResolver {
 
     private static String fetchText(String url) {
         try {
-            okhttp3.OkHttpClient client = com.github.tvbox.osc.util.OkGoHelper.getDefaultClient();
+            // 扩展源接口同样限时,防止解析阶段被黑洞连接卡死
+            okhttp3.OkHttpClient client = com.github.tvbox.osc.util.OkGoHelper.getDefaultClient().newBuilder()
+                    .callTimeout(30, TimeUnit.SECONDS).build();
             okhttp3.Request request = new okhttp3.Request.Builder().url(url).build();
             okhttp3.Response response = client.newCall(request).execute();
+            android.util.Log.d("DownloadTask", "resolve fetchText " + url + " -> HTTP " + response.code());
             if (response.body() == null) return null;
             String body = response.body().string();
             response.close();
             return body;
         } catch (Throwable th) {
+            // 记录真实失败原因(DNS/连接/超时等),否则上层只能看到"返回为空"
+            android.util.Log.w("DownloadTask", "resolve fetchText " + url + " failed: " + th, th);
             return null;
         }
     }
