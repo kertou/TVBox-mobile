@@ -94,14 +94,23 @@ public abstract class BaseActivity extends AppCompatActivity implements CustomAd
 
     /**
      * 默认给内容区加导航栏(手势条)高度的下内边距,页面底部内容不被小白条遮挡,
-     * 遮挡区域透出页面背景色自然融合;自带底部布局的页面(主页底部导航/播放页)覆写返回 false 自行处理
+     * 遮挡区域透出页面背景色自然融合;全屏播放页覆写 autoNavigationBarInset 返回 false 自行处理
      */
     private void applyNavigationBarInset() {
         if (!autoNavigationBarInset()) return;
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content), (v, insets) -> {
+        View content = findViewById(android.R.id.content);
+        ViewCompat.setOnApplyWindowInsetsListener(content, (v, insets) -> {
             int nav = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom;
             if (v.getPaddingBottom() != nav) v.setPadding(0, 0, 0, nav);
             return insets;
+        });
+        // insets 沿视图树下发可能被中间层级消费或错过(真机实测主页 bottom_nav 收不到),
+        // 首帧布局完成后不依赖分发、直接从 window 根再兜底取一次,两处幂等
+        content.post(() -> {
+            WindowInsetsCompat root = ViewCompat.getRootWindowInsets(content);
+            if (root == null) return;
+            int nav = root.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom;
+            if (content.getPaddingBottom() != nav) content.setPadding(0, 0, 0, nav);
         });
     }
 

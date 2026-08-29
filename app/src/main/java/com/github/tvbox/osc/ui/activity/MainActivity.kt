@@ -2,8 +2,6 @@ package com.github.tvbox.osc.ui.activity
 
 import android.os.Process
 import android.view.MenuItem
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentPagerAdapter
 import androidx.viewpager.widget.ViewPager.SimpleOnPageChangeListener
@@ -23,18 +21,9 @@ class MainActivity : BaseVbActivity<ActivityMainBinding>() {
     var useCacheConfig = false
     private var exitTime = 0L
 
-    override fun autoNavigationBarInset(): Boolean = false
-
     override fun init() {
 
         useCacheConfig = intent.extras?.getBoolean(IntentKey.CACHE_CONFIG_CHANGED, false)?:false
-
-        // 底部导航延伸到屏幕底,小白条悬浮在导航栏自身的留白上
-        ViewCompat.setOnApplyWindowInsetsListener(mBinding.bottomNav) { v, insets ->
-            val nav = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
-            if (v.paddingBottom != nav) v.setPadding(0, 0, 0, nav)
-            insets
-        }
 
         mBinding.vp.adapter = object : FragmentPagerAdapter(supportFragmentManager) {
             override fun getItem(position: Int): Fragment {
