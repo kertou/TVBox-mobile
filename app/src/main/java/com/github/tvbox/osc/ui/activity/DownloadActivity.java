@@ -288,9 +288,8 @@ public class DownloadActivity extends BaseVbActivity<ActivityDownloadBinding> {
         }
         long size = 0;
         for (DownloadEpisode ep : eps) {
-            if (ep.status == DownloadEpisode.STATUS_DONE) {
-                size += episodeSize(ep);
-            }
+            //占用角标按真实磁盘占用(含下载中/暂停的半成品),与"已占用"总量口径一致
+            size += episodeSize(ep);
         }
         groupSizeCache.put(groupKey, size);
         return size;
@@ -326,8 +325,9 @@ public class DownloadActivity extends BaseVbActivity<ActivityDownloadBinding> {
         for (DownloadEpisode ep : eps) {
             if (ep.status == DownloadEpisode.STATUS_DONE) {
                 done++;
-                size += episodeSize(ep);
             }
+            //头部大小按真实磁盘占用(含未完成集),完成数只算已完成
+            size += episodeSize(ep);
         }
         header.doneCount = done;
         header.totalCount = eps.size();
