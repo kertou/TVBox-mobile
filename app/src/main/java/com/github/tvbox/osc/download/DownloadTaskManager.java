@@ -3,6 +3,8 @@ package com.github.tvbox.osc.download;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkCapabilities;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.TextUtils;
 
 import com.github.tvbox.osc.cache.DownloadEpisode;
@@ -46,6 +48,12 @@ public class DownloadTaskManager {
     /** 当前正在下载的集数id,用于速度统计 */
     private final Map<Integer, Long> lastBytes = new HashMap<>();
     private final Map<Integer, Long> lastTime = new HashMap<>();
+    /** 失败自动重试: 每集已重试次数与下次重试时间(内存态,不落库,进程重启后手动重试重新计) */
+    private static final int MAX_AUTO_RETRY = 3;
+    private static final long RETRY_DELAY_MS = 5000;
+    private final Map<Integer, Integer> retryCounts = new ConcurrentHashMap<>();
+    private final Map<Integer, Long> retryUntil = new ConcurrentHashMap<>();
+    private final Handler retryHandler = new Handler(Looper.getMainLooper());
 
     public static DownloadTaskManager get() {
         if (instance == null) {
@@ -110,6 +118,7 @@ public class DownloadTaskManager {
         for (DownloadEpisode t : tasks) {
             pauseIds.remove(t.getId());
             cancelIds.remove(t.getId());
+            clearRetryState(t.getId());
             t.status = DownloadEpisode.STATUS_WAITING;
             if (t.createTime <= 0) t.createTime = now;
             t.updateTime = now;
@@ -128,6 +137,7 @@ public class DownloadTaskManager {
 
     public void resume(int episodeId) {
         pauseIds.remove(episodeId);
+        clearRetryState(episodeId);
         DownloadEpisode t = RoomDataManger.getDownloadEpisode(episodeId);
         if (t != null && (t.status == DownloadEpisode.STATUS_PAUSED || t.status == DownloadEpisode.STATUS_FAILED)) {
             t.status = DownloadEpisode.STATUS_WAITING;
@@ -163,6 +173,7 @@ public class DownloadTaskManager {
         boolean hasWaiting = false;
         for (DownloadEpisode t : all) {
             if (t.status == DownloadEpisode.STATUS_PAUSED || t.status == DownloadEpisode.STATUS_FAILED) {
+                clearRetryState(t.getId());
                 t.status = DownloadEpisode.STATUS_WAITING;
                 t.updateTime = now;
                 RoomDataManger.updateDownloadEpisode(t);
@@ -230,10 +241,12 @@ public class DownloadTaskManager {
             } catch (Throwable th) {
                 // 单集处理中的意外异常不允许杀死唯一的调度线程,否则整个队列永久卡死
                 android.util.Log.e("DownloadTask", "processTask crashed: " + task.displayTitle(), th);
-                task.status = DownloadEpisode.STATUS_FAILED;
-                task.errMsg = "内部错误:" + th.getMessage();
-                touch(task);
-                postChanged();
+                if (!failOrRetry(task, "内部错误:" + th.getMessage())) {
+                    task.status = DownloadEpisode.STATUS_FAILED;
+                    task.errMsg = "内部错误:" + th.getMessage();
+                    touch(task);
+                    postChanged();
+                }
             }
         }
         // 注意:这里不能调用 DownloadService.stop()——
@@ -245,11 +258,13 @@ public class DownloadTaskManager {
     private DownloadEpisode nextWaitingTask() {
         List<DownloadEpisode> waiting = RoomDataManger.getAllDownloadEpisodes();
         DownloadEpisode first = null;
+        long now = System.currentTimeMillis();
         for (DownloadEpisode t : waiting) {
-            if (t.status == DownloadEpisode.STATUS_WAITING) {
-                if (first == null || t.createTime < first.createTime) {
-                    first = t;
-                }
+            if (t.status != DownloadEpisode.STATUS_WAITING) continue;
+            Long until = retryUntil.get(t.getId());
+            if (until != null && until > now) continue; // 重试退避期内先跳过,不阻塞其他集
+            if (first == null || t.createTime < first.createTime) {
+                first = t;
             }
         }
         return first;
@@ -291,6 +306,7 @@ public class DownloadTaskManager {
                 return;
             }
             if (!resolved.ok) {
+                if (failOrRetry(task, resolved.errMsg)) return;
                 task.status = DownloadEpisode.STATUS_FAILED;
                 task.errMsg = resolved.errMsg;
                 touch(task);
@@ -338,6 +354,7 @@ public class DownloadTaskManager {
                 return;
             }
             if (!r.success) {
+                if (failOrRetry(task, r.errMsg)) return;
                 task.status = DownloadEpisode.STATUS_FAILED;
                 task.errMsg = r.errMsg;
                 touch(task);
@@ -404,6 +421,7 @@ public class DownloadTaskManager {
                 return;
             }
             if (!r.success) {
+                if (failOrRetry(task, r.errMsg)) return;
                 task.status = DownloadEpisode.STATUS_FAILED;
                 task.errMsg = r.errMsg;
                 touch(task);
@@ -434,6 +452,7 @@ public class DownloadTaskManager {
     private void finishTask(DownloadEpisode task) {
         task.status = DownloadEpisode.STATUS_DONE;
         task.errMsg = null;
+        clearRetryState(task.getId());
         touch(task);
         DownloadEvent event = new DownloadEvent(DownloadEvent.TYPE_DONE);
         event.episodeId = task.getId();
@@ -447,6 +466,7 @@ public class DownloadTaskManager {
     private void removeTask(DownloadEpisode task) {
         cancelIds.remove(task.getId());
         pauseIds.remove(task.getId());
+        clearRetryState(task.getId());
         if (task.localDir != null) {
             DownloadStorage.deleteRecursive(new File(task.localDir));
             DownloadStorage.cleanEmptyParents(new File(task.localDir));
@@ -457,6 +477,33 @@ public class DownloadTaskManager {
     private void touch(DownloadEpisode task) {
         task.updateTime = System.currentTimeMillis();
         RoomDataManger.updateDownloadEpisode(task);
+    }
+
+    /**
+     * 失败自动重试: 非暂停/取消/全局暂停时回队列等待,间隔 RETRY_DELAY_MS 自动续跑,
+     * 最多 MAX_AUTO_RETRY 次;返回 true 表示已安排重试,false 表示调用方走原有的失败收尾
+     */
+    private boolean failOrRetry(DownloadEpisode task, String errMsg) {
+        int id = task.getId();
+        if (pauseIds.containsKey(id) || cancelIds.containsKey(id) || pausedAll) return false;
+        int count = retryCounts.merge(id, 1, Integer::sum);
+        if (count > MAX_AUTO_RETRY) {
+            clearRetryState(id);
+            return false;
+        }
+        task.status = DownloadEpisode.STATUS_WAITING;
+        task.errMsg = "下载失败,自动重试(" + count + "/" + MAX_AUTO_RETRY + ")"
+                + (TextUtils.isEmpty(errMsg) ? "" : " · " + errMsg);
+        retryUntil.put(id, System.currentTimeMillis() + RETRY_DELAY_MS);
+        touch(task);
+        postChanged();
+        retryHandler.postDelayed(this::kick, RETRY_DELAY_MS);
+        return true;
+    }
+
+    private void clearRetryState(int episodeId) {
+        retryCounts.remove(episodeId);
+        retryUntil.remove(episodeId);
     }
 
     private void postProgress(DownloadEpisode task, int status, long downloaded, long total,

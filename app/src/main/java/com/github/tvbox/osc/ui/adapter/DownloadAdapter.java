@@ -54,7 +54,8 @@ public class DownloadAdapter extends BaseSectionQuickAdapter<DownloadSection, Ba
         int progress = 0;
         switch (ep.status) {
             case DownloadEpisode.STATUS_WAITING:
-                tvState.setText("等待中…");
+                // 自动重试退避期间会带着 errMsg 回到等待状态,把重试进度显示出来
+                tvState.setText(TextUtils.isEmpty(ep.errMsg) ? "等待中…" : ep.errMsg);
                 btnAction.setText("删除");
                 pb.setVisibility(View.GONE);
                 break;
