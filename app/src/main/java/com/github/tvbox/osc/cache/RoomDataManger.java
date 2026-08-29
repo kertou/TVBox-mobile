@@ -160,4 +160,40 @@ public class RoomDataManger {
         AppDataManager.get().getVodRecordDao().deleteAll();
     }
 
+    public static List<DownloadEpisode> getAllDownloadEpisodes() {
+        return AppDataManager.get().getDownloadEpisodeDao().getAll();
+    }
+
+    public static DownloadEpisode getDownloadEpisode(int id) {
+        return AppDataManager.get().getDownloadEpisodeDao().get(id);
+    }
+
+    public static List<DownloadEpisode> getDownloadEpisodes(String sourceKey, String vodId, String flag) {
+        return AppDataManager.get().getDownloadEpisodeDao().getByVod(sourceKey, vodId, flag);
+    }
+
+    public static DownloadEpisode getCompletedEpisode(String sourceKey, String vodId, String flag, int episodeIndex) {
+        return AppDataManager.get().getDownloadEpisodeDao().getCompleted(sourceKey, vodId, flag, episodeIndex);
+    }
+
+    public static DownloadEpisode getCompletedEpisodeByRawUrl(String rawUrl) {
+        return AppDataManager.get().getDownloadEpisodeDao().getCompletedByRawUrl(rawUrl);
+    }
+
+    public static DownloadEpisode getCompletedEpisodeByUrl(String url) {
+        return AppDataManager.get().getDownloadEpisodeDao().getCompletedByUrl(url);
+    }
+
+    public static void insertDownloadEpisode(DownloadEpisode episode) {
+        AppDataManager.get().getDownloadEpisodeDao().insert(episode);
+    }
+
+    public static void updateDownloadEpisode(DownloadEpisode episode) {
+        AppDataManager.get().getDownloadEpisodeDao().update(episode);
+    }
+
+    public static void deleteDownloadEpisode(DownloadEpisode episode) {
+        AppDataManager.get().getDownloadEpisodeDao().delete(episode);
+    }
+
 }

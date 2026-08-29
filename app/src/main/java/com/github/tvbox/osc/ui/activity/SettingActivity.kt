@@ -428,6 +428,14 @@ class SettingActivity : BaseVbActivity<ActivitySettingBinding>() {
             mBinding.switchIjkCachePlay.setChecked(newConfig)
             Hawk.put(HawkConfig.IJK_CACHE_PLAY, newConfig)
         }
+        // 应用内缓存:仅Wi-Fi下载 -------------------------------------
+        mBinding.switchDownloadWifiOnly.setChecked(Hawk.get(HawkConfig.DOWNLOAD_WIFI_ONLY, false))
+        mBinding.llDownloadWifiOnly.setOnClickListener { v: View? ->
+            FastClickCheckUtil.check(v)
+            val newConfig = !Hawk.get(HawkConfig.DOWNLOAD_WIFI_ONLY, false)
+            mBinding.switchDownloadWifiOnly.setChecked(newConfig)
+            Hawk.put(HawkConfig.DOWNLOAD_WIFI_ONLY, newConfig)
+        }
     }
 
     override fun onBackPressed() {

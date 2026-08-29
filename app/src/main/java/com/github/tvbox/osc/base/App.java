@@ -11,6 +11,7 @@ import com.github.tvbox.osc.bean.VodInfo;
 import com.github.tvbox.osc.callback.EmptyCallback;
 import com.github.tvbox.osc.callback.LoadingCallback;
 import com.github.tvbox.osc.data.AppDataManager;
+import com.github.tvbox.osc.download.DownloadTaskManager;
 import com.github.tvbox.osc.server.ControlManager;
 import com.github.tvbox.osc.ui.activity.MainActivity;
 import com.github.tvbox.osc.util.EpgUtil;
@@ -57,6 +58,8 @@ public class App extends MultiDexApplication {
         ControlManager.init(this);
         //初始化数据库
         AppDataManager.init();
+        //恢复上次异常退出的缓存下载任务
+        DownloadTaskManager.get().recoverOnStart();
         LoadSir.beginBuilder()
                 .addCallback(new EmptyCallback())
                 .addCallback(new LoadingCallback())

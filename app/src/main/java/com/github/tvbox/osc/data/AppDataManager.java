@@ -49,6 +49,28 @@ public class AppDataManager {
             } catch (SQLiteException e) {
                 e.printStackTrace();
             }
+            // 应用内缓存(离线缓存)任务表
+            database.execSQL("CREATE TABLE IF NOT EXISTS `downloadEpisode` (" +
+                    "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                    "`sourceKey` TEXT, " +
+                    "`vodId` TEXT, " +
+                    "`vodName` TEXT, " +
+                    "`vodPic` TEXT, " +
+                    "`flag` TEXT, " +
+                    "`episodeName` TEXT, " +
+                    "`episodeIndex` INTEGER NOT NULL, " +
+                    "`rawUrl` TEXT, " +
+                    "`resolvedUrl` TEXT, " +
+                    "`headersJson` TEXT, " +
+                    "`mediaType` INTEGER NOT NULL, " +
+                    "`localDir` TEXT, " +
+                    "`localFilePath` TEXT, " +
+                    "`totalBytes` INTEGER NOT NULL, " +
+                    "`downloadedBytes` INTEGER NOT NULL, " +
+                    "`status` INTEGER NOT NULL, " +
+                    "`errMsg` TEXT, " +
+                    "`createTime` INTEGER NOT NULL, " +
+                    "`updateTime` INTEGER NOT NULL)");
         }
     };
 
@@ -114,13 +136,13 @@ public class AppDataManager {
         if (manager == null) {
             throw new RuntimeException("AppDataManager is no init");
         }
-        if (dbInstance == null)
-            dbInstance = Room.databaseBuilder(App.getInstance(), AppDataBase.class, dbPath())
-                    .setJournalMode(RoomDatabase.JournalMode.TRUNCATE)
-                    //.addMigrations(MIGRATION_1_2)
-                    //.addMigrations(MIGRATION_2_3)
-                    //.addMigrations(MIGRATION_3_4)
-                    //.addMigrations(MIGRATION_4_5)
+            if (dbInstance == null)
+                dbInstance = Room.databaseBuilder(App.getInstance(), AppDataBase.class, dbPath())
+                        .setJournalMode(RoomDatabase.JournalMode.TRUNCATE)
+                        .addMigrations(MIGRATION_1_2)
+                        //.addMigrations(MIGRATION_2_3)
+                        //.addMigrations(MIGRATION_3_4)
+                        //.addMigrations(MIGRATION_4_5)
                     .addCallback(new RoomDatabase.Callback() {
                         @Override
                         public void onCreate(@NonNull SupportSQLiteDatabase db) {

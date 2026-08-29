@@ -53,6 +53,8 @@ import com.github.tvbox.osc.bean.SourceBean;
 import com.github.tvbox.osc.bean.Subtitle;
 import com.github.tvbox.osc.bean.VodInfo;
 import com.github.tvbox.osc.cache.CacheManager;
+import com.github.tvbox.osc.cache.DownloadEpisode;
+import com.github.tvbox.osc.cache.RoomDataManger;
 import com.github.tvbox.osc.event.RefreshEvent;
 import com.github.tvbox.osc.player.EXOmPlayer;
 import com.github.tvbox.osc.player.IjkMediaPlayer;
@@ -1238,10 +1240,20 @@ public class PlayFragment extends BaseLazyFragment {
         if (mVideoView != null) mVideoView.release();
         String subtitleCacheKey = mVodInfo.sourceKey + "-" + mVodInfo.id + "-" + mVodInfo.playFlag + "-" + mVodInfo.playIndex + "-" + vs.name + "-subt";
         String progressKey = mVodInfo.sourceKey + mVodInfo.id + mVodInfo.playFlag + mVodInfo.playIndex + vs.name;
+        this.progressKey = progressKey;
+        this.subtitleCacheKey = subtitleCacheKey;
         //重新播放清除现有进度
         if (reset) {
             CacheManager.delete(MD5.string2MD5(progressKey), 0);
             CacheManager.delete(MD5.string2MD5(subtitleCacheKey), 0);
+        }
+        //离线缓存命中:直接播放应用内已缓存的本地文件
+        String cachedPath = findCachedLocalPath(vs);
+        if (cachedPath != null) {
+            hideTip();
+            mController.showParse(false);
+            startLocalUrl(cachedPath);
+            return;
         }
         if (Jianpian.isJpUrl(vs.url)) {//荐片地址特殊判断
             String jp_url = vs.url;
@@ -1276,6 +1288,43 @@ public class PlayFragment extends BaseLazyFragment {
             return;
         }
         sourceViewModel.getPlay(sourceKey, mVodInfo.playFlag, progressKey, vs.url, subtitleCacheKey);
+    }
+
+    /**
+     * 查找当前集的应用内缓存(已完成),命中返回本地文件路径
+     */
+    private String findCachedLocalPath(VodInfo.VodSeries vs) {
+        try {
+            DownloadEpisode ep = RoomDataManger.getCompletedEpisode(mVodInfo.sourceKey, mVodInfo.id, mVodInfo.playFlag, mVodInfo.playIndex);
+            if (ep == null && vs.url != null) {
+                ep = RoomDataManger.getCompletedEpisodeByRawUrl(vs.url);
+            }
+            if (ep == null || ep.localFilePath == null) return null;
+            File file = new File(ep.localFilePath);
+            return file.exists() && file.length() > 0 ? ep.localFilePath : null;
+        } catch (Throwable th) {
+            return null;
+        }
+    }
+
+    /**
+     * 播放本地缓存文件(file://),进度仍记录在原progressKey下
+     */
+    private void startLocalUrl(String path) {
+        if (mActivity == null || !isAdded()) return;
+        final String url = "file://" + path;
+        mCurrentUrl = url;
+        requireActivity().runOnUiThread(() -> {
+            stopParse();
+            if (mVideoView != null) {
+                hideTip();
+                PlayerHelper.updateCfg(mVideoView, mVodPlayerCfg);
+                mVideoView.setProgressKey(progressKey);
+                mVideoView.setUrl(url);
+                mVideoView.start();
+                mController.resetSpeed();
+            }
+        });
     }
 
     private String playSubtitle;

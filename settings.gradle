@@ -5,3 +5,6 @@ include ':quickjs'
 include ':TabLayout'
 include ':ViewPager1Delegate'
 include ':crash'
+// dlna-cast: jitpack 上的 dlna-dmc:V1.0.0 已无法构建,改为源码内置
+include ':dlna-core'
+include ':dlna-dmc'

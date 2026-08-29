@@ -64,4 +64,12 @@ public class HawkConfig {
      * 搜索记录
      */
     public static final String HISTORY_SEARCH = "history_search";
+    /**
+     * 应用内缓存:仅Wi-Fi下载
+     */
+    public static final String DOWNLOAD_WIFI_ONLY = "download_wifi_only";
+    /**
+     * 应用内缓存:已同意免责声明
+     */
+    public static final String DOWNLOAD_DISCLAIMER_AGREED = "download_disclaimer_agreed";
 }

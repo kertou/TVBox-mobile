@@ -15,6 +15,7 @@ import com.github.tvbox.osc.bean.VodInfo;
 import com.lihang.ShadowLayout;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 
 /**
  * @author pj567
@@ -23,6 +24,8 @@ import java.util.ArrayList;
  */
 public class SeriesAdapter extends BaseQuickAdapter<VodInfo.VodSeries, BaseViewHolder> {
     private boolean isGird;
+    /** 已离线缓存的集数地址(原始url),用于显示角标 */
+    private HashSet<String> cachedUrls = new HashSet<>();
 
     public SeriesAdapter(boolean isGird) {
         super(R.layout.item_series, new ArrayList<>());
@@ -34,13 +37,18 @@ public class SeriesAdapter extends BaseQuickAdapter<VodInfo.VodSeries, BaseViewH
         ShadowLayout sl = helper.getView(R.id.sl);
         TextView tvSeries = helper.getView(R.id.tvSeries);
         sl.setSelected(item.selected);
-        tvSeries.setText(item.name);
+        boolean cached = item.url != null && cachedUrls.contains(item.url);
+        tvSeries.setText(cached ? "✓ " + item.name : item.name);
 
         if (!isGird){// 详情页横向展示时固定宽度
             ViewGroup.LayoutParams layoutParams = sl.getLayoutParams();
             layoutParams.width = ConvertUtils.dp2px(120);
             sl.setLayoutParams(layoutParams);
         }
+    }
+
+    public void setCachedUrls(HashSet<String> urls) {
+        this.cachedUrls = urls == null ? new HashSet<>() : urls;
     }
 
     public void setGird(boolean gird) {

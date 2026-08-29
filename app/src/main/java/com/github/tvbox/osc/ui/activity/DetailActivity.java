@@ -47,9 +47,11 @@ import com.github.tvbox.osc.bean.Movie;
 import com.github.tvbox.osc.bean.ParseBean;
 import com.github.tvbox.osc.bean.SourceBean;
 import com.github.tvbox.osc.bean.VodInfo;
+import com.github.tvbox.osc.cache.DownloadEpisode;
 import com.github.tvbox.osc.cache.RoomDataManger;
 import com.github.tvbox.osc.constant.IntentKey;
 import com.github.tvbox.osc.databinding.ActivityDetailBinding;
+import com.github.tvbox.osc.event.DownloadEvent;
 import com.github.tvbox.osc.event.RefreshEvent;
 import com.github.tvbox.osc.receiver.BatteryReceiver;
 import com.github.tvbox.osc.service.PlayService;
@@ -58,6 +60,7 @@ import com.github.tvbox.osc.ui.adapter.SeriesAdapter;
 import com.github.tvbox.osc.ui.adapter.SeriesFlagAdapter;
 import com.github.tvbox.osc.ui.dialog.AllVodSeriesBottomDialog;
 import com.github.tvbox.osc.ui.dialog.AllVodSeriesRightDialog;
+import com.github.tvbox.osc.ui.dialog.CacheSelectDialog;
 import com.github.tvbox.osc.ui.dialog.CastListDialog;
 import com.github.tvbox.osc.ui.dialog.QuickSearchDialog;
 import com.github.tvbox.osc.ui.dialog.VideoDetailDialog;
@@ -195,7 +198,7 @@ public class DetailActivity extends BaseVbActivity<ActivityDetailBinding> {
         findViewById(R.id.tvDownload).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                use1DMDownload();
+                showCacheSelectDialog();
             }
         });
         mBinding.tvSort.setOnClickListener(new View.OnClickListener() {
@@ -465,7 +468,7 @@ public class DetailActivity extends BaseVbActivity<ActivityDetailBinding> {
                 vodInfo.seriesMap.get(vodInfo.playFlag).get(vodInfo.playIndex).selected = true;
         }
         seriesAdapter.setNewData(vodInfo.seriesMap.get(vodInfo.playFlag));
-
+        refreshCachedBadge();
     }
 
     private void initViewModel() {
@@ -575,6 +578,10 @@ public class DetailActivity extends BaseVbActivity<ActivityDetailBinding> {
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onDownloadEvent(DownloadEvent event) {
+        refreshCachedBadge();
+    }
+
     public void refresh(RefreshEvent event) {
         if (event.type == RefreshEvent.TYPE_REFRESH) {
             if (event.obj != null) {
@@ -830,6 +837,48 @@ public class DetailActivity extends BaseVbActivity<ActivityDetailBinding> {
             subtitleTextSize *= 0.6;
         }
         EventBus.getDefault().post(new RefreshEvent(RefreshEvent.TYPE_SUBTITLE_SIZE_CHANGE, subtitleTextSize));
+    }
+
+    /**
+     * 应用内缓存选集弹窗
+     */
+    public void showCacheSelectDialog() {
+        if (vodInfo == null || vodInfo.seriesMap == null || vodInfo.seriesMap.get(vodInfo.playFlag) == null
+                || vodInfo.seriesMap.get(vodInfo.playFlag).isEmpty()) {
+            ToastUtils.showShort("资源异常,请稍后重试");
+            return;
+        }
+        HashSet<String> cachedUrls = getCachedUrls();
+        new XPopup.Builder(this)
+                .isViewMode(true)
+                .hasNavigationBar(false)
+                .maxHeight(ScreenUtils.getScreenHeight() - (ScreenUtils.getScreenHeight() / 4))
+                .asCustom(new CacheSelectDialog(this, vodInfo, cachedUrls))
+                .show();
+    }
+
+    private HashSet<String> getCachedUrls() {
+        HashSet<String> cachedUrls = new HashSet<>();
+        try {
+            for (DownloadEpisode ep : RoomDataManger.getDownloadEpisodes(sourceKey, vodInfo.id, vodInfo.playFlag)) {
+                if (ep.status == DownloadEpisode.STATUS_DONE && ep.rawUrl != null) {
+                    cachedUrls.add(ep.rawUrl);
+                }
+            }
+        } catch (Throwable th) {
+            th.printStackTrace();
+        }
+        return cachedUrls;
+    }
+
+    /**
+     * 刷新集数列表的"已缓存"角标
+     */
+    public void refreshCachedBadge() {
+        if (vodInfo == null || seriesAdapter == null || vodInfo.seriesMap == null
+                || vodInfo.seriesMap.get(vodInfo.playFlag) == null) return;
+        seriesAdapter.setCachedUrls(getCachedUrls());
+        seriesAdapter.notifyDataSetChanged();
     }
 
     public void use1DMDownload() {
