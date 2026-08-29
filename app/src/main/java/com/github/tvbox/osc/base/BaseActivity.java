@@ -3,6 +3,7 @@ package com.github.tvbox.osc.base;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.AssetManager;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -13,6 +14,9 @@ import android.view.Window;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.PermissionChecker;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import com.blankj.utilcode.util.ActivityUtils;
 import com.blankj.utilcode.util.AppUtils;
@@ -82,8 +86,28 @@ public abstract class BaseActivity extends AppCompatActivity implements CustomAd
         ImmersionBar.with(this)
                 .statusBarDarkFont(!Utils.isDarkTheme())
                 .titleBar(findTitleBar(getWindow().getDecorView().findViewById(android.R.id.content)))
-                .navigationBarColor(R.color.white)
+                .navigationBarColor(Color.TRANSPARENT)
                 .init();
+        // 全面屏(手势小白条)适配:内容延伸到导航栏下,导航栏透明,由各页面用 insets 避让
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+        applyNavigationBarInset();
+    }
+
+    /**
+     * 默认给内容区加导航栏(手势条)高度的下内边距,页面底部内容不被小白条遮挡,
+     * 遮挡区域透出页面背景色自然融合;自带底部布局的页面(主页底部导航/播放页)覆写返回 false 自行处理
+     */
+    private void applyNavigationBarInset() {
+        if (!autoNavigationBarInset()) return;
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content), (v, insets) -> {
+            int nav = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom;
+            if (v.getPaddingBottom() != nav) v.setPadding(0, 0, 0, nav);
+            return insets;
+        });
+    }
+
+    protected boolean autoNavigationBarInset() {
+        return true;
     }
 
     private void initTitleBar(){

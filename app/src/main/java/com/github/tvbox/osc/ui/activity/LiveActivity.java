@@ -5,6 +5,7 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.IntEvaluator;
 import android.animation.ObjectAnimator;
 import android.content.Context;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.CountDownTimer;
 import android.os.Handler;
@@ -56,7 +57,6 @@ import com.github.tvbox.osc.util.FastClickCheckUtil;
 import com.github.tvbox.osc.util.HawkConfig;
 import com.github.tvbox.osc.util.live.TxtSubscribe;
 import com.google.gson.JsonArray;
-import com.gyf.immersionbar.BarHide;
 import com.gyf.immersionbar.ImmersionBar;
 import com.lxj.xpopup.XPopup;
 import com.lxj.xpopup.core.BasePopupView;
@@ -145,14 +145,19 @@ public class LiveActivity extends BaseActivity {
         return R.layout.activity_live;
     }
 
+    /** fitsSystemWindows 已让内容避开手势条,不再叠加 BaseActivity 的默认底部避让 */
+    @Override
+    protected boolean autoNavigationBarInset() {
+        return false;
+    }
+
     @Override
     protected void init() {
         ImmersionBar.with(this)
                 .statusBarColor(R.color.black)
                 .statusBarDarkFont(false)
-                .navigationBarColor(R.color.black)
+                .navigationBarColor(Color.TRANSPARENT)
                 .fitsSystemWindows(true)
-                .hideBar(BarHide.FLAG_HIDE_NAVIGATION_BAR)
                 .init();
         context = this;
         epgStringAddress = Hawk.get(HawkConfig.EPG_URL,"");
@@ -1101,7 +1106,6 @@ public class LiveActivity extends BaseActivity {
     public void showAllChannelDialog() {
         mAllChannelRightDialog = new XPopup.Builder(this)
                 .isViewMode(true)
-                .hasNavigationBar(false)
                 .hasShadowBg(false)
                 .popupHeight(ScreenUtils.getScreenHeight())
                 .popupPosition(PopupPosition.Right)
@@ -1166,7 +1170,6 @@ public class LiveActivity extends BaseActivity {
         if (fullScreenStyle){
             mSettingRightDialog = new XPopup.Builder(this)
                     .isViewMode(true)
-                    .hasNavigationBar(false)
                     .hasShadowBg(false)
                     .popupHeight(ScreenUtils.getScreenHeight())
                     .popupWidth(ConvertUtils.dp2px(300))
@@ -1177,7 +1180,6 @@ public class LiveActivity extends BaseActivity {
             mSettingBottomDialog = new XPopup.Builder(this)
                     .isViewMode(true)
                     .popupHeight(ScreenUtils.getScreenHeight()/2)
-                    .hasNavigationBar(false)
                     .hasShadowBg(false)
                     .asCustom(new LiveSettingDialog(this));
             mSettingBottomDialog.show();

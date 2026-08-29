@@ -12,6 +12,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.graphics.Color;
 import android.graphics.drawable.Icon;
 import android.net.Uri;
 import android.os.Build;
@@ -142,6 +143,12 @@ public class DetailActivity extends BaseVbActivity<ActivityDetailBinding> {
      */
     ScreenShotListenManager screenShotListenManager;
 
+    /** fitsSystemWindows 已让内容避开手势条,不再叠加 BaseActivity 的默认底部避让 */
+    @Override
+    protected boolean autoNavigationBarInset() {
+        return false;
+    }
+
     @Override
     protected void init() {
         initReceiver();
@@ -151,7 +158,7 @@ public class DetailActivity extends BaseVbActivity<ActivityDetailBinding> {
         registerReceiver(mBatteryReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         ImmersionBar.with(this)
                 .statusBarColor(R.color.black)
-                .navigationBarColor(R.color.white)
+                .navigationBarColor(Color.TRANSPARENT)
                 .fitsSystemWindows(true)
                 .statusBarDarkFont(false)
                 .init();
@@ -191,7 +198,6 @@ public class DetailActivity extends BaseVbActivity<ActivityDetailBinding> {
         findViewById(R.id.ll_title).setOnClickListener(view -> {
             new XPopup.Builder(this)
                     .isViewMode(true)
-                    .hasNavigationBar(false)
                     .asCustom(new VideoDetailDialog(this, vodInfo))
                     .show();
         });
@@ -331,7 +337,6 @@ public class DetailActivity extends BaseVbActivity<ActivityDetailBinding> {
         if (fullWindows) {
             mAllSeriesRightDialog = new XPopup.Builder(this)
                     .isViewMode(true)//隐藏导航栏(手势条)在dialog模式下会闪一下,改为view模式,但需处理onBackPress的隐藏,下方同理
-                    .hasNavigationBar(false)
                     .popupHeight(ScreenUtils.getScreenHeight())
                     .popupPosition(PopupPosition.Right)
                     .enableDrag(false)//禁用拖拽,内部有横向rv
@@ -340,7 +345,6 @@ public class DetailActivity extends BaseVbActivity<ActivityDetailBinding> {
         } else {
             mAllSeriesBottomDialog = new XPopup.Builder(this)
                     .isViewMode(true)
-                    .hasNavigationBar(false)
                     .maxHeight(ScreenUtils.getScreenHeight() - (ScreenUtils.getScreenHeight() / 4))
                     .asCustom(new AllVodSeriesBottomDialog(this, seriesAdapter.getData(), (position, text) -> {
                         chooseSeries(position, false);
@@ -851,7 +855,6 @@ public class DetailActivity extends BaseVbActivity<ActivityDetailBinding> {
         HashSet<String> cachedUrls = getCachedUrls();
         new XPopup.Builder(this)
                 .isViewMode(true)
-                .hasNavigationBar(false)
                 .maxHeight(ScreenUtils.getScreenHeight() - (ScreenUtils.getScreenHeight() / 4))
                 .asCustom(new CacheSelectDialog(this, vodInfo, cachedUrls))
                 .show();

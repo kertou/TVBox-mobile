@@ -323,7 +323,6 @@ public class PlayFragment extends BaseLazyFragment {
                 if (mFullWindows){
                     mPlayingControlRightDialog = new XPopup.Builder(activity)
                             .isViewMode(true)//改为view模式无法自动响应返回键操作,onBackPress时手动dismiss
-                            .hasNavigationBar(false)
                             .popupHeight(ScreenUtils.getScreenHeight())
                             .popupPosition(PopupPosition.Right)
                             .asCustom(new PlayingControlRightDialog(activity,mController,mVideoView));
@@ -331,7 +330,6 @@ public class PlayFragment extends BaseLazyFragment {
                 }else {
                     mPlayingControlDialog = new XPopup.Builder(activity)
                             .isViewMode(true)
-                            .hasNavigationBar(false)
                             .asCustom(new PlayingControlDialog(activity,mController,mVideoView));
                     mPlayingControlDialog.show();
                 }
@@ -387,7 +385,7 @@ public class PlayFragment extends BaseLazyFragment {
 
             ImmersionBar.with(mActivity)
                     .hideBar(BarHide.FLAG_SHOW_BAR)
-                    .navigationBarColor(R.color.white)
+                    .navigationBarColor(Color.TRANSPARENT)
                     .fitsSystemWindows(true)
                     .init();
         }
