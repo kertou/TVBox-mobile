@@ -287,7 +287,8 @@ public class DownloadActivity extends BaseVbActivity<ActivityDownloadBinding> {
         new XPopup.Builder(this)
                 .isDarkTheme(Utils.isDarkTheme())
                 .asConfirm("清空缓存", "确定删除全部缓存文件吗?", "取消", "确定", () -> {
-                    DownloadTaskManager.get().pauseAll();
+                    // 不能在这里 pauseAll():全局暂停置位后没有界面入口可以恢复,
+                    // 之后新入队的任务会永远停在"等待中";逐集 cancel 已足以打断在途下载
                     List<DownloadEpisode> all = RoomDataManger.getAllDownloadEpisodes();
                     for (DownloadEpisode ep : all) {
                         DownloadTaskManager.get().cancel(ep.getId());

@@ -6,6 +6,7 @@ import android.net.NetworkCapabilities;
 import android.text.TextUtils;
 
 import com.github.tvbox.osc.cache.DownloadEpisode;
+import com.github.tvbox.osc.api.ApiConfig;
 import com.github.tvbox.osc.cache.RoomDataManger;
 import com.github.tvbox.osc.event.DownloadEvent;
 import com.github.tvbox.osc.service.DownloadService;
@@ -60,9 +61,10 @@ public class DownloadTaskManager {
     private DownloadTaskManager() {
     }
 
-    /** App 启动时把上次异常退出的"下载中"任务重置为暂停 */
+    /** App 启动时把上次异常退出的"下载中"任务重置为暂停,并自动续跑遗留的等待队列 */
     public void recoverOnStart() {
         try {
+            boolean hasWaiting = false;
             List<DownloadEpisode> actives = RoomDataManger.getAllDownloadEpisodes();
             for (DownloadEpisode t : actives) {
                 if (t.status == DownloadEpisode.STATUS_DOWNLOADING || t.status == DownloadEpisode.STATUS_RESOLVING) {
@@ -70,14 +72,41 @@ public class DownloadTaskManager {
                     t.updateTime = System.currentTimeMillis();
                     RoomDataManger.updateDownloadEpisode(t);
                 }
+                if (t.status == DownloadEpisode.STATUS_WAITING) hasWaiting = true;
+            }
+            // 否则上次退出时已排队的任务要等到下次入队才会开始下载
+            if (hasWaiting && !pausedAll) {
+                kickWhenSourceReady();
             }
         } catch (Throwable th) {
             th.printStackTrace();
         }
     }
 
+    /** 等订阅/源列表加载完成再启动队列:App 启动早期源列表还是空的,
+     *  立即跑队列会让所有任务瞬间失败"数据源不存在或未启用"。
+     *  最多等 60 秒,订阅加载失败也放行,让任务拿到明确的失败原因。
+     *  该等待占用调度线程,期间入队的新任务会排在后面,同样不会抢跑。 */
+    private void kickWhenSourceReady() {
+        scheduler.execute(() -> {
+            for (int i = 0; i < 60 && ApiConfig.get().getSourceBeanList().isEmpty(); i++) {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return;
+                }
+            }
+            DownloadService.start();
+            kick();
+        });
+    }
+
     public void enqueue(List<DownloadEpisode> tasks) {
         long now = System.currentTimeMillis();
+        // 入队是明确的下载意图:清掉全局暂停,否则清空缓存等路径遗留的
+        // pausedAll 会让新队列永远停在"等待中"且界面无恢复入口
+        pausedAll = false;
         for (DownloadEpisode t : tasks) {
             pauseIds.remove(t.getId());
             cancelIds.remove(t.getId());
@@ -196,7 +225,16 @@ public class DownloadTaskManager {
                 // 仅Wi-Fi下载模式下等待网络
                 break;
             }
-            processTask(task);
+            try {
+                processTask(task);
+            } catch (Throwable th) {
+                // 单集处理中的意外异常不允许杀死唯一的调度线程,否则整个队列永久卡死
+                android.util.Log.e("DownloadTask", "processTask crashed: " + task.displayTitle(), th);
+                task.status = DownloadEpisode.STATUS_FAILED;
+                task.errMsg = "内部错误:" + th.getMessage();
+                touch(task);
+                postChanged();
+            }
         }
         // 注意:这里不能调用 DownloadService.stop()——
         // 外部 stopService 与 startForegroundService 竞态会触发

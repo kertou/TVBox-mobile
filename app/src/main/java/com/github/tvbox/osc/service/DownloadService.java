@@ -92,7 +92,15 @@ public class DownloadService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        startForeground(FOREGROUND_ID, buildNotification("正在缓存视频", "正在准备下载任务…", 0, true));
+        // 初始通知必须如实反映全局暂停状态,否则暂停后服务重启会
+        // 重新显示"正在缓存视频/暂停全部",用户找不到任何"继续"入口
+        if (DownloadTaskManager.get().isPausedAll()) {
+            startForeground(FOREGROUND_ID,
+                    buildNotification("已暂停", "下载已全部暂停,点击继续可恢复", 0, false));
+        } else {
+            startForeground(FOREGROUND_ID,
+                    buildNotification("正在缓存视频", "正在准备下载任务…", 0, true));
+        }
         if (!DownloadTaskManager.get().hasActiveTasks()) {
             stopSelf();
         }
