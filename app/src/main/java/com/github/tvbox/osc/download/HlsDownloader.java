@@ -3,7 +3,6 @@ package com.github.tvbox.osc.download;
 import android.text.TextUtils;
 
 import com.github.tvbox.osc.util.MD5;
-import com.github.tvbox.osc.util.OkGoHelper;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -67,7 +66,9 @@ public class HlsDownloader {
         Result result = new Result();
         File partsDir = DownloadStorage.partsDir(episodeDir);
         try {
+            if (abort.shouldAbort()) return aborted(result);
             String content = fetchText(playlistUrl, headers);
+            if (abort.shouldAbort()) return aborted(result);
             if (TextUtils.isEmpty(content) || !content.contains("#EXTM3U")) {
                 result.errMsg = "播放列表获取失败";
                 return result;
@@ -81,6 +82,7 @@ public class HlsDownloader {
                 }
                 playlistUrl = child;
                 content = fetchText(playlistUrl, headers);
+                if (abort.shouldAbort()) return aborted(result);
                 if (TextUtils.isEmpty(content) || !content.contains("#EXTM3U")) {
                     result.errMsg = "播放列表获取失败";
                     return result;
@@ -180,10 +182,11 @@ public class HlsDownloader {
                 File keyFile = new File(partsDir, entry.getValue());
                 if (!keyFile.exists() || keyFile.length() <= 0) {
                     keyFile.getParentFile().mkdirs();
-                    if (!downloadToFile(entry.getKey(), headers, keyFile)) {
+                    if (!downloadToFile(entry.getKey(), headers, keyFile, abort) && !abort.shouldAbort()) {
                         result.errMsg = "密钥下载失败";
                         return result;
                     }
+                    if (abort.shouldAbort()) return aborted(result);
                 }
             }
             // init 段
@@ -191,10 +194,11 @@ public class HlsDownloader {
                 if (abort.shouldAbort()) return aborted(result);
                 File initFile = new File(partsDir, entry.getValue());
                 if (!initFile.exists() || initFile.length() <= 0) {
-                    if (!downloadToFile(entry.getKey(), headers, initFile)) {
+                    if (!downloadToFile(entry.getKey(), headers, initFile, abort) && !abort.shouldAbort()) {
                         result.errMsg = "init 段下载失败";
                         return result;
                     }
+                    if (abort.shouldAbort()) return aborted(result);
                 }
             }
 
@@ -207,14 +211,16 @@ public class HlsDownloader {
             List<Future<?>> futures = new ArrayList<>();
             for (Segment seg : segments) {
                 futures.add(pool.submit(() -> {
-                    if (failed.get()) return;
+                    if (failed.get() || abort.shouldAbort()) return;
                     File target = new File(partsDir, seg.localName);
                     boolean ok = target.exists() && target.length() > 0;
                     for (int retry = 0; !ok && retry <= SEGMENT_RETRY; retry++) {
-                        if (failed.get()) return;
-                        ok = downloadToFile(seg.remoteUrl, headers, target);
+                        // 每次重试前检查暂停/取消,防止在黑洞连接的重试循环里无视暂停
+                        if (failed.get() || abort.shouldAbort()) return;
+                        ok = downloadToFile(seg.remoteUrl, headers, target, abort);
                     }
                     if (!ok) {
+                        if (abort.shouldAbort()) return; // 暂停/取消不算失败
                         failed.set(true);
                         failMsg.append(": ").append(seg.localName);
                         return;
@@ -435,8 +441,8 @@ public class HlsDownloader {
         return def;
     }
 
-    static boolean downloadToFile(String url, Map<String, String> headers, File target) {
-        OkHttpClient client = OkGoHelper.getDefaultClient();
+    static boolean downloadToFile(String url, Map<String, String> headers, File target, AbortChecker abort) {
+        OkHttpClient client = DownloadHttp.hlsClient();
         Request.Builder builder = new Request.Builder().url(url);
         builder.header("User-Agent", DEFAULT_UA);
         if (headers != null) {
@@ -454,6 +460,7 @@ public class HlsDownloader {
         try {
             Response response = client.newCall(builder.build()).execute();
             if (!response.isSuccessful() || response.body() == null) {
+                response.close();
                 return false;
             }
             is = response.body().byteStream();
@@ -461,6 +468,10 @@ public class HlsDownloader {
             byte[] buf = new byte[64 * 1024];
             int len;
             while ((len = is.read(buf)) != -1) {
+                if (abort.shouldAbort()) {
+                    tmp.delete();
+                    return false;
+                }
                 fos.write(buf, 0, len);
             }
             fos.close();
@@ -486,7 +497,7 @@ public class HlsDownloader {
     }
 
     private static String fetchText(String url, Map<String, String> headers) throws IOException {
-        OkHttpClient client = OkGoHelper.getDefaultClient();
+        OkHttpClient client = DownloadHttp.hlsClient();
         Request.Builder builder = new Request.Builder().url(url);
         builder.header("User-Agent", DEFAULT_UA);
         if (headers != null) {

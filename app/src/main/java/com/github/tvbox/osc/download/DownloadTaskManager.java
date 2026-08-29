@@ -93,6 +93,8 @@ public class DownloadTaskManager {
 
     public void pause(int episodeId) {
         pauseIds.put(episodeId, true);
+        // 立即打断在途下载请求:阻塞中的连接可能长时间无响应,不能等它自然超时
+        DownloadHttp.cancelAll();
     }
 
     public void resume(int episodeId) {
@@ -112,6 +114,7 @@ public class DownloadTaskManager {
     public void cancel(int episodeId) {
         cancelIds.put(episodeId, true);
         pauseIds.remove(episodeId);
+        DownloadHttp.cancelAll();
         DownloadEpisode t = RoomDataManger.getDownloadEpisode(episodeId);
         if (t != null && t.status != DownloadEpisode.STATUS_DOWNLOADING && t.status != DownloadEpisode.STATUS_RESOLVING) {
             removeTask(t);
@@ -121,6 +124,7 @@ public class DownloadTaskManager {
 
     public void pauseAll() {
         pausedAll = true;
+        DownloadHttp.cancelAll();
     }
 
     public void resumeAll() {
@@ -140,8 +144,6 @@ public class DownloadTaskManager {
         if (hasWaiting) {
             DownloadService.start();
             kick();
-        } else {
-            DownloadService.stop();
         }
     }
 
@@ -163,6 +165,7 @@ public class DownloadTaskManager {
     }
 
     private void kick() {
+        android.util.Log.d("DownloadTask", "kick looping=" + looping.get() + " pausedAll=" + pausedAll);
         if (looping.compareAndSet(false, true)) {
             scheduler.execute(() -> {
                 try {
@@ -179,9 +182,11 @@ public class DownloadTaskManager {
     }
 
     private void runLoop() {
+        android.util.Log.d("DownloadTask", "runLoop enter pausedAll=" + pausedAll);
         while (!pausedAll) {
             DownloadEpisode task = nextWaitingTask();
             if (task == null) break;
+            android.util.Log.d("DownloadTask", "runLoop pick id=" + task.getId() + " " + task.displayTitle());
             if (cancelIds.containsKey(task.getId())) {
                 removeTask(task);
                 postChanged();
@@ -193,9 +198,10 @@ public class DownloadTaskManager {
             }
             processTask(task);
         }
-        if (!hasActiveTasks()) {
-            DownloadService.stop();
-        }
+        // 注意:这里不能调用 DownloadService.stop()——
+        // 外部 stopService 与 startForegroundService 竞态会触发
+        // ForegroundServiceDidNotStartInTimeException 崩溃;
+        // 服务空队列时自行 stopSelf(见 DownloadService.onDownloadEvent)。
     }
 
     private DownloadEpisode nextWaitingTask() {
@@ -213,6 +219,19 @@ public class DownloadTaskManager {
 
     private void processTask(DownloadEpisode task) {
         int id = task.getId();
+        // 解析开始前先响应暂停/取消,点暂停的集不再进入解析
+        if (pauseIds.containsKey(id) || pausedAll) {
+            pauseIds.remove(id);
+            task.status = DownloadEpisode.STATUS_PAUSED;
+            touch(task);
+            postChanged();
+            return;
+        }
+        if (cancelIds.containsKey(id)) {
+            removeTask(task);
+            postChanged();
+            return;
+        }
         task.status = DownloadEpisode.STATUS_RESOLVING;
         task.errMsg = null;
         touch(task);
@@ -312,6 +331,8 @@ public class DownloadTaskManager {
                 task.totalBytes = outFile.length();
             } else {
                 // 降级: 保留分片+本地索引,同样可离线播放
+                android.util.Log.w("DownloadTask", "HLS合并回退分片模式: " + task.displayTitle()
+                        + " 原因: " + MediaMerger.lastError());
                 mergeInput.delete();
                 task.localFilePath = playlistFile.getAbsolutePath();
                 task.totalBytes = DownloadStorage.dirSize(dir);

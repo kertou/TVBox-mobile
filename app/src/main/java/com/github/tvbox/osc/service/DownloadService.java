@@ -105,6 +105,12 @@ public class DownloadService extends Service {
             notifyDone(event);
             return;
         }
+        // 任务排空后服务自行退出:startForeground 已在 onStartCommand 完成,
+        // 服务内部 stopSelf 不会与 startForegroundService 产生崩溃竞态
+        if (event.type == DownloadEvent.TYPE_TASKS_CHANGED && !DownloadTaskManager.get().hasActiveTasks()) {
+            stopSelf();
+            return;
+        }
         if (event.type != DownloadEvent.TYPE_PROGRESS) {
             return;
         }
