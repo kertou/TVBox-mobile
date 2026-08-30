@@ -244,7 +244,7 @@ public class DownloadActivity extends BaseVbActivity<ActivityDownloadBinding> {
             List<DownloadEpisode> eps = entry.getValue();
             CacheGridAdapter.Item item = new CacheGridAdapter.Item();
             item.groupKey = entry.getKey();
-            item.name = eps.get(0).vodName == null ? "" : eps.get(0).vodName;
+            item.name = displayNameOf(eps.get(0));
             item.pic = eps.get(0).vodPic;
             int done = 0, waiting = 0, resolving = 0, downloading = 0, paused = 0, failed = 0;
             for (DownloadEpisode ep : eps) {
@@ -310,14 +310,14 @@ public class DownloadActivity extends BaseVbActivity<ActivityDownloadBinding> {
         }
         Collections.sort(eps, (a, b) -> Integer.compare(a.episodeIndex, b.episodeIndex));
         if (detailSeriesName == null) {
-            detailSeriesName = eps.get(0).vodName == null ? "" : eps.get(0).vodName;
+            detailSeriesName = displayNameOf(eps.get(0));
             mBinding.titleBar.setTitle(detailSeriesName);
             mBinding.titleBar.setRightTitle("删除");
             mBinding.tvStorage.setVisibility(View.GONE);
         }
         DownloadEpisode first = eps.get(0);
         DownloadSection header = new DownloadSection(true);
-        header.seriesName = first.vodName == null ? "" : first.vodName + " · " + first.flag;
+        header.seriesName = displayNameOf(first) + " · " + first.flag;
         header.pic = first.vodPic;
         header.groupKey = first.groupKey();
         int done = 0;
@@ -339,6 +339,12 @@ public class DownloadActivity extends BaseVbActivity<ActivityDownloadBinding> {
         }
         mAdapter.setNewData(sections);
         mBinding.tvEmpty.setVisibility(View.GONE);
+    }
+
+    /** 显示名:剧名为空时(部分源入队时没带剧名)回退用线路名,避免卡片标题空白 */
+    private String displayNameOf(DownloadEpisode ep) {
+        if (ep.vodName != null && !ep.vodName.trim().isEmpty()) return ep.vodName;
+        return ep.flag == null ? "" : ep.flag;
     }
 
     /** 单集实际磁盘占用:分片模式(m3u8)统计整个集目录,直链模式统计文件本身 */
