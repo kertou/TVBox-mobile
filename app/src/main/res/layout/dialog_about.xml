@@ -65,7 +65,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="https://github.com/XiaoRanLiu3119/TVBoxOS-Mobile"
+        android:text="https://github.com/kertou/TVBox-mobile"
         android:textIsSelectable="true"
         android:textColor="@color/text_sub_foreground"
         android:layout_marginTop="4dp"/>
@@ -91,5 +91,11 @@
         android:textIsSelectable="true"
         android:textColor="@color/text_sub_foreground"
         android:text="https://github.com/CatVodTVOfficial/TVBoxOSC"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textIsSelectable="true"
+        android:textColor="@color/text_sub_foreground"
+        android:text="https://github.com/XiaoRanLiu3119/TVBoxOS-Mobile"/>
 
 </LinearLayout>
