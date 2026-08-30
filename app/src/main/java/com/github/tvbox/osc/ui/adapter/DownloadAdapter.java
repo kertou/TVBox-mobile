@@ -24,13 +24,14 @@ import java.util.Map;
  */
 public class DownloadAdapter extends BaseSectionQuickAdapter<DownloadSection, BaseViewHolder> {
 
-    /** 下载中的实时进度(EventBus 事件驱动,不走数据库) */
+    /** 下载中的实时进度(EventBus 事件驱动,不走数据库)。
+     *  缓存页后台加载线程也会读(算角标时取实时字节),字段用 volatile 保证可见性 */
     public static class Live {
-        public long downloadedBytes;
-        public long totalBytes;
-        public long speedBytes;
-        public int segmentsDone = -1;
-        public int segmentsTotal = -1;
+        public volatile long downloadedBytes;
+        public volatile long totalBytes;
+        public volatile long speedBytes;
+        public volatile int segmentsDone = -1;
+        public volatile int segmentsTotal = -1;
     }
 
     private Map<Integer, Live> liveMap;
