@@ -1,13 +1,41 @@
 <resources>
 
 
-    <style name="AppTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
-        <!--应用的主要色调,actionBar默认使用该颜色,Toolbar导航栏的底色-->
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <!--CheckBox,RadioButton,SwitchCompat等一般控件的选中效果默认采用该颜色-->
-        <item name="colorAccent">@color/colorAccent</item>
+    <style name="AppTheme" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Material 3 配色（md_* 色板深浅两套见 values / values-night） -->
+        <item name="colorPrimary">@color/md_primary</item>
+        <item name="colorOnPrimary">@color/md_on_primary</item>
+        <item name="colorPrimaryContainer">@color/md_primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/md_on_primary_container</item>
+        <item name="colorSecondary">@color/md_secondary</item>
+        <item name="colorOnSecondary">@color/md_on_secondary</item>
+        <item name="colorSecondaryContainer">@color/md_secondary_container</item>
+        <item name="colorOnSecondaryContainer">@color/md_on_secondary_container</item>
+        <item name="colorTertiary">@color/md_tertiary</item>
+        <item name="colorOnTertiary">@color/md_on_tertiary</item>
+        <item name="colorTertiaryContainer">@color/md_tertiary_container</item>
+        <item name="colorOnTertiaryContainer">@color/md_on_tertiary_container</item>
+        <item name="colorError">@color/md_error</item>
+        <item name="colorOnError">@color/md_on_error</item>
+        <item name="colorErrorContainer">@color/md_error_container</item>
+        <item name="colorOnErrorContainer">@color/md_on_error_container</item>
+        <item name="android:colorBackground">@color/md_background</item>
+        <item name="colorOnBackground">@color/md_on_background</item>
+        <item name="colorSurface">@color/md_surface</item>
+        <item name="colorOnSurface">@color/md_on_surface</item>
+        <item name="colorSurfaceVariant">@color/md_surface_variant</item>
+        <item name="colorOnSurfaceVariant">@color/md_on_surface_variant</item>
+        <item name="colorOutline">@color/md_outline</item>
+        <item name="colorPrimaryInverse">@color/md_inverse_primary</item>
+        <item name="colorSurfaceInverse">@color/md_inverse_surface</item>
+        <item name="colorOnSurfaceInverse">@color/md_inverse_on_surface</item>
         <!--默认window窗口(activity)背景颜色,根据主题修改该属性可 避免某些情况activity跳转/回跳会白屏(出现与主题相反的颜色)-->
-        <item name="android:windowBackground">@color/windowBackground</item>
+        <item name="android:windowBackground">@color/md_background</item>
+        <!-- 旧属性兼容（部分三方库仍读取） -->
+        <item name="colorAccent">@color/md_primary</item>
+        <item name="colorPrimaryDark">@color/md_primary</item>
+        <!-- 本地已有正式深色色板，禁止 Force Dark 二次压暗 -->
+        <item name="android:forceDarkAllowed">false</item>
     </style>
 
     <style name="SplashTheme" parent="AppTheme">
@@ -81,46 +109,39 @@
     </style>
 
 
-    <!-- 实心通用主题色,MaterialButton样式-->
-    <style name="mbSolid" parent="@style/Widget.MaterialComponents.Button.UnelevatedButton">
+    <!-- 实心通用主题色,MaterialButton样式（M3 pill 形）-->
+    <style name="mbSolid" parent="@style/Widget.Material3.Button.UnelevatedButton">
 
-        <item name="android:textColor">@color/white</item>
+        <item name="android:textColor">@color/md_on_primary</item>
         <item name="android:textSize">14sp</item>
         <item name="android:textAllCaps">false</item>
         <item name="android:insetTop">0dp</item>
         <item name="android:insetBottom">0dp</item>
         <item name="android:gravity">center</item>
         <item name="backgroundTintMode">src_atop</item>
-        <item name="backgroundTint">@color/colorPrimary</item>
+        <item name="backgroundTint">@color/md_primary</item>
         <!--        <item name="rippleColor">@color/white</item>-->
 
         <item name="iconTintMode">src_atop</item>
-        <item name="iconTint">@color/white</item>
+        <item name="iconTint">@color/md_on_primary</item>
         <item name="iconGravity">textStart</item>
         <item name="iconPadding">0dp</item>
         <!--        <item name="iconSize">20dp</item>-->
 
-        <item name="cornerRadius">@dimen/common_corners</item>
+        <item name="cornerRadius">@dimen/m3_corner_pill</item>
     </style>
 
-    <!-- 带边框的空心MaterialButton样式-->
-    <style name="mbOutline" parent="@style/Widget.MaterialComponents.Button.OutlinedButton">
-        <!--        <item name="android:textColor">@color/colorPrimary</item>-->
-        <!--        <item name="android:textAllCaps">false</item>-->
+    <!-- 带边框的空心MaterialButton样式（M3 pill 形）-->
+    <style name="mbOutline" parent="@style/Widget.Material3.Button.OutlinedButton">
+        <item name="android:textColor">@color/md_primary</item>
+        <item name="android:textAllCaps">false</item>
         <item name="android:insetTop">0dp</item>
         <item name="android:insetBottom">0dp</item>
         <item name="android:gravity">center</item>
         <item name="android:textSize">13sp</item>
-        <!--        <item name="rippleColor">@color/white</item>-->
-        <!--        <item name="strokeWidth">1dp</item>-->
-        <item name="strokeColor">@color/colorPrimary</item>
-        <item name="cornerRadius">@dimen/common_corners</item>
-        <!--        <item name="iconTintMode">src_atop</item>-->
-        <!--        <item name="iconTint">@color/white</item>-->
-        <!--        <item name="iconGravity">textStart</item>-->
-        <!--        <item name="iconPadding">0dp</item>-->
-        <!--        <item name="iconSize">20dp</item>-->
-
+        <item name="strokeColor">@color/md_primary</item>
+        <item name="rippleColor">@color/md_primary</item>
+        <item name="cornerRadius">@dimen/m3_corner_pill</item>
     </style>
 
 <!--文件选择器样式,在此只改变了背景和基本颜色-->

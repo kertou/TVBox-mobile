@@ -6,4 +6,35 @@
 
     <color name="text_foreground">#FFFFFF</color>
     <color name="text_sub_foreground">#AFAFAF</color>
+
+    <!-- Material 3 深色色板（品牌蓝种子生成） -->
+    <color name="md_primary">#BDC2FF</color>
+    <color name="md_on_primary">#2F3038</color>
+    <color name="md_primary_container">#25428D</color>
+    <color name="md_on_primary_container">#DFE0FF</color>
+    <color name="md_secondary">#C3C4E2</color>
+    <color name="md_on_secondary">#2F3038</color>
+    <color name="md_secondary_container">#394375</color>
+    <color name="md_on_secondary_container">#DFE0FF</color>
+    <color name="md_tertiary">#FFAFD2</color>
+    <color name="md_on_tertiary">#382D32</color>
+    <color name="md_tertiary_container">#821C54</color>
+    <color name="md_on_tertiary_container">#FFD8E8</color>
+    <color name="md_error">#F2B8B5</color>
+    <color name="md_on_error">#601410</color>
+    <color name="md_error_container">#8C1D18</color>
+    <color name="md_on_error_container">#F9DEDC</color>
+    <color name="md_background">#15151D</color>
+    <color name="md_on_background">#E1E1ED</color>
+    <color name="md_surface">#15151D</color>
+    <color name="md_on_surface">#E1E1ED</color>
+    <color name="md_surface_variant">#454655</color>
+    <color name="md_on_surface_variant">#C5C5D8</color>
+    <color name="md_outline">#8F8FA1</color>
+    <color name="md_inverse_surface">#E1E1ED</color>
+    <color name="md_inverse_on_surface">#2F3038</color>
+    <color name="md_inverse_primary">#4459A8</color>
+    <color name="md_surface_container_low">#1A1B23</color>
+    <color name="md_surface_container">#1F1F27</color>
+    <color name="md_surface_container_high">#292932</color>
 </resources>
