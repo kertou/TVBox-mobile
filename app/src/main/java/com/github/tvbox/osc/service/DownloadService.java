@@ -96,10 +96,10 @@ public class DownloadService extends Service {
         filter.addAction(ACTION_RESUME_ALL);
         registerReceiver(actionReceiver, filter);
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-        wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "TVbox:download");
+        wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "TVBox:download");
         wakeLock.setReferenceCounted(false);
         WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        wifiLock = wm.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "TVbox:downloadWifi");
+        wifiLock = wm.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "TVBox:downloadWifi");
         wifiLock.setReferenceCounted(false);
     }
 
