@@ -32,7 +32,7 @@ import org.json.JSONObject;
 
 public class PlayService extends Service {
 
-    static String videoInfo = "MBox&&第一集";
+    static String videoInfo = "TVbox&&第一集";
     private static MyVideoView videoView;
 
     public static void start(MyVideoView controller,String currentVideoInfo) {

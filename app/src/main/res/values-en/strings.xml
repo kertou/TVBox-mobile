@@ -1,0 +1,5 @@
+<resources>
+    <!-- ExpandableTextView AAR 自带 values-en/app_name=ExpandableTextViewLibrary，
+         应用侧必须以同限定符覆盖，否则英语 locale 下桌面名会显示库名 -->
+    <string name="app_name">TVbox</string>
+</resources>
