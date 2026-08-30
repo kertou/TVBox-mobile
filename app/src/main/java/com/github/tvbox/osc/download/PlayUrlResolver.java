@@ -21,7 +21,8 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * 后台解析某一集的真实播放地址(与 SourceViewModel.getPlay 的判定规则保持一致)。
- * 仅支持直连地址;需要网页嗅探(parse=1)的集数无法离线缓存。
+ * 直连地址直接返回;需要在线解析(parse=1/jx=1)的集数走 HeadlessParser
+ * (json解析接口/后台WebView网页嗅探)解析出直链后返回。
  */
 public class PlayUrlResolver {
 
@@ -129,7 +130,18 @@ public class PlayUrlResolver {
             boolean parse = result.optString("parse", "1").equals("1");
             boolean jx = result.optString("jx", "0").equals("1");
             if (parse || jx) {
-                return Result.fail("该集需要在线解析,暂不支持缓存");
+                // 需要在线解析的集数:走与播放端一致的后台解析管线(json解析/网页嗅探)
+                // 解析出真实直链,不再直接拒绝;失败原因透传给界面
+                String parseUrl = result.optString("url", "");
+                if (TextUtils.isEmpty(parseUrl)) {
+                    return Result.fail("未获取到播放地址");
+                }
+                HeadlessParser.Result hr = HeadlessParser.resolve(
+                        sourceBean, flag, result.optString("playUrl", ""), parseUrl, jx);
+                if (!hr.ok) {
+                    return Result.fail(hr.errMsg);
+                }
+                return Result.success(hr.url, hr.headers);
             }
             String playUrl = result.optString("playUrl", "").trim();
             String url = result.getString("url");
@@ -167,7 +179,7 @@ public class PlayUrlResolver {
         return headers;
     }
 
-    private static String fetchText(String url) {
+    static String fetchText(String url) {
         try {
             // 扩展源接口同样限时,防止解析阶段被黑洞连接卡死
             okhttp3.OkHttpClient client = com.github.tvbox.osc.util.OkGoHelper.getDefaultClient().newBuilder()
