@@ -120,6 +120,7 @@ import tv.danmaku.ijk.media.player.IMediaPlayer;
 import tv.danmaku.ijk.media.player.IjkTimedText;
 import xyz.doikki.videoplayer.player.AbstractPlayer;
 import xyz.doikki.videoplayer.player.ProgressManager;
+import xyz.doikki.videoplayer.player.VideoView;
 
 public class PlayFragment extends BaseLazyFragment {
     private MyVideoView mVideoView;
@@ -347,6 +348,15 @@ public class PlayFragment extends BaseLazyFragment {
             }
         });
         mVideoView.setVideoController(mController);
+        // 下载门控:首帧真正开始播放时通知详情页,放行暂存的缓存任务(见 DetailActivity.queueDownloadAfterPlay)
+        mVideoView.addOnStateChangeListener(new VideoView.SimpleOnStateChangeListener() {
+            @Override
+            public void onPlayStateChanged(int playState) {
+                if (playState == VideoView.STATE_PLAYING && mActivity instanceof DetailActivity) {
+                    ((DetailActivity) mActivity).onPlaybackStarted();
+                }
+            }
+        });
     }
 
     public boolean hideAllDialogSuccess(){
@@ -1912,6 +1922,13 @@ public class PlayFragment extends BaseLazyFragment {
         public void onLoadResource(WebView webView, String url) {
             super.onLoadResource(webView, url);
         }
+    }
+
+    /** 下载门控:播放器处于空闲/出错态(没有在加载播放)时,选集确认后需主动起播 */
+    public boolean isPlayerIdleOrError() {
+        if (mVideoView == null) return true;
+        int state = mVideoView.getCurrentPlayState();
+        return state == VideoView.STATE_IDLE || state == VideoView.STATE_ERROR;
     }
 
     public MyVideoView getPlayer() {

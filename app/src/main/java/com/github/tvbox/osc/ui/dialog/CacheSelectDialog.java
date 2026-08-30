@@ -146,6 +146,11 @@ public class CacheSelectDialog extends BottomPopupView {
     }
 
     private void startDownload(List<CacheSelectAdapter.Item> selected) {
+        if (TextUtils.isEmpty(mVodInfo.id)) {
+            // 缺 id 的任务会落进 null_null 目录且分组/续播/优先播本地全部失效,直接拒绝
+            ToastUtils.showShort("该数据源未返回影片ID,暂不支持缓存");
+            return;
+        }
         if (!showDisclaimerIfNeeded()) {
             return;
         }
@@ -165,8 +170,13 @@ public class CacheSelectDialog extends BottomPopupView {
             task.rawUrl = vs.url;
             tasks.add(task);
         }
-        DownloadTaskManager.get().enqueue(tasks);
-        ToastUtils.showShort("已加入缓存队列,可在通知栏查看进度");
+        if (getContext() instanceof DetailActivity) {
+            // 下载门控:开始播放后才会自动开始下载(未播放过则先暂存)
+            ((DetailActivity) getContext()).queueDownloadAfterPlay(tasks);
+        } else {
+            DownloadTaskManager.get().enqueue(tasks);
+            ToastUtils.showShort("已加入缓存队列,可在通知栏查看进度");
+        }
         dismiss();
     }
 

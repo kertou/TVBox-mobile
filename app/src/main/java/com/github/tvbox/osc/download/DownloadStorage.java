@@ -34,7 +34,10 @@ public class DownloadStorage {
 
     /** 剧集目录: offline/<vodId_剧名>/<线路>/<NN_集名>/ */
     public static File episodeDir(String vodId, String vodName, String flag, int episodeIndex, String episodeName) {
-        File seriesDir = new File(baseDir(), sanitize(vodId + "_" + vodName));
+        // vodId/vodName 缺失时兜底 unknown,避免目录名出现字面量 null_null
+        String safeVodId = vodId == null || vodId.trim().isEmpty() ? "unknown" : vodId.trim();
+        String safeVodName = vodName == null || vodName.trim().isEmpty() ? "unknown" : vodName.trim();
+        File seriesDir = new File(baseDir(), sanitize(String.format("%s_%s", safeVodId, safeVodName)));
         File flagDir = new File(seriesDir, sanitize(flag == null ? "线路" : flag));
         File dir = new File(flagDir, String.format("%03d_%s", episodeIndex + 1, sanitize(episodeName)));
         if (!dir.exists()) {

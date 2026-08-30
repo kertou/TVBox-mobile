@@ -51,6 +51,7 @@ import com.github.tvbox.osc.cache.DownloadEpisode;
 import com.github.tvbox.osc.cache.RoomDataManger;
 import com.github.tvbox.osc.constant.IntentKey;
 import com.github.tvbox.osc.databinding.ActivityDetailBinding;
+import com.github.tvbox.osc.download.DownloadTaskManager;
 import com.github.tvbox.osc.event.DownloadEvent;
 import com.github.tvbox.osc.event.RefreshEvent;
 import com.github.tvbox.osc.receiver.BatteryReceiver;
@@ -883,6 +884,39 @@ public class DetailActivity extends BaseVbActivity<ActivityDetailBinding> {
             th.printStackTrace();
         }
         return cachedUrls;
+    }
+
+    /** 下载门控:本剧已有任意一集成功开始播放(首帧)后,选集确认才直接入队 */
+    private boolean playbackStarted = false;
+    /** 播放开始前确认的缓存选集,等首帧后自动入队 */
+    private final List<DownloadEpisode> pendingDownloadTasks = new ArrayList<>();
+
+    /**
+     * 缓存选集确认入口:开始播放后才会自动开始下载。
+     * 已有集播放过→直接入队;否则先暂存,等 PlayFragment 首帧回调后自动入队。
+     */
+    public void queueDownloadAfterPlay(List<DownloadEpisode> tasks) {
+        if (playbackStarted || playFragment == null) {
+            DownloadTaskManager.get().enqueue(tasks);
+            ToastUtils.showShort("已加入缓存队列,可在通知栏查看进度");
+            return;
+        }
+        pendingDownloadTasks.addAll(tasks);
+        ToastUtils.showShort(String.format("开始播放后将自动开始缓存(%d集)", tasks.size()));
+        // 播放器空闲/出错(没有在加载)时主动起播当前集;正在加载则等它自己起播
+        if (playFragment.isPlayerIdleOrError()) {
+            jumpToPlay();
+        }
+    }
+
+    /** PlayFragment 首帧回调:任何一集真正开始播放,暂存的缓存任务一次性入队 */
+    public void onPlaybackStarted() {
+        playbackStarted = true;
+        if (pendingDownloadTasks.isEmpty()) return;
+        List<DownloadEpisode> tasks = new ArrayList<>(pendingDownloadTasks);
+        pendingDownloadTasks.clear();
+        DownloadTaskManager.get().enqueue(tasks);
+        ToastUtils.showShort(String.format("已开始播放,自动开始缓存(%d集)", tasks.size()));
     }
 
     /**
