@@ -456,8 +456,8 @@ public class DownloadTaskManager {
             long now = System.currentTimeMillis();
             if (now - lastPostTime[0] > 500) {
                 lastPostTime[0] = now;
-                long bytesDone = DownloadStorage.dirSize(DownloadStorage.partsDir(dir));
-                postProgress(task, DownloadEpisode.STATUS_DOWNLOADING, bytesDone, 0, bytesDone, done, total);
+                // 字节由 HlsDownloader 按完成分片累计上报,不再每 500ms 递归扫描 parts 目录
+                postProgress(task, DownloadEpisode.STATUS_DOWNLOADING, bytes, 0, bytes, done, total);
             }
         };
         HlsDownloader.Result r = HlsDownloader.download(task.resolvedUrl, headers, dir,

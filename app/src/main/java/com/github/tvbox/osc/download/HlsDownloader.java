@@ -18,6 +18,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -209,6 +210,7 @@ public class HlsDownloader {
             // 分片并发下载
             int total = segments.size();
             AtomicInteger doneCount = new AtomicInteger(0);
+            AtomicLong bytesCount = new AtomicLong(0);
             AtomicBoolean failed = new AtomicBoolean(false);
             StringBuilder failMsg = new StringBuilder("分片下载失败");
             ExecutorService pool = Executors.newFixedThreadPool(THREADS);
@@ -241,9 +243,11 @@ public class HlsDownloader {
                                 .append("(").append(httpText(lastCode)).append(")");
                         return;
                     }
+                    // 分片完成即累计字节(含续传跳过的已有分片),供上层替代每 500ms 扫盘统计
+                    bytesCount.addAndGet(target.length());
                     int done = doneCount.incrementAndGet();
                     if (listener != null && !failed.get()) {
-                        listener.onProgress(done, total, 0);
+                        listener.onProgress(done, total, bytesCount.get());
                     }
                 }));
             }
