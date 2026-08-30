@@ -580,8 +580,20 @@ public class DetailActivity extends BaseVbActivity<ActivityDetailBinding> {
         }
     }
 
+    /** 角标只在任务状态变化时刷新:进度事件每秒 2-3 次,每次都做主线程
+     *  Room 查询 + 集数网格全量重绑,是下载期间页面卡顿的来源之一 */
+    private long lastBadgeRefreshTime = 0;
+
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onDownloadEvent(DownloadEvent event) {
+        if (event.type == DownloadEvent.TYPE_PROGRESS) {
+            return;
+        }
+        long now = System.currentTimeMillis();
+        if (now - lastBadgeRefreshTime < 1000) {
+            return;
+        }
+        lastBadgeRefreshTime = now;
         refreshCachedBadge();
     }
 
