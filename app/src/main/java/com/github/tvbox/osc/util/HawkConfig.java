@@ -72,4 +72,8 @@ public class HawkConfig {
      * 应用内缓存:已同意免责声明
      */
     public static final String DOWNLOAD_DISCLAIMER_AGREED = "download_disclaimer_agreed";
+    /**
+     * 应用内缓存:已请求过电池优化白名单(只弹一次)
+     */
+    public static final String DOWNLOAD_BATTERY_PROMPTED = "download_battery_prompted";
 }

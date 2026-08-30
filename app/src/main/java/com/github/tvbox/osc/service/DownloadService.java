@@ -9,8 +9,10 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.IBinder;
+import android.os.PowerManager;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
@@ -43,6 +45,11 @@ public class DownloadService extends Service {
 
     /** 通知节流 */
     private long lastNotifyTime = 0;
+
+    /** 下载期间持锁:锁屏休眠会暂停网络与 CPU,长任务(几 GB 的剧集)会被掐断。
+     *  服务只在有任务时存活(排空自停),onDestroy 统一释放 */
+    private PowerManager.WakeLock wakeLock;
+    private WifiManager.WifiLock wifiLock;
 
     private final BroadcastReceiver actionReceiver = new BroadcastReceiver() {
         @Override
@@ -88,6 +95,12 @@ public class DownloadService extends Service {
         filter.addAction(ACTION_PAUSE_ALL);
         filter.addAction(ACTION_RESUME_ALL);
         registerReceiver(actionReceiver, filter);
+        PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MBox:download");
+        wakeLock.setReferenceCounted(false);
+        WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        wifiLock = wm.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "MBox:downloadWifi");
+        wifiLock.setReferenceCounted(false);
     }
 
     @Override
@@ -100,6 +113,12 @@ public class DownloadService extends Service {
         } else {
             startForeground(FOREGROUND_ID,
                     buildNotification("正在缓存视频", "正在准备下载任务…", 0, true));
+        }
+        if (!wakeLock.isHeld()) {
+            wakeLock.acquire();
+        }
+        if (!wifiLock.isHeld()) {
+            wifiLock.acquire();
         }
         if (!DownloadTaskManager.get().hasActiveTasks()) {
             stopSelf();
@@ -127,13 +146,11 @@ public class DownloadService extends Service {
             return;
         }
         lastNotifyTime = now;
-        if (DownloadTaskManager.get().hasActiveTasks()) {
-            String title = "正在缓存视频";
-            String text = buildProgressText(event);
-            updateNotification(buildNotification(title, text, percentOf(event), true));
-        } else {
-            stopSelf();
-        }
+        // 进度事件不再查库(hasActiveTasks 是主线程全表查询):
+        // 任务排空必然伴随 TASKS_CHANGED 事件,停服务在那边处理
+        String title = "正在缓存视频";
+        String text = buildProgressText(event);
+        updateNotification(buildNotification(title, text, percentOf(event), true));
     }
 
     private String buildProgressText(DownloadEvent event) {
@@ -222,6 +239,12 @@ public class DownloadService extends Service {
 
     @Override
     public void onDestroy() {
+        try {
+            if (wakeLock != null && wakeLock.isHeld()) wakeLock.release();
+            if (wifiLock != null && wifiLock.isHeld()) wifiLock.release();
+        } catch (Throwable th) {
+            th.printStackTrace();
+        }
         EventBus.getDefault().unregister(this);
         unregisterReceiver(actionReceiver);
         stopForeground(true);

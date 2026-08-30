@@ -2,6 +2,8 @@ package com.github.tvbox.osc.ui.dialog;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
 import android.text.TextUtils;
 import android.widget.TextView;
@@ -148,6 +150,7 @@ public class CacheSelectDialog extends BottomPopupView {
             return;
         }
         requestNotificationPermissionIfNeeded();
+        requestIgnoreBatteryOptimizationsIfNeeded();
         List<DownloadEpisode> tasks = new ArrayList<>();
         for (CacheSelectAdapter.Item item : selected) {
             VodInfo.VodSeries vs = mVodInfo.seriesMap.get(mVodInfo.playFlag).get(item.index);
@@ -205,6 +208,32 @@ public class CacheSelectDialog extends BottomPopupView {
                 activity.requestPermissions(new String[]{"android.permission.POST_NOTIFICATIONS"}, 10021);
             } catch (Throwable ignored) {
             }
+        }
+    }
+
+    /**
+     * 首次缓存时请求电池优化白名单:前台服务足以支撑亮屏时的后台下载,
+     * 但锁屏休眠与国产 ROM 的省电冻结仍可能掐断长时间下载。
+     * 只请求一次,拒绝后不再骚扰(可到 设置→电池→启动管理 手动放开)
+     */
+    private void requestIgnoreBatteryOptimizationsIfNeeded() {
+        try {
+            if (Hawk.get(HawkConfig.DOWNLOAD_BATTERY_PROMPTED, false)) {
+                return;
+            }
+            Context context = getContext();
+            android.os.PowerManager pm = (android.os.PowerManager) context.getSystemService(Context.POWER_SERVICE);
+            if (pm == null || pm.isIgnoringBatteryOptimizations(context.getPackageName())) {
+                return;
+            }
+            Hawk.put(HawkConfig.DOWNLOAD_BATTERY_PROMPTED, true);
+            Intent intent = new Intent(android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+                    Uri.parse("package:" + context.getPackageName()));
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(intent);
+        } catch (Throwable th) {
+            // 部分 ROM 不响应该对话框,只能由用户到系统设置手动放开
+            th.printStackTrace();
         }
     }
 }
