@@ -2,6 +2,7 @@ package com.github.tvbox.osc.ui.activity
 
 import android.os.Process
 import android.view.MenuItem
+import androidx.core.view.ViewCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentPagerAdapter
 import androidx.viewpager.widget.ViewPager.SimpleOnPageChangeListener
@@ -24,6 +25,11 @@ class MainActivity : BaseVbActivity<ActivityMainBinding>() {
     override fun init() {
 
         useCacheConfig = intent.extras?.getBoolean(IntentKey.CACHE_CONFIG_CHANGED, false)?:false
+
+        // NavigationBarView(Material)会在 insets 分发时自动给自己加导航栏避让 padding,
+        // 与 BaseActivity 统一的 content padding 叠成双重避让(三键导航下 tab 与导航栏间出现大段空白),
+        // 替换为透传监听抵消掉,避让只由 content padding 承担
+        ViewCompat.setOnApplyWindowInsetsListener(mBinding.bottomNav) { _, insets -> insets }
 
         mBinding.vp.adapter = object : FragmentPagerAdapter(supportFragmentManager) {
             override fun getItem(position: Int): Fragment {
