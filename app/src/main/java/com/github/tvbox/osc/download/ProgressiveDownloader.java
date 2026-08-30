@@ -29,6 +29,8 @@ public class ProgressiveDownloader {
         public boolean cancelled;
         /** 416 且本地文件与远端不一致时置位,由 download() 清零重下一次 */
         boolean restart;
+        /** 内容实为 m3u8 播放列表(URL 不带 .m3u8 的伪装直链),由上层转 HLS 流水线 */
+        public boolean playlistContent;
         public String errMsg;
         public String localFilePath;
         public long totalBytes;
@@ -118,8 +120,38 @@ public class ProgressiveDownloader {
                 totalBytes = downloaded;
             }
 
-            FileOutputStream fos = new FileOutputStream(target, response.code() == 206 && downloaded > 0);
+            boolean resume = response.code() == 206 && downloaded > 0;
             InputStream is = response.body().byteStream();
+            // 首次写入前嗅探内容:部分"直链"实际返回 m3u8 播放列表或网页错误页,
+            // 不校验会把播放列表文本存成视频并标成已缓存(假完成、无法播放)
+            byte[] sniff = null;
+            if (!resume) {
+                sniff = readUpTo(is, 16);
+                if (sniff == null || sniff.length == 0) {
+                    is.close();
+                    response.close();
+                    result.errMsg = "下载内容为空(0字节)";
+                    return result;
+                }
+                if (ContentSniff.isM3u8(sniff) || contentTypeMpegurl(response)) {
+                    is.close();
+                    response.close();
+                    result.playlistContent = true;
+                    return result;
+                }
+                if (ContentSniff.isHtml(sniff)) {
+                    is.close();
+                    response.close();
+                    result.errMsg = "源返回的是网页,不是视频文件";
+                    return result;
+                }
+            }
+
+            FileOutputStream fos = new FileOutputStream(target, resume);
+            if (sniff != null) {
+                fos.write(sniff);
+                downloaded += sniff.length;
+            }
             byte[] buf = new byte[64 * 1024];
             long lastNotify = 0;
             int len;
@@ -161,6 +193,24 @@ public class ProgressiveDownloader {
             result.errMsg = "下载异常: " + th.getMessage();
             return result;
         }
+    }
+
+    /** 读流头部(最多 max 字节),读不到任何字节返回 null */
+    private static byte[] readUpTo(InputStream is, int max) throws IOException {
+        byte[] buf = new byte[max];
+        int off = 0;
+        while (off < max) {
+            int n = is.read(buf, off, max - off);
+            if (n < 0) break;
+            off += n;
+        }
+        return off == 0 ? null : java.util.Arrays.copyOf(buf, off);
+    }
+
+    /** Content-Type 是否为 m3u8 播放列表 */
+    private static boolean contentTypeMpegurl(Response response) {
+        String ct = response.header("Content-Type");
+        return ct != null && ct.toLowerCase().contains("mpegurl");
     }
 
     /** 解析 416 响应的 Content-Range: bytes *\/12345 → 12345,拿不到返回 -1 */

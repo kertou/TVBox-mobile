@@ -48,9 +48,13 @@ public class DownloadTaskManager {
     /** 当前正在下载的集数id,用于速度统计 */
     private final Map<Integer, Long> lastBytes = new HashMap<>();
     private final Map<Integer, Long> lastTime = new HashMap<>();
-    /** 失败自动重试: 每集已重试次数与下次重试时间(内存态,不落库,进程重启后手动重试重新计) */
-    private static final int MAX_AUTO_RETRY = 3;
+    /** 失败自动重试: 每集已重试次数与下次重试时间(内存态,不落库,进程重启后手动重试重新计)。
+     *  次数给足 6 次:限流型源(防盗链配额)每窗口只能推进几十个分片,已下分片跨尝试累加,多退几次能下完整集 */
+    private static final int MAX_AUTO_RETRY = 6;
     private static final long RETRY_DELAY_MS = 5000;
+    /** 限流型失败阶梯退避: 403/成批网络重置多为源站配额(实测约放行45个分片后拦截),
+     *  5 秒后立刻重试只会撞在同一堵墙上,拉开间隔等配额窗口恢复,每次重试能推进一段 */
+    private static final long[] RETRY_DELAYS_THROTTLED = {20_000, 60_000, 180_000, 300_000, 600_000, 600_000};
     private final Map<Integer, Integer> retryCounts = new ConcurrentHashMap<>();
     private final Map<Integer, Long> retryUntil = new ConcurrentHashMap<>();
     private final Handler retryHandler = new Handler(Looper.getMainLooper());
@@ -69,10 +73,9 @@ public class DownloadTaskManager {
     private DownloadTaskManager() {
     }
 
-    /** App 启动时把上次异常退出的"下载中"任务重置为暂停,并自动续跑遗留的等待队列 */
+    /** App 启动时把上次异常退出的"下载中"任务重置为暂停;自检"假完成"条目;自动续跑遗留的等待队列 */
     public void recoverOnStart() {
         try {
-            boolean hasWaiting = false;
             List<DownloadEpisode> actives = RoomDataManger.getAllDownloadEpisodes();
             for (DownloadEpisode t : actives) {
                 if (t.status == DownloadEpisode.STATUS_DOWNLOADING || t.status == DownloadEpisode.STATUS_RESOLVING) {
@@ -80,15 +83,61 @@ public class DownloadTaskManager {
                     t.updateTime = System.currentTimeMillis();
                     RoomDataManger.updateDownloadEpisode(t);
                 }
-                if (t.status == DownloadEpisode.STATUS_WAITING) hasWaiting = true;
             }
-            // 否则上次退出时已排队的任务要等到下次入队才会开始下载
-            if (hasWaiting && !pausedAll) {
-                kickWhenSourceReady();
+            // 自检要读文件头,放调度线程执行,完成后再决定是否续跑
+            scheduler.execute(() -> {
+                try {
+                    int fixed = sanitizeDoneEpisodes();
+                    boolean hasWaiting = nextWaitingTask() != null;
+                    if ((hasWaiting || fixed > 0) && !pausedAll) {
+                        // 否则上次退出时已排队的任务要等到下次入队才会开始下载
+                        kickWhenSourceReady();
+                    }
+                } catch (Throwable th) {
+                    th.printStackTrace();
+                }
+            });
+        } catch (Throwable th) {
+            th.printStackTrace();
+        }
+    }
+
+    /**
+     * 启动自检: 历史上直链下载不校验内容,把 m3u8 播放列表/网页错误页存成了
+     * 视频并标成"已缓存"(假完成、无法播放)。文件头嗅探把这些条目打回等待队列,
+     * 配合直链 m3u8 嗅探转 HLS,重新下载后即可正常离线播放。
+     *
+     * @return 重置的条目数
+     */
+    private int sanitizeDoneEpisodes() {
+        int fixed = 0;
+        try {
+            List<DownloadEpisode> all = RoomDataManger.getAllDownloadEpisodes();
+            for (DownloadEpisode t : all) {
+                if (t.status != DownloadEpisode.STATUS_DONE || TextUtils.isEmpty(t.localFilePath)) continue;
+                if (t.localFilePath.endsWith(".m3u8")) continue; // 分片模式的合法索引
+                File f = new File(t.localFilePath);
+                if (!f.exists() || f.length() <= 0) continue;
+                byte[] head = ContentSniff.sniff(f, 512);
+                if (!ContentSniff.isM3u8(head) && !ContentSniff.isHtml(head)) continue;
+                f.delete();
+                t.status = DownloadEpisode.STATUS_WAITING;
+                t.errMsg = null;
+                t.totalBytes = 0;
+                t.downloadedBytes = 0;
+                t.localFilePath = null;
+                t.updateTime = System.currentTimeMillis();
+                RoomDataManger.updateDownloadEpisode(t);
+                fixed++;
+                android.util.Log.w("DownloadTask", "自检重置假完成条目(内容非视频): " + t.displayTitle());
             }
         } catch (Throwable th) {
             th.printStackTrace();
         }
+        if (fixed > 0) {
+            postChanged();
+        }
+        return fixed;
     }
 
     /** 等订阅/源列表加载完成再启动队列:App 启动早期源列表还是空的,
@@ -291,6 +340,11 @@ public class DownloadTaskManager {
         postChanged();
 
         // 1. 解析真实地址
+        // 本地代理地址(spider 经 127.0.0.1:9978/proxy?do=xx 暴露)依赖 spider 的内存态,
+        // 进程重启后必然失效(实测返回 200 空体),每次处理都强制重新解析
+        if (task.resolvedUrl != null && isSessionProxyUrl(task.resolvedUrl)) {
+            task.resolvedUrl = null;
+        }
         if (TextUtils.isEmpty(task.resolvedUrl)) {
             PlayUrlResolver.Result resolved = PlayUrlResolver.resolve(task.sourceKey, task.flag, task.rawUrl);
             if (cancelIds.containsKey(id)) {
@@ -328,125 +382,140 @@ public class DownloadTaskManager {
         touch(task);
         postChanged();
         Map<String, String> headers = PlayUrlResolver.headersFromJson(task.headersJson);
-        final long[] lastPostTime = {0};
         if (task.mediaType == DownloadEpisode.TYPE_HLS) {
-            HlsDownloader.ProgressListener listener = (done, total, bytes) -> {
-                long now = System.currentTimeMillis();
-                if (now - lastPostTime[0] > 500) {
-                    lastPostTime[0] = now;
-                    long bytesDone = DownloadStorage.dirSize(DownloadStorage.partsDir(dir));
-                    postProgress(task, DownloadEpisode.STATUS_DOWNLOADING, bytesDone, 0, bytesDone, done, total);
-                }
-            };
-            HlsDownloader.Result r = HlsDownloader.download(task.resolvedUrl, headers, dir,
-                    () -> pausedAll || pauseIds.containsKey(id) || cancelIds.containsKey(id), listener);
-            if (r.cancelled || cancelIds.containsKey(id)) {
-                removeTask(task);
-                postChanged();
-                return;
+            runHlsTask(task, dir, headers, id);
+            return;
+        }
+        String ext = ProgressiveDownloader.guessExt(task.resolvedUrl);
+        File target = new File(dir, "source." + ext);
+        final long[] lastPostTime = {0};
+        ProgressiveDownloader.ProgressListener listener = (bytes, total) -> {
+            long now = System.currentTimeMillis();
+            if (now - lastPostTime[0] > 500) {
+                lastPostTime[0] = now;
+                postProgress(task, DownloadEpisode.STATUS_DOWNLOADING, bytes, total, 0, -1, -1);
             }
-            if (r.paused || pauseIds.containsKey(id) || pausedAll) {
-                pauseIds.remove(id);
-                task.status = DownloadEpisode.STATUS_PAUSED;
-                task.downloadedBytes = DownloadStorage.dirSize(dir);
-                touch(task);
-                postChanged();
-                return;
-            }
-            if (!r.success) {
-                if (failOrRetry(task, r.errMsg)) return;
-                task.status = DownloadEpisode.STATUS_FAILED;
-                task.errMsg = r.errMsg;
-                touch(task);
-                postChanged();
-                return;
-            }
-            // 4. 合并 MP4(分片已解密拼接,无损转封装)
-            File playlistFile = new File(r.localPlaylistPath);
-            File mergeInput = new File(r.mergeInputPath);
+        };
+        ProgressiveDownloader.Result r = ProgressiveDownloader.download(task.resolvedUrl, headers, target,
+                () -> pausedAll || pauseIds.containsKey(id) || cancelIds.containsKey(id), listener);
+        if (r.cancelled || cancelIds.containsKey(id)) {
+            removeTask(task);
+            postChanged();
+            return;
+        }
+        if (r.playlistContent) {
+            // "直链"实际返回的是 m3u8 播放列表(地址不带 .m3u8 的伪装/代理直链):
+            // 删掉误存文件,转 HLS 流水线重新下载
+            target.delete();
+            task.mediaType = DownloadEpisode.TYPE_HLS;
+            touch(task);
+            runHlsTask(task, dir, headers, id);
+            return;
+        }
+        if (r.paused || pauseIds.containsKey(id) || pausedAll) {
+            pauseIds.remove(id);
+            task.status = DownloadEpisode.STATUS_PAUSED;
+            task.downloadedBytes = target.exists() ? target.length() : 0;
+            task.totalBytes = r.totalBytes;
+            touch(task);
+            postChanged();
+            return;
+        }
+        if (!r.success) {
+            if (failOrRetry(task, r.errMsg)) return;
+            task.status = DownloadEpisode.STATUS_FAILED;
+            task.errMsg = r.errMsg;
+            touch(task);
+            postChanged();
+            return;
+        }
+        // mp4 直接完成,其它容器尝试无损转封装
+        if ("mp4".equals(ext)) {
+            task.localFilePath = target.getAbsolutePath();
+            task.totalBytes = target.length();
+        } else {
             File outFile = new File(dir, "index.mp4");
-            boolean merged = MediaMerger.mergeToMp4(mergeInput, outFile);
-            if (cancelIds.containsKey(id)) {
-                removeTask(task);
-                postChanged();
-                return;
-            }
-            if (pauseIds.containsKey(id) || pausedAll) {
-                pauseIds.remove(id);
-                task.status = DownloadEpisode.STATUS_PAUSED;
-                touch(task);
-                postChanged();
-                return;
-            }
-            if (merged) {
-                // 删除分片与索引,只保留 MP4
-                DownloadStorage.deleteRecursive(DownloadStorage.partsDir(dir));
-                playlistFile.delete();
+            if (MediaMerger.remuxToMp4(target, outFile)) {
+                target.delete();
                 task.localFilePath = outFile.getAbsolutePath();
                 task.totalBytes = outFile.length();
             } else {
-                // 降级: 保留分片+本地索引,同样可离线播放
-                android.util.Log.w("DownloadTask", "HLS合并回退分片模式: " + task.displayTitle()
-                        + " 原因: " + MediaMerger.lastError());
-                mergeInput.delete();
-                task.localFilePath = playlistFile.getAbsolutePath();
-                task.totalBytes = DownloadStorage.dirSize(dir);
-            }
-            task.downloadedBytes = task.totalBytes;
-            finishTask(task);
-        } else {
-            String ext = ProgressiveDownloader.guessExt(task.resolvedUrl);
-            File target = new File(dir, "source." + ext);
-            ProgressiveDownloader.ProgressListener listener = (bytes, total) -> {
-                long now = System.currentTimeMillis();
-                if (now - lastPostTime[0] > 500) {
-                    lastPostTime[0] = now;
-                    postProgress(task, DownloadEpisode.STATUS_DOWNLOADING, bytes, total, 0, -1, -1);
-                }
-            };
-            ProgressiveDownloader.Result r = ProgressiveDownloader.download(task.resolvedUrl, headers, target,
-                    () -> pausedAll || pauseIds.containsKey(id) || cancelIds.containsKey(id), listener);
-            if (r.cancelled || cancelIds.containsKey(id)) {
-                removeTask(task);
-                postChanged();
-                return;
-            }
-            if (r.paused || pauseIds.containsKey(id) || pausedAll) {
-                pauseIds.remove(id);
-                task.status = DownloadEpisode.STATUS_PAUSED;
-                task.downloadedBytes = target.exists() ? target.length() : 0;
-                task.totalBytes = r.totalBytes;
-                touch(task);
-                postChanged();
-                return;
-            }
-            if (!r.success) {
-                if (failOrRetry(task, r.errMsg)) return;
-                task.status = DownloadEpisode.STATUS_FAILED;
-                task.errMsg = r.errMsg;
-                touch(task);
-                postChanged();
-                return;
-            }
-            // mp4 直接完成,其它容器尝试无损转封装
-            if ("mp4".equals(ext)) {
+                outFile.delete();
                 task.localFilePath = target.getAbsolutePath();
                 task.totalBytes = target.length();
-            } else {
-                File outFile = new File(dir, "index.mp4");
-                if (MediaMerger.remuxToMp4(target, outFile)) {
-                    target.delete();
-                    task.localFilePath = outFile.getAbsolutePath();
-                    task.totalBytes = outFile.length();
-                } else {
-                    outFile.delete();
-                    task.localFilePath = target.getAbsolutePath();
-                    task.totalBytes = target.length();
-                }
             }
-            task.downloadedBytes = task.totalBytes;
-            finishTask(task);
         }
+        task.downloadedBytes = task.totalBytes;
+        finishTask(task);
+    }
+
+    /** HLS 下载→合并→完成收尾(取消/暂停/失败在其中处理) */
+    private void runHlsTask(DownloadEpisode task, File dir, Map<String, String> headers, int id) {
+        final long[] lastPostTime = {0};
+        HlsDownloader.ProgressListener listener = (done, total, bytes) -> {
+            long now = System.currentTimeMillis();
+            if (now - lastPostTime[0] > 500) {
+                lastPostTime[0] = now;
+                long bytesDone = DownloadStorage.dirSize(DownloadStorage.partsDir(dir));
+                postProgress(task, DownloadEpisode.STATUS_DOWNLOADING, bytesDone, 0, bytesDone, done, total);
+            }
+        };
+        HlsDownloader.Result r = HlsDownloader.download(task.resolvedUrl, headers, dir,
+                () -> pausedAll || pauseIds.containsKey(id) || cancelIds.containsKey(id), listener);
+        if (r.cancelled || cancelIds.containsKey(id)) {
+            removeTask(task);
+            postChanged();
+            return;
+        }
+        if (r.paused || pauseIds.containsKey(id) || pausedAll) {
+            pauseIds.remove(id);
+            task.status = DownloadEpisode.STATUS_PAUSED;
+            task.downloadedBytes = DownloadStorage.dirSize(dir);
+            touch(task);
+            postChanged();
+            return;
+        }
+        if (!r.success) {
+            if (failOrRetry(task, r.errMsg, r.segmentsDone)) return;
+            task.status = DownloadEpisode.STATUS_FAILED;
+            task.errMsg = r.errMsg;
+            touch(task);
+            postChanged();
+            return;
+        }
+        // 4. 合并 MP4(分片已解密拼接,无损转封装)
+        File playlistFile = new File(r.localPlaylistPath);
+        File mergeInput = new File(r.mergeInputPath);
+        File outFile = new File(dir, "index.mp4");
+        boolean merged = MediaMerger.mergeToMp4(mergeInput, outFile);
+        if (cancelIds.containsKey(id)) {
+            removeTask(task);
+            postChanged();
+            return;
+        }
+        if (pauseIds.containsKey(id) || pausedAll) {
+            pauseIds.remove(id);
+            task.status = DownloadEpisode.STATUS_PAUSED;
+            touch(task);
+            postChanged();
+            return;
+        }
+        if (merged) {
+            // 删除分片与索引,只保留 MP4
+            DownloadStorage.deleteRecursive(DownloadStorage.partsDir(dir));
+            playlistFile.delete();
+            task.localFilePath = outFile.getAbsolutePath();
+            task.totalBytes = outFile.length();
+        } else {
+            // 降级: 保留分片+本地索引,同样可离线播放
+            android.util.Log.w("DownloadTask", "HLS合并回退分片模式: " + task.displayTitle()
+                    + " 原因: " + MediaMerger.lastError());
+            mergeInput.delete();
+            task.localFilePath = playlistFile.getAbsolutePath();
+            task.totalBytes = DownloadStorage.dirSize(dir);
+        }
+        task.downloadedBytes = task.totalBytes;
+        finishTask(task);
     }
 
     private void finishTask(DownloadEpisode task) {
@@ -479,11 +548,19 @@ public class DownloadTaskManager {
         RoomDataManger.updateDownloadEpisode(task);
     }
 
+    /** spider 经应用本地代理(127.0.0.1:9978/proxy?do=xx)暴露的地址,生命周期只在当前进程内 */
+    private static boolean isSessionProxyUrl(String url) {
+        return url.startsWith("http://127.0.0.1") || url.startsWith("http://localhost")
+                || url.startsWith("https://127.0.0.1") || url.startsWith("https://localhost");
+    }
+
     /**
-     * 失败自动重试: 非暂停/取消/全局暂停时回队列等待,间隔 RETRY_DELAY_MS 自动续跑,
-     * 最多 MAX_AUTO_RETRY 次;返回 true 表示已安排重试,false 表示调用方走原有的失败收尾
+     * 失败自动重试: 非暂停/取消/全局暂停时回队列等待,间隔后退避自动续跑,
+     * 最多 MAX_AUTO_RETRY 次;返回 true 表示已安排重试,false 表示调用方走原有的失败收尾。
+     *
+     * @param attemptSegments 本次尝试已完成的分片数(-1=非分片下载);达到阈值的失败按限流处理
      */
-    private boolean failOrRetry(DownloadEpisode task, String errMsg) {
+    private boolean failOrRetry(DownloadEpisode task, String errMsg, int attemptSegments) {
         int id = task.getId();
         if (pauseIds.containsKey(id) || cancelIds.containsKey(id) || pausedAll) return false;
         int count = retryCounts.merge(id, 1, Integer::sum);
@@ -491,14 +568,27 @@ public class DownloadTaskManager {
             clearRetryState(id);
             return false;
         }
+        long delay = isThrottledFailure(errMsg, attemptSegments)
+                ? RETRY_DELAYS_THROTTLED[Math.min(count - 1, RETRY_DELAYS_THROTTLED.length - 1)]
+                : RETRY_DELAY_MS;
         task.status = DownloadEpisode.STATUS_WAITING;
         task.errMsg = "下载失败,自动重试(" + count + "/" + MAX_AUTO_RETRY + ")"
                 + (TextUtils.isEmpty(errMsg) ? "" : " · " + errMsg);
-        retryUntil.put(id, System.currentTimeMillis() + RETRY_DELAY_MS);
+        retryUntil.put(id, System.currentTimeMillis() + delay);
         touch(task);
         postChanged();
-        retryHandler.postDelayed(this::kick, RETRY_DELAY_MS);
+        retryHandler.postDelayed(this::kick, delay);
         return true;
+    }
+
+    private boolean failOrRetry(DownloadEpisode task, String errMsg) {
+        return failOrRetry(task, errMsg, -1);
+    }
+
+    /** 限流型失败:显式 403,或单次尝试已推进大量分片后才失败(配额耗尽特征,常表现为成批网络重置) */
+    private static boolean isThrottledFailure(String errMsg, int attemptSegments) {
+        if (errMsg != null && errMsg.contains("HTTP 403")) return true;
+        return attemptSegments >= 20;
     }
 
     private void clearRetryState(int episodeId) {

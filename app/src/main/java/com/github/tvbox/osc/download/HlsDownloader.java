@@ -48,9 +48,11 @@ public class HlsDownloader {
         public boolean paused;
         public boolean cancelled;
         public String errMsg;
+        /** 本次尝试完成的分片数(失败时也有效,用于上层识别限流型失败) */
+        public int segmentsDone;
         /** 本地 index.m3u8(合并失败时的分片播放模式) */
         public String localPlaylistPath;
-        /** 解密/拼接后的待合并文件(ts 或 fmp4) */
+        /** 解密/拼接后的待合并文件(ts 或 fMP4) */
         public String mergeInputPath;
         public long totalBytes;
     }
@@ -70,7 +72,7 @@ public class HlsDownloader {
             String content = fetchText(playlistUrl, headers);
             if (abort.shouldAbort()) return aborted(result);
             if (TextUtils.isEmpty(content) || !content.contains("#EXTM3U")) {
-                result.errMsg = "播放列表获取失败";
+                result.errMsg = "播放列表获取失败(可能已失效,重试会重新解析)";
                 return result;
             }
             // master 播放列表 → 选最高码率的子流
@@ -84,7 +86,7 @@ public class HlsDownloader {
                 content = fetchText(playlistUrl, headers);
                 if (abort.shouldAbort()) return aborted(result);
                 if (TextUtils.isEmpty(content) || !content.contains("#EXTM3U")) {
-                    result.errMsg = "播放列表获取失败";
+                    result.errMsg = "播放列表获取失败(可能已失效,重试会重新解析)";
                     return result;
                 }
             }
@@ -182,8 +184,9 @@ public class HlsDownloader {
                 File keyFile = new File(partsDir, entry.getValue());
                 if (!keyFile.exists() || keyFile.length() <= 0) {
                     keyFile.getParentFile().mkdirs();
-                    if (!downloadToFile(entry.getKey(), headers, keyFile, abort) && !abort.shouldAbort()) {
-                        result.errMsg = "密钥下载失败";
+                    int code = downloadToFile(entry.getKey(), headers, keyFile, abort);
+                    if (code != 200 && code != 206 && !abort.shouldAbort()) {
+                        result.errMsg = "密钥下载失败(" + httpText(code) + ")";
                         return result;
                     }
                     if (abort.shouldAbort()) return aborted(result);
@@ -194,8 +197,9 @@ public class HlsDownloader {
                 if (abort.shouldAbort()) return aborted(result);
                 File initFile = new File(partsDir, entry.getValue());
                 if (!initFile.exists() || initFile.length() <= 0) {
-                    if (!downloadToFile(entry.getKey(), headers, initFile, abort) && !abort.shouldAbort()) {
-                        result.errMsg = "init 段下载失败";
+                    int code = downloadToFile(entry.getKey(), headers, initFile, abort);
+                    if (code != 200 && code != 206 && !abort.shouldAbort()) {
+                        result.errMsg = "init 段下载失败(" + httpText(code) + ")";
                         return result;
                     }
                     if (abort.shouldAbort()) return aborted(result);
@@ -213,16 +217,28 @@ public class HlsDownloader {
                 futures.add(pool.submit(() -> {
                     if (failed.get() || abort.shouldAbort()) return;
                     File target = new File(partsDir, seg.localName);
-                    boolean ok = target.exists() && target.length() > 0;
+                    // 已存在的分片也要校验内容:老版本可能把占位图片/网页存成了分片
+                    boolean ok = target.exists() && target.length() > 0
+                            && !(seg.localName.startsWith("seg_") && isGarbageHead(target));
+                    int lastCode = -1;
                     for (int retry = 0; !ok && retry <= SEGMENT_RETRY; retry++) {
                         // 每次重试前检查暂停/取消,防止在黑洞连接的重试循环里无视暂停
                         if (failed.get() || abort.shouldAbort()) return;
-                        ok = downloadToFile(seg.remoteUrl, headers, target, abort);
+                        lastCode = downloadToFile(seg.remoteUrl, headers, target, abort);
+                        if ((lastCode == 200 || lastCode == 206) && seg.localName.startsWith("seg_")
+                                && isGarbageHead(target)) {
+                            // HTTP 成功但内容是图片/网页(防盗链占位图等):删掉,按内容无效处理
+                            target.delete();
+                            lastCode = -2;
+                        }
+                        ok = lastCode == 200 || lastCode == 206;
                     }
                     if (!ok) {
                         if (abort.shouldAbort()) return; // 暂停/取消不算失败
                         failed.set(true);
-                        failMsg.append(": ").append(seg.localName);
+                        // 带 HTTP 码:源站分片批量 404/403 时用户能直接看出是源失效而非应用问题
+                        failMsg.append(": ").append(seg.localName)
+                                .append("(").append(httpText(lastCode)).append(")");
                         return;
                     }
                     int done = doneCount.incrementAndGet();
@@ -236,6 +252,7 @@ public class HlsDownloader {
                     while (!f.isDone()) {
                         if (abort.shouldAbort() || failed.get()) {
                             pool.shutdownNow();
+                            result.segmentsDone = doneCount.get();
                             if (abort.shouldAbort()) return aborted(result);
                             result.errMsg = failMsg.toString();
                             return result;
@@ -255,6 +272,7 @@ public class HlsDownloader {
                 pool.shutdown();
             }
             if (failed.get()) {
+                result.segmentsDone = doneCount.get();
                 result.errMsg = failMsg.toString();
                 return result;
             }
@@ -441,7 +459,12 @@ public class HlsDownloader {
         return def;
     }
 
-    static boolean downloadToFile(String url, Map<String, String> headers, File target, AbortChecker abort) {
+    /**
+     * 下载到目标文件(先写 .tmp 再改名)。
+     *
+     * @return HTTP 状态码(200/206 为成功),请求未完成(网络异常/中断/改名失败)返回 -1
+     */
+    static int downloadToFile(String url, Map<String, String> headers, File target, AbortChecker abort) {
         OkHttpClient client = DownloadHttp.hlsClient();
         Request.Builder builder = new Request.Builder().url(url);
         builder.header("User-Agent", DEFAULT_UA);
@@ -459,9 +482,10 @@ public class HlsDownloader {
         FileOutputStream fos = null;
         try {
             Response response = client.newCall(builder.build()).execute();
+            int code = response.code();
             if (!response.isSuccessful() || response.body() == null) {
                 response.close();
-                return false;
+                return code;
             }
             is = response.body().byteStream();
             fos = new FileOutputStream(tmp);
@@ -470,7 +494,7 @@ public class HlsDownloader {
             while ((len = is.read(buf)) != -1) {
                 if (abort.shouldAbort()) {
                     tmp.delete();
-                    return false;
+                    return -1;
                 }
                 fos.write(buf, 0, len);
             }
@@ -478,12 +502,12 @@ public class HlsDownloader {
             fos = null;
             if (!tmp.renameTo(target)) {
                 tmp.delete();
-                return false;
+                return -1;
             }
-            return true;
+            return code;
         } catch (Throwable th) {
             tmp.delete();
-            return false;
+            return -1;
         } finally {
             try {
                 if (is != null) is.close();
@@ -494,6 +518,27 @@ public class HlsDownloader {
             } catch (IOException ignored) {
             }
         }
+    }
+
+    /** 失败信息里的状态码文本 */
+    private static String httpText(int code) {
+        if (code == -2) return "内容无效,非视频分片";
+        return code > 0 ? "HTTP " + code : "网络异常";
+    }
+
+    /**
+     * 分片内容是否为垃圾(图片/网页而非视频):
+     * 部分防盗链 CDN 对失效分片会 302 到占位图片或返回错误页,存下来会拼出损坏视频。
+     * 只识别无歧义的特征头,TS(0x47) 与 fMP4(ftyp/styp 等) 不会误伤。
+     */
+    private static boolean isGarbageHead(File file) {
+        byte[] head = ContentSniff.sniff(file, 16);
+        if (head == null || head.length < 4) return false;
+        if ((head[0] & 0xFF) == 0xFF && (head[1] & 0xFF) == 0xD8 && (head[2] & 0xFF) == 0xFF) return true; // JPEG
+        if ((head[0] & 0xFF) == 0x89 && head[1] == 'P' && head[2] == 'N' && head[3] == 'G') return true;    // PNG
+        if (head[0] == 'G' && head[1] == 'I' && head[2] == 'F') return true;                                // GIF
+        if (head[0] == 'R' && head[1] == 'I' && head[2] == 'F' && head[3] == 'F') return true;              // RIFF/WebP
+        return ContentSniff.isHtml(head);
     }
 
     private static String fetchText(String url, Map<String, String> headers) throws IOException {
