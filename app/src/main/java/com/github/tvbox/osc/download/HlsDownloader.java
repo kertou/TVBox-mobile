@@ -227,11 +227,14 @@ public class HlsDownloader {
                         // 每次重试前检查暂停/取消,防止在黑洞连接的重试循环里无视暂停
                         if (failed.get() || abort.shouldAbort()) return;
                         lastCode = downloadToFile(seg.remoteUrl, headers, target, abort);
-                        if ((lastCode == 200 || lastCode == 206) && seg.localName.startsWith("seg_")
-                                && isGarbageHead(target)) {
-                            // HTTP 成功但内容是图片/网页(防盗链占位图等):删掉,按内容无效处理
-                            target.delete();
-                            lastCode = -2;
+                        if ((lastCode == 200 || lastCode == 206) && seg.localName.startsWith("seg_")) {
+                            int stripped = ContentSniff.stripImageWrapper(target);
+                            if (stripped < 0) {
+                                // HTTP 成功但内容是纯图片/网页(防盗链占位图等):删掉,按内容无效处理
+                                target.delete();
+                                lastCode = -2;
+                            }
+                            // stripped >= 0: 已剥离图片头(伪装分片)或本就是视频,按成功处理
                         }
                         ok = lastCode == 200 || lastCode == 206;
                     }
@@ -531,18 +534,12 @@ public class HlsDownloader {
     }
 
     /**
-     * 分片内容是否为垃圾(图片/网页而非视频):
-     * 部分防盗链 CDN 对失效分片会 302 到占位图片或返回错误页,存下来会拼出损坏视频。
-     * 只识别无歧义的特征头,TS(0x47) 与 fMP4(ftyp/styp 等) 不会误伤。
+     * 已存分片是否为垃圾头(图片/网页):老版本把占位图/错误页存成了分片时用于强制重下。
+     * 图片头也可能包裹真视频(防盗链伪装),新下载的内容走 ContentSniff.stripImageWrapper
+     * 剥离处理,只有剥离后仍无视频负载的才按垃圾删除。
      */
     private static boolean isGarbageHead(File file) {
-        byte[] head = ContentSniff.sniff(file, 16);
-        if (head == null || head.length < 4) return false;
-        if ((head[0] & 0xFF) == 0xFF && (head[1] & 0xFF) == 0xD8 && (head[2] & 0xFF) == 0xFF) return true; // JPEG
-        if ((head[0] & 0xFF) == 0x89 && head[1] == 'P' && head[2] == 'N' && head[3] == 'G') return true;    // PNG
-        if (head[0] == 'G' && head[1] == 'I' && head[2] == 'F') return true;                                // GIF
-        if (head[0] == 'R' && head[1] == 'I' && head[2] == 'F' && head[3] == 'F') return true;              // RIFF/WebP
-        return ContentSniff.isHtml(head);
+        return ContentSniff.isGarbageHead(ContentSniff.sniff(file, 16));
     }
 
     private static String fetchText(String url, Map<String, String> headers) throws IOException {

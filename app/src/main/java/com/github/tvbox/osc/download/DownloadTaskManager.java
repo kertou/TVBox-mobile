@@ -106,6 +106,8 @@ public class DownloadTaskManager {
      * 启动自检: 历史上直链下载不校验内容,把 m3u8 播放列表/网页错误页存成了
      * 视频并标成"已缓存"(假完成、无法播放)。文件头嗅探把这些条目打回等待队列,
      * 配合直链 m3u8 嗅探转 HLS,重新下载后即可正常离线播放。
+     * 分片模式(索引为 .m3u8)同样有假完成形态:源站死节点把整集"分片"放在
+     * 图床上(BMP/JPG 占位图),抽查 parts 文件头识别。
      *
      * @return 重置的条目数
      */
@@ -115,21 +117,40 @@ public class DownloadTaskManager {
             List<DownloadEpisode> all = RoomDataManger.getAllDownloadEpisodes();
             for (DownloadEpisode t : all) {
                 if (t.status != DownloadEpisode.STATUS_DONE || TextUtils.isEmpty(t.localFilePath)) continue;
-                if (t.localFilePath.endsWith(".m3u8")) continue; // 分片模式的合法索引
-                File f = new File(t.localFilePath);
-                if (!f.exists() || f.length() <= 0) continue;
-                byte[] head = ContentSniff.sniff(f, 512);
-                if (!ContentSniff.isM3u8(head) && !ContentSniff.isHtml(head)) continue;
-                f.delete();
+                String reason = null;
+                if (t.localFilePath.endsWith(".m3u8")) {
+                    reason = segmentPartsBroken(t);
+                } else {
+                    File f = new File(t.localFilePath);
+                    if (!f.exists() || f.length() <= 0) continue;
+                    byte[] head = ContentSniff.sniff(f, 512);
+                    if (ContentSniff.isM3u8(head) || ContentSniff.isHtml(head)) {
+                        reason = "内容非视频";
+                    } else if (ContentSniff.isImageHead(head)) {
+                        // 老版本可能把"图片头包裹的真视频"直链存成了假完成:能剥出视频就原地剥离保留
+                        if (ContentSniff.stripImageWrapper(f) < 0) reason = "内容非视频";
+                    } else {
+                        reason = null;
+                    }
+                }
+                if (reason == null) continue;
+                // 直链假完成把误存文件一并删掉;分片模式保留 parts,
+                // 重下时已存在的合法分片会被跳过,垃圾分片(含 BMP)会被重新下载
+                if (!t.localFilePath.endsWith(".m3u8")) {
+                    new File(t.localFilePath).delete();
+                }
                 t.status = DownloadEpisode.STATUS_WAITING;
                 t.errMsg = null;
                 t.totalBytes = 0;
                 t.downloadedBytes = 0;
                 t.localFilePath = null;
+                // 产生假缓存的解析地址大概率是死节点,清掉强制重下时重新解析
+                t.resolvedUrl = null;
+                t.headersJson = null;
                 t.updateTime = System.currentTimeMillis();
                 RoomDataManger.updateDownloadEpisode(t);
                 fixed++;
-                android.util.Log.w("DownloadTask", "自检重置假完成条目(内容非视频): " + t.displayTitle());
+                android.util.Log.w("DownloadTask", "自检重置假完成条目(" + reason + "): " + t.displayTitle());
             }
         } catch (Throwable th) {
             th.printStackTrace();
@@ -138,6 +159,34 @@ public class DownloadTaskManager {
             postChanged();
         }
         return fixed;
+    }
+
+    /** 分片模式假完成自检: 索引存在且 parts 里均匀抽查最多 6 个分片,
+     *  任一是图片/网页头或空文件即判整集为假缓存(源站死节点批量返回占位图) */
+    private static String segmentPartsBroken(DownloadEpisode t) {
+        File index = new File(t.localFilePath);
+        if (!index.exists() || index.length() <= 0) return "索引缺失";
+        File[] files = new File(index.getParentFile(), "parts").listFiles();
+        if (files == null) return "分片缺失";
+        int segCount = 0;
+        for (File f : files) {
+            if (f.getName().startsWith("seg_")) segCount++;
+        }
+        if (segCount == 0) return "分片缺失";
+        File[] segs = new File[segCount];
+        int n = 0;
+        for (File f : files) {
+            if (f.getName().startsWith("seg_")) segs[n++] = f;
+        }
+        int samples = Math.min(6, segs.length);
+        for (int i = 0; i < samples; i++) {
+            File pick = samples == 1 ? segs[0]
+                    : segs[Math.round(i * (segs.length - 1) / (float) (samples - 1))];
+            if (pick.length() <= 0 || ContentSniff.isGarbageHead(ContentSniff.sniff(pick, 16))) {
+                return "分片内容非视频";
+            }
+        }
+        return null;
     }
 
     /** 等订阅/源列表加载完成再启动队列:App 启动早期源列表还是空的,
@@ -189,6 +238,11 @@ public class DownloadTaskManager {
         clearRetryState(episodeId);
         DownloadEpisode t = RoomDataManger.getDownloadEpisode(episodeId);
         if (t != null && (t.status == DownloadEpisode.STATUS_PAUSED || t.status == DownloadEpisode.STATUS_FAILED)) {
+            if (t.status == DownloadEpisode.STATUS_FAILED) {
+                // 失败集重试重新解析:缓存地址可能已失效(源站多节点轮换)
+                t.resolvedUrl = null;
+                t.headersJson = null;
+            }
             t.status = DownloadEpisode.STATUS_WAITING;
             t.errMsg = null;
             t.updateTime = System.currentTimeMillis();
@@ -223,6 +277,11 @@ public class DownloadTaskManager {
         for (DownloadEpisode t : all) {
             if (t.status == DownloadEpisode.STATUS_PAUSED || t.status == DownloadEpisode.STATUS_FAILED) {
                 clearRetryState(t.getId());
+                if (t.status == DownloadEpisode.STATUS_FAILED) {
+                    // 失败集重新解析:缓存地址可能已失效(源站多节点轮换)
+                    t.resolvedUrl = null;
+                    t.headersJson = null;
+                }
                 t.status = DownloadEpisode.STATUS_WAITING;
                 t.updateTime = now;
                 RoomDataManger.updateDownloadEpisode(t);
@@ -430,6 +489,18 @@ public class DownloadTaskManager {
             return;
         }
         // mp4 直接完成,其它容器尝试无损转封装
+        // 先剥防盗链伪装:部分源把真视频存成"占位图头+视频负载"(实测 PNG/BMP 包 TS),
+        // 播放器能靠 TS 同步字节容错,不剥离则合并产物损坏
+        int stripped = ContentSniff.stripImageWrapper(target);
+        if (stripped < 0) {
+            target.delete();
+            if (failOrRetry(task, "内容无效,非视频文件")) return;
+            task.status = DownloadEpisode.STATUS_FAILED;
+            task.errMsg = "内容无效,非视频文件";
+            touch(task);
+            postChanged();
+            return;
+        }
         if ("mp4".equals(ext)) {
             task.localFilePath = target.getAbsolutePath();
             task.totalBytes = target.length();
@@ -571,6 +642,10 @@ public class DownloadTaskManager {
         long delay = isThrottledFailure(errMsg, attemptSegments)
                 ? RETRY_DELAYS_THROTTLED[Math.min(count - 1, RETRY_DELAYS_THROTTLED.length - 1)]
                 : RETRY_DELAY_MS;
+        // 解析地址可能已失效:这类源在多个镜像节点间轮换,死节点只会返回占位图/假分片,
+        // 拿缓存地址重试永远撞同一堵墙;重试一律重新解析,与在线播放每次现解析的行为对齐
+        task.resolvedUrl = null;
+        task.headersJson = null;
         task.status = DownloadEpisode.STATUS_WAITING;
         task.errMsg = "下载失败,自动重试(" + count + "/" + MAX_AUTO_RETRY + ")"
                 + (TextUtils.isEmpty(errMsg) ? "" : " · " + errMsg);
@@ -585,9 +660,12 @@ public class DownloadTaskManager {
         return failOrRetry(task, errMsg, -1);
     }
 
-    /** 限流型失败:显式 403,或单次尝试已推进大量分片后才失败(配额耗尽特征,常表现为成批网络重置) */
+    /** 限流型失败:显式 403,或单次尝试已推进大量分片后才失败(配额耗尽特征,常表现为成批网络重置);
+     *  占位图/假分片型失败(内容无效):源当前解析到的节点是死的,窗口内立刻重试只会重复拿到
+     *  同一死节点,同样需要拉开间隔等源站节点轮换 */
     private static boolean isThrottledFailure(String errMsg, int attemptSegments) {
         if (errMsg != null && errMsg.contains("HTTP 403")) return true;
+        if (errMsg != null && errMsg.contains("内容无效")) return true;
         return attemptSegments >= 20;
     }
 
