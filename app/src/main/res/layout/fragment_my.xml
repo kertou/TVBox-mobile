@@ -103,16 +103,16 @@
                 </LinearLayout>
 
                 <LinearLayout
-                    android:id="@+id/llSubscription"
-                    style="@style/M3MenuRow">
+                    android:id="@+id/tvLive"
+                    style="@style/M3MenuRowLast">
 
                     <ImageView
                         style="@style/M3MenuIcon"
-                        android:src="@drawable/ic_database_48" />
+                        android:src="@drawable/ic_live_tv_48" />
 
                     <TextView
                         style="@style/M3MenuText"
-                        android:text="订阅管理" />
+                        android:text="直播" />
 
                     <Space
                         android:layout_width="0dp"
@@ -133,37 +133,16 @@
                 android:orientation="vertical">
 
                 <LinearLayout
-                    android:id="@+id/tvLive"
+                    android:id="@+id/llSubscription"
                     style="@style/M3MenuRow">
 
                     <ImageView
                         style="@style/M3MenuIcon"
-                        android:src="@drawable/ic_live" />
+                        android:src="@drawable/ic_database_48" />
 
                     <TextView
                         style="@style/M3MenuText"
-                        android:text="直播" />
-
-                    <Space
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1" />
-
-                    <ImageView
-                        style="@style/M3MenuChevron" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/addrPlay"
-                    style="@style/M3MenuRow">
-
-                    <ImageView
-                        style="@style/M3MenuIcon"
-                        android:src="@drawable/ic_copyright_48" />
-
-                    <TextView
-                        style="@style/M3MenuText"
-                        android:text="播放链接" />
+                        android:text="订阅管理" />
 
                     <Space
                         android:layout_width="0dp"
