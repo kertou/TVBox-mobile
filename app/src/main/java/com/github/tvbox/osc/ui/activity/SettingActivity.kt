@@ -368,7 +368,7 @@ class SettingActivity : BaseVbActivity<ActivitySettingBinding>() {
         mBinding.llClearCache.setOnClickListener { view: View ->
             XPopup.Builder(this)
                 .isDarkTheme(Utils.isDarkTheme())
-                .asConfirm("提示", "确定清空吗？") { onClickClearCache(view) }.show()
+                .asConfirm("提示", "确定清空吗？", "取消", "确定", { onClickClearCache(view) }, null, false).show()
         }
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
             mBinding.llTheme.visibility = View.GONE

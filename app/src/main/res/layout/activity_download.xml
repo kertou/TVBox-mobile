@@ -9,9 +9,13 @@
         android:id="@+id/title_bar"
         android:layout_width="match_parent"
         android:layout_height="60dp"
+        android:background="@color/md_surface"
         app:title="我的缓存"
         app:leftTitleSize="16sp"
+        app:titleColor="@color/md_on_surface"
+        app:leftIconTint="@color/md_on_surface"
         app:rightTitle="清空"
+        app:rightTitleColor="@color/md_on_surface"
         app:lineVisible="false" />
 
     <TextView

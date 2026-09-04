@@ -48,7 +48,7 @@ class HistoryActivity : BaseVbActivity<ActivityHistoryBinding>() {
         mBinding.titleBar.rightView.setOnClickListener { view: View? ->
             XPopup.Builder(this)
                 .isDarkTheme(Utils.isDarkTheme())
-                .asConfirm("提示", "确定清空?") {
+                .asConfirm("提示", "确定清空?", "取消", "确定", {
 
                     showLoadingDialog()
                     lifecycleScope.launch(Dispatchers.IO) {
@@ -62,7 +62,7 @@ class HistoryActivity : BaseVbActivity<ActivityHistoryBinding>() {
                         }
                     }
 
-                }.show()
+                }, null, false).show()
         }
 
         historyAdapter!!.onItemClickListener =

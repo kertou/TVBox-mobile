@@ -38,7 +38,7 @@ class CollectActivity : BaseVbActivity<ActivityCollectBinding>() {
         mBinding.titleBar.rightView.setOnClickListener {
             XPopup.Builder(this)
                 .isDarkTheme(Utils.isDarkTheme())
-                .asConfirm("提示", "确定清空?") {
+                .asConfirm("提示", "确定清空?", "取消", "确定", {
                     showLoadingDialog()
                     lifecycleScope.launch(Dispatchers.IO){
                         RoomDataManger.deleteVodCollectAll()
@@ -49,7 +49,7 @@ class CollectActivity : BaseVbActivity<ActivityCollectBinding>() {
                             showEmpty()
                         }
                     }
-                }.show()
+                }, null, false).show()
         }
         collectAdapter.onItemLongClickListener =
             BaseQuickAdapter.OnItemLongClickListener { adapter: BaseQuickAdapter<*, *>?, view: View?, position: Int ->

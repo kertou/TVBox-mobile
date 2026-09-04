@@ -10,9 +10,13 @@
         android:id="@+id/title_bar"
         android:layout_width="match_parent"
         android:layout_height="60dp"
+        android:background="@color/md_surface"
         app:title="收藏"
+        app:titleColor="@color/md_on_surface"
+        app:leftIconTint="@color/md_on_surface"
         app:lineVisible="false"
-        app:rightIcon="@drawable/ic_clear"/>
+        app:rightIcon="@drawable/ic_clear"
+        app:rightIconTint="@color/md_on_surface"/>
 
     <TextView
         android:id="@+id/top_tip"
@@ -22,7 +26,9 @@
         android:layout_marginVertical="10dp"
         android:visibility="gone"
         tools:visibility="visible"
-        android:text="长按取消收藏"/>
+        android:text="长按取消收藏"
+        android:textColor="@color/md_on_surface_variant"
+        android:textSize="13sp"/>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/mGridView"

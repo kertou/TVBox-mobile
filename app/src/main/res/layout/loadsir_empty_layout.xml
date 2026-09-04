@@ -20,7 +20,8 @@
             android:layout_height="wrap_content"
             android:gravity="center"
             android:text="暂无数据"
-             />
+            android:textColor="@color/md_on_surface_variant"
+            android:textSize="14sp" />
     </LinearLayout>
 
 </FrameLayout>

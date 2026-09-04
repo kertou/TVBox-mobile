@@ -101,11 +101,11 @@ class SubscriptionActivity : BaseVbActivity<ActivitySubscriptionBinding>() {
                     return@setOnItemChildClickListener
                 }
                 XPopup.Builder(this@SubscriptionActivity)
-                    .asConfirm("删除订阅", "确定删除订阅吗？") {
+                    .asConfirm("删除订阅", "确定删除订阅吗？", "取消", "确定", {
                         mSubscriptions.removeAt(position)
                         //删除/选择只刷新,不触发重新排序
                         mSubscriptionAdapter.notifyDataSetChanged()
-                    }.show()
+                    }, null, false).show()
             }
         }
 
@@ -176,7 +176,7 @@ class SubscriptionActivity : BaseVbActivity<ActivitySubscriptionBinding>() {
     private fun showPermissionTipPopup(checked: Boolean) {
         XPopup.Builder(this@SubscriptionActivity)
             .isDarkTheme(Utils.isDarkTheme())
-            .asConfirm("提示", "这将访问您设备文件的读取权限") {
+            .asConfirm("提示", "这将访问您设备文件的读取权限", "取消", "确定", {
                 XXPermissions.with(this)
                     .permission(Permission.MANAGE_EXTERNAL_STORAGE)
                     .request(object : OnPermissionCallback {
@@ -202,7 +202,7 @@ class SubscriptionActivity : BaseVbActivity<ActivitySubscriptionBinding>() {
                             }
                         }
                     })
-            }.show()
+            }, null, false).show()
     }
 
     /**

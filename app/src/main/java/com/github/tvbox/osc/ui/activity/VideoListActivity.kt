@@ -85,7 +85,7 @@ class VideoListActivity : BaseVbActivity<ActivityMovieFoldersBinding>() {
             FastClickCheckUtil.check(view)
             XPopup.Builder(this)
                 .isDarkTheme(Utils.isDarkTheme())
-                .asConfirm("提示", "确定删除所选视频吗？") {
+                .asConfirm("提示", "确定删除所选视频吗？", "取消", "确定", {
                     showLoadingDialog()
                     lifecycleScope.launch(Dispatchers.IO) {
                         val data = mLocalVideoAdapter.data
@@ -111,7 +111,7 @@ class VideoListActivity : BaseVbActivity<ActivityMovieFoldersBinding>() {
                             toggleListSelectMode(false)
                         }
                     }
-                }.show()
+                }, null, false).show()
         }
     }
 

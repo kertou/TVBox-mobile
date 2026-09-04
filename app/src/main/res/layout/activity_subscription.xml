@@ -12,8 +12,12 @@
         android:id="@+id/title_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@color/md_surface"
         app:title="订阅管理"
+        app:titleColor="@color/md_on_surface"
+        app:leftIconTint="@color/md_on_surface"
         app:rightIcon="@drawable/ic_add_24"
+        app:rightIconTint="@color/md_on_surface"
         >
 
         <ImageView
@@ -21,13 +25,14 @@
             android:layout_width="wrap_content"
             android:layout_height="20dp"
             android:src="@drawable/ic_use_description_24"
+            app:tint="@color/md_on_surface_variant"
             android:layout_gravity="end|center_vertical"
             android:paddingLeft="20dp"
             android:layout_marginRight="50dp"/>
     </com.hjq.bar.TitleBar>
 
     <androidx.recyclerview.widget.RecyclerView
-        android:background="@drawable/bg_large_round_gray"
+        android:background="@drawable/bg_m3_surface_card"
         android:layout_margin="10dp"
         android:id="@+id/rv"
         android:layout_width="match_parent"
