@@ -3,7 +3,6 @@ package com.github.tvbox.osc.ui.dialog;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Build;
 import android.text.TextUtils;
 import android.widget.TextView;
@@ -222,9 +221,10 @@ public class CacheSelectDialog extends BottomPopupView {
     }
 
     /**
-     * 首次缓存时请求电池优化白名单:前台服务足以支撑亮屏时的后台下载,
+     * 首次缓存时提示电池优化白名单:前台服务足以支撑亮屏时的后台下载,
      * 但锁屏休眠与国产 ROM 的省电冻结仍可能掐断长时间下载。
-     * 只请求一次,拒绝后不再骚扰(可到 设置→电池→启动管理 手动放开)
+     * 应用内提示代替系统白名单弹窗(免去 REQUEST_IGNORE_BATTERY_OPTIMIZATIONS 权限),
+     * 跳转的是系统电池优化列表页,无需权限;只提示一次,取消后不再骚扰。
      */
     private void requestIgnoreBatteryOptimizationsIfNeeded() {
         try {
@@ -237,12 +237,21 @@ public class CacheSelectDialog extends BottomPopupView {
                 return;
             }
             Hawk.put(HawkConfig.DOWNLOAD_BATTERY_PROMPTED, true);
-            Intent intent = new Intent(android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
-                    Uri.parse("package:" + context.getPackageName()));
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            context.startActivity(intent);
+            new com.lxj.xpopup.XPopup.Builder(context)
+                    .isDarkTheme(Utils.isDarkTheme())
+                    .asConfirm("下载保活提示",
+                            "锁屏或长时间缓存时,系统休眠/省电冻结可能中断下载任务。\n\n建议把 TVBox 加入电池优化白名单:系统 设置→电池→启动管理 中允许后台运行、保持关联启动。\n\n现在打开电池优化设置吗?",
+                            "下次再说", "去设置",
+                            () -> {
+                                try {
+                                    context.startActivity(new Intent(android.provider.Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+                                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+                                } catch (Throwable th) {
+                                    // 个别 ROM 没有该页面,只能由用户到系统设置手动放开
+                                    ToastUtils.showShort("未能打开系统设置,请到 系统设置→电池 中手动放开");
+                                }
+                            }, null, false).show();
         } catch (Throwable th) {
-            // 部分 ROM 不响应该对话框,只能由用户到系统设置手动放开
             th.printStackTrace();
         }
     }
