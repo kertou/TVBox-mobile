@@ -3,7 +3,6 @@ package com.github.tvbox.osc.download;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.graphics.Color;
-import android.net.http.SslError;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
@@ -12,7 +11,6 @@ import android.webkit.ConsoleMessage;
 import android.webkit.CookieManager;
 import android.webkit.JsPromptResult;
 import android.webkit.JsResult;
-import android.webkit.SslErrorHandler;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
@@ -474,12 +472,6 @@ public class HeadlessParser {
     }
 
     private class HeadlessWebClient extends WebViewClient {
-
-        @SuppressLint("WebViewClientOnReceivedSslError")
-        @Override
-        public void onReceivedSslError(WebView wv, SslErrorHandler handler, SslError error) {
-            handler.proceed();
-        }
 
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, String url) {
