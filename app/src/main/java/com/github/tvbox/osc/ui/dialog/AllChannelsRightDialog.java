@@ -1,6 +1,5 @@
 package com.github.tvbox.osc.ui.dialog;
 
-import android.content.Context;
 import android.view.View;
 
 import androidx.annotation.NonNull;
@@ -12,7 +11,7 @@ import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.github.tvbox.osc.R;
 import com.github.tvbox.osc.bean.VodInfo;
 import com.github.tvbox.osc.databinding.DialogAllChannelBinding;
-import com.github.tvbox.osc.ui.activity.LiveActivity;
+import com.github.tvbox.osc.ui.fragment.LiveFragment;
 import com.github.tvbox.osc.ui.adapter.LiveChannelGroupNewAdapter;
 import com.github.tvbox.osc.ui.adapter.LiveChannelItemNewAdapter;
 import com.github.tvbox.osc.ui.widget.GridSpacingItemDecoration;
@@ -30,17 +29,27 @@ import java.util.List;
 
 public class AllChannelsRightDialog extends DrawerPopupView {
 
-    private final LiveActivity mActivity;
+    private final LiveFragment mActivity;
     private com.github.tvbox.osc.databinding.DialogAllChannelBinding mBinding;
 
-    public AllChannelsRightDialog(@NonNull @NotNull Context context) {
-        super(context);
-        mActivity = (LiveActivity) context;
+    public AllChannelsRightDialog(@NonNull @NotNull LiveFragment fragment) {
+        super(fragment.requireActivity());
+        mActivity = fragment;
     }
 
     @Override
     protected int getImplLayoutId() {
         return R.layout.dialog_all_channel;
+    }
+
+    /**
+     * decorFitsSystemWindows(false) 后 XPopup 的 getDecorViewInvisibleHeight 恒非 0,
+     * 默认 back 走"隐藏软键盘"分支被吞不关弹窗,这里显式 dismiss
+     */
+    @Override
+    protected boolean onBackPressed() {
+        dismiss();
+        return true;
     }
 
     @Override

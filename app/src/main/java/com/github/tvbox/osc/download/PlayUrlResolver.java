@@ -179,7 +179,7 @@ public class PlayUrlResolver {
         return headers;
     }
 
-    static String fetchText(String url) {
+    public static String fetchText(String url) {
         try {
             // 扩展源接口同样限时,防止解析阶段被黑洞连接卡死
             okhttp3.OkHttpClient client = com.github.tvbox.osc.util.OkGoHelper.getDefaultClient().newBuilder()

@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 直播 tab 页(原 LiveActivity 布局,外层 FrameLayout 供 LoadSir 包裹内部 live_root) -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
 <LinearLayout
 	xmlns:tools="http://schemas.android.com/tools"
 	android:id="@+id/live_root"
@@ -238,4 +243,4 @@
         android:textStyle="bold"
         android:visibility="gone" />
 
-</LinearLayout>
+</LinearLayout></FrameLayout>

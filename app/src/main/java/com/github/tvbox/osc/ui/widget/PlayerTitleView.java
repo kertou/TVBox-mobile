@@ -20,7 +20,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.blankj.utilcode.util.ActivityUtils;
-import com.github.tvbox.osc.ui.activity.LiveActivity;
 
 import xyz.doikki.videocontroller.R;
 import xyz.doikki.videoplayer.controller.ControlWrapper;
@@ -41,6 +40,17 @@ public class PlayerTitleView extends FrameLayout implements IControlComponent {
 
     private final BatteryReceiver mBatteryReceiver;
     private boolean mIsRegister;//是否注册BatteryReceiver
+
+    /** 非全屏时返回键宿主自定义处理(如 Fragment 场景切回首页 tab),消费返回 true */
+    public interface OnBackListener {
+        boolean onBack();
+    }
+
+    private OnBackListener mOnBackListener;
+
+    public void setOnBackListener(OnBackListener listener) {
+        mOnBackListener = listener;
+    }
 
     public PlayerTitleView(@NonNull Context context) {
         super(context);
@@ -67,6 +77,8 @@ public class PlayerTitleView extends FrameLayout implements IControlComponent {
                     if (mControlWrapper.isFullScreen()){
                         activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
                         mControlWrapper.stopFullScreen();
+                    }else if (mOnBackListener != null && mOnBackListener.onBack()) {
+                        // 宿主已处理
                     }else {
                         activity.finish();
                     }

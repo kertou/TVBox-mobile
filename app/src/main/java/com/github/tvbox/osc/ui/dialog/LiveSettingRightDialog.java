@@ -1,6 +1,5 @@
 package com.github.tvbox.osc.ui.dialog;
 
-import android.content.Context;
 import android.view.View;
 
 import androidx.annotation.NonNull;
@@ -10,7 +9,7 @@ import com.github.tvbox.osc.R;
 import com.github.tvbox.osc.bean.LiveSettingGroup;
 import com.github.tvbox.osc.bean.LiveSettingItem;
 import com.github.tvbox.osc.databinding.DialogLiveSettingBinding;
-import com.github.tvbox.osc.ui.activity.LiveActivity;
+import com.github.tvbox.osc.ui.fragment.LiveFragment;
 import com.github.tvbox.osc.ui.adapter.LiveSettingGroupAdapter;
 import com.github.tvbox.osc.ui.adapter.LiveSettingItemAdapter;
 import com.github.tvbox.osc.util.FastClickCheckUtil;
@@ -30,20 +29,30 @@ public class LiveSettingRightDialog extends DrawerPopupView {
 
 
     @NonNull
-    private final LiveActivity mActivity;
+    private final LiveFragment mActivity;
     private DialogLiveSettingBinding mBinding;
     private LiveSettingGroupAdapter liveSettingGroupAdapter;
     private LiveSettingItemAdapter liveSettingItemAdapter;
     private List<LiveSettingGroup> liveSettingGroupList = new ArrayList<>();
 
-    public LiveSettingRightDialog(@NonNull @NotNull Context context) {
-        super(context);
-        mActivity = (LiveActivity)context;
+    public LiveSettingRightDialog(@NonNull @NotNull LiveFragment fragment) {
+        super(fragment.requireActivity());
+        mActivity = fragment;
     }
 
     @Override
     protected int getImplLayoutId() {
         return R.layout.dialog_live_setting;
+    }
+
+    /**
+     * decorFitsSystemWindows(false) 后 XPopup 的 getDecorViewInvisibleHeight 恒非 0,
+     * 默认 back 走"隐藏软键盘"分支被吞不关弹窗,这里显式 dismiss
+     */
+    @Override
+    protected boolean onBackPressed() {
+        dismiss();
+        return true;
     }
 
     @Override

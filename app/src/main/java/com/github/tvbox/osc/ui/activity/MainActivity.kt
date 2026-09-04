@@ -1,6 +1,7 @@
 package com.github.tvbox.osc.ui.activity
 
 import android.os.Process
+import android.view.KeyEvent
 import android.view.MenuItem
 import androidx.core.view.ViewCompat
 import androidx.fragment.app.Fragment
@@ -13,12 +14,13 @@ import com.github.tvbox.osc.constant.IntentKey
 import com.github.tvbox.osc.databinding.ActivityMainBinding
 import com.github.tvbox.osc.ui.fragment.GridFragment
 import com.github.tvbox.osc.ui.fragment.HomeFragment
+import com.github.tvbox.osc.ui.fragment.LiveFragment
 import com.github.tvbox.osc.ui.fragment.MyFragment
 import kotlin.system.exitProcess
 
 class MainActivity : BaseVbActivity<ActivityMainBinding>() {
 
-    var fragments = listOf(HomeFragment(),MyFragment())
+    var fragments = listOf<Fragment>(HomeFragment(), LiveFragment(), MyFragment())
     var useCacheConfig = false
     private var exitTime = 0L
 
@@ -52,8 +54,18 @@ class MainActivity : BaseVbActivity<ActivityMainBinding>() {
         })
     }
 
+    /** 切换底部 tab(直播标题栏返回/我的页入口/通知点击等统一入口) */
+    fun goToTab(index: Int) {
+        mBinding.vp.currentItem = index
+    }
+
     override fun onBackPressed() {
-        if (mBinding.vp.currentItem == 1) {
+        if (mBinding.vp.currentItem != 0) {
+            // 直播 tab 内部有可回退层(侧边设置/全屏)时先消化,否则切回首页 tab
+            val liveFragment = fragments[1] as LiveFragment
+            if (liveFragment.isUiReady() && liveFragment.handleBack()) {
+                return
+            }
             mBinding.vp.currentItem = 0
             return
         }
@@ -77,6 +89,17 @@ class MainActivity : BaseVbActivity<ActivityMainBinding>() {
         } else {
             confirmExit()
         }
+    }
+
+    override fun dispatchKeyEvent(event: KeyEvent?): Boolean {
+        // 直播 tab 内遥控器按键(换台/呼出频道列表)交给直播页处理
+        if (mBinding.vp.currentItem == 1) {
+            val liveFragment = fragments[1] as LiveFragment
+            if (event != null && liveFragment.isUiReady()) {
+                liveFragment.handleKeyEvent(event)
+            }
+        }
+        return super.dispatchKeyEvent(event)
     }
 
     private fun confirmExit() {

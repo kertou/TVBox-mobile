@@ -14,7 +14,7 @@ import com.github.tvbox.osc.ui.activity.CollectActivity;
 import com.github.tvbox.osc.ui.activity.DetailActivity;
 import com.github.tvbox.osc.ui.activity.DownloadActivity;
 import com.github.tvbox.osc.ui.activity.HistoryActivity;
-import com.github.tvbox.osc.ui.activity.LiveActivity;
+import com.github.tvbox.osc.ui.activity.MainActivity;
 import com.github.tvbox.osc.ui.activity.SettingActivity;
 import com.github.tvbox.osc.ui.activity.SubscriptionActivity;
 import com.github.tvbox.osc.ui.dialog.AboutDialog;
@@ -50,7 +50,9 @@ public class MyFragment extends BaseVbFragment<FragmentMyBinding> {
                     }, null, R.layout.dialog_input).show();
         });
         //mBinding.tvLive.setOnClickListener(v -> jumpActivity(LivePlayActivity.class));
-        mBinding.tvLive.setOnClickListener(v -> jumpActivity(LiveActivity.class));
+        mBinding.tvLive.setOnClickListener(v -> {
+            if (mActivity instanceof MainActivity) ((MainActivity) mActivity).goToTab(1);
+        });
 
         mBinding.tvSetting.setOnClickListener(v -> jumpActivity(SettingActivity.class));
 
