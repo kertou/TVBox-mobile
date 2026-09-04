@@ -5,7 +5,6 @@ import androidx.annotation.Nullable;
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.BaseViewHolder;
 import com.github.tvbox.osc.R;
-import com.lihang.ShadowLayout;
 
 import java.util.ArrayList;
 
@@ -27,9 +26,8 @@ public class CacheSelectAdapter extends BaseQuickAdapter<CacheSelectAdapter.Item
 
     @Override
     protected void convert(BaseViewHolder helper, Item item) {
-        ShadowLayout sl = helper.getView(R.id.sl);
         android.widget.TextView tv = helper.getView(R.id.tvEp);
-        sl.setSelected(item.checked);
+        tv.setSelected(item.checked);
         String text = item.name;
         if (item.cached) {
             text = "✓ " + text;

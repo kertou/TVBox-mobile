@@ -1,18 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 热搜/历史词 chip: pill 形 tonal surface -->
 <TextView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/tvSearchWord"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:layout_gravity="center_horizontal"
-    android:background="@drawable/bg_large_round_gray"
+    android:background="@drawable/bg_m3_search"
     android:ellipsize="marquee"
     android:focusable="true"
     android:marqueeRepeatLimit="marquee_forever"
-    android:paddingVertical="6dp"
-    android:paddingHorizontal="10dp"
+    android:paddingVertical="7dp"
+    android:paddingHorizontal="14dp"
     android:singleLine="true"
     android:textAlignment="center"
+    android:textColor="@color/md_on_surface"
     android:layout_marginTop="4dp"
     android:layout_marginRight="4dp"
     tools:text="釜山行"/>

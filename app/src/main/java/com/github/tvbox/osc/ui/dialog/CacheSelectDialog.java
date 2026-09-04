@@ -54,6 +54,18 @@ public class CacheSelectDialog extends BottomPopupView {
     @Override
     protected void onCreate() {
         super.onCreate();
+        // XPopup 底部弹窗不避让导航栏 inset,三键导航下底部按钮会被遮;
+        // 按系统 navigation_bar_height 补内边距(手势导航时该值为 0 自然退化)
+        android.view.View root = findViewById(R.id.llRoot);
+        if (root != null) {
+            android.content.res.Resources res = getContext().getResources();
+            int navResId = res.getIdentifier("navigation_bar_height", "dimen", "android");
+            int navH = navResId > 0 ? res.getDimensionPixelSize(navResId) : 0;
+            if (navH > 0) {
+                root.setPadding(root.getPaddingLeft(), root.getPaddingTop(),
+                        root.getPaddingRight(), root.getPaddingBottom() + navH);
+            }
+        }
         TextView tvSubTitle = findViewById(R.id.tvSubTitle);
         tvSubTitle.setText((mVodInfo.name == null ? "" : mVodInfo.name) + " · " + mVodInfo.playFlag);
 

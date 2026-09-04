@@ -12,7 +12,6 @@ import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.BaseViewHolder;
 import com.github.tvbox.osc.R;
 import com.github.tvbox.osc.bean.VodInfo;
-import com.lihang.ShadowLayout;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -34,16 +33,15 @@ public class SeriesAdapter extends BaseQuickAdapter<VodInfo.VodSeries, BaseViewH
 
     @Override
     protected void convert(BaseViewHolder helper, VodInfo.VodSeries item) {
-        ShadowLayout sl = helper.getView(R.id.sl);
         TextView tvSeries = helper.getView(R.id.tvSeries);
-        sl.setSelected(item.selected);
+        tvSeries.setSelected(item.selected);
         boolean cached = item.url != null && cachedUrls.contains(item.url);
         tvSeries.setText(cached ? "✓ " + item.name : item.name);
 
         if (!isGird){// 详情页横向展示时固定宽度
-            ViewGroup.LayoutParams layoutParams = sl.getLayoutParams();
+            ViewGroup.LayoutParams layoutParams = tvSeries.getLayoutParams();
             layoutParams.width = ConvertUtils.dp2px(120);
-            sl.setLayoutParams(layoutParams);
+            tvSeries.setLayoutParams(layoutParams);
         }
     }
 

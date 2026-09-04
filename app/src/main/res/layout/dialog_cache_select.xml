@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/llRoot"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/bg_large_round_gray"
+    android:background="@drawable/bg_m3_surface_card"
     android:orientation="vertical"
     android:paddingHorizontal="20dp"
     android:paddingTop="20dp"
@@ -12,7 +13,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="缓存剧集"
-        android:textColor="@color/text_foreground"
+        android:textColor="@color/md_on_surface"
         android:textSize="18sp"
         android:textStyle="bold" />
 
@@ -22,7 +23,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
         android:text="剧名 · 线路"
-        android:textColor="@color/gray_darker"
+        android:textColor="@color/md_on_surface_variant"
         android:textSize="13sp" />
 
     <LinearLayout
@@ -39,8 +40,8 @@
             android:paddingHorizontal="14dp"
             android:paddingVertical="6dp"
             android:text="全选"
-            android:textColor="@color/text_foreground"
-            android:textSize="13sp" />
+        android:textColor="@color/md_on_surface"
+        android:textSize="13sp" />
 
         <TextView
             android:id="@+id/tvSelectInvert"
@@ -51,7 +52,7 @@
             android:paddingHorizontal="14dp"
             android:paddingVertical="6dp"
             android:text="反选"
-            android:textColor="@color/text_foreground"
+            android:textColor="@color/md_on_surface"
             android:textSize="13sp" />
 
         <TextView
@@ -63,7 +64,7 @@
             android:paddingHorizontal="14dp"
             android:paddingVertical="6dp"
             android:text="仅当前集"
-            android:textColor="@color/text_foreground"
+            android:textColor="@color/md_on_surface"
             android:textSize="13sp" />
     </LinearLayout>
 
@@ -80,7 +81,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
         android:text="提示:开始播放后才会自动开始下载"
-        android:textColor="@color/gray_darker"
+        android:textColor="@color/md_on_surface_variant"
         android:textSize="12sp" />
 
     <LinearLayout
@@ -94,9 +95,11 @@
             android:id="@+id/tvUse1DM"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:padding="8dp"
+            android:background="@drawable/bg_m3_button_outline"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="8dp"
             android:text="用1DM下载当前集"
-            android:textColor="@color/gray_darker"
+            android:textColor="@color/md_primary"
             android:textSize="12sp" />
 
         <Space
@@ -112,7 +115,7 @@
             android:paddingHorizontal="30dp"
             android:paddingVertical="10dp"
             android:text="开始缓存(0集)"
-            android:textColor="#fff"
+            android:textColor="@color/md_on_primary"
             android:textSize="14sp" />
     </LinearLayout>
 </LinearLayout>
