@@ -36,8 +36,8 @@ import java.text.DecimalFormat;
  */
 public class DownloadService extends Service {
 
-    public static final String ACTION_PAUSE_ALL = "com.github.tvbox.osc.download.ACTION_PAUSE_ALL";
-    public static final String ACTION_RESUME_ALL = "com.github.tvbox.osc.download.ACTION_RESUME_ALL";
+    public static final String ACTION_PAUSE_ALL = "com.kertou.tvplayer.download.ACTION_PAUSE_ALL";
+    public static final String ACTION_RESUME_ALL = "com.kertou.tvplayer.download.ACTION_RESUME_ALL";
 
     private static final String CHANNEL_PROGRESS = "download_progress";
     private static final String CHANNEL_DONE = "download_done";

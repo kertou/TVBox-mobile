@@ -5,11 +5,11 @@ android {
     compileSdkVersion 33
 
     defaultConfig {
-        applicationId 'com.github.tvbox.osc'
+        applicationId 'com.kertou.tvplayer'
         minSdkVersion 24
         targetSdkVersion 30
-        versionCode 36
-        versionName '2.2.1'
+        versionCode 37
+        versionName '3.0.0'
         multiDexEnabled true
         //设置room的Schema的位置
         javaCompileOptions {
