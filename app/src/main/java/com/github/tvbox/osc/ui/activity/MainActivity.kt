@@ -1,5 +1,6 @@
 package com.github.tvbox.osc.ui.activity
 
+import android.content.Intent
 import android.os.Process
 import android.view.KeyEvent
 import android.view.MenuItem
@@ -12,6 +13,7 @@ import com.blankj.utilcode.util.ToastUtils
 import com.github.tvbox.osc.base.BaseVbActivity
 import com.github.tvbox.osc.constant.IntentKey
 import com.github.tvbox.osc.databinding.ActivityMainBinding
+import com.github.tvbox.osc.ui.fragment.CacheFragment
 import com.github.tvbox.osc.ui.fragment.GridFragment
 import com.github.tvbox.osc.ui.fragment.HomeFragment
 import com.github.tvbox.osc.ui.fragment.LiveFragment
@@ -20,7 +22,12 @@ import kotlin.system.exitProcess
 
 class MainActivity : BaseVbActivity<ActivityMainBinding>() {
 
-    var fragments = listOf<Fragment>(HomeFragment(), LiveFragment(), MyFragment())
+    companion object {
+        /** 通知/页面跳转直达指定底部 tab(0=首页 1=直播 2=我的缓存 3=我的) */
+        const val EXTRA_TAB = "extra_tab"
+    }
+
+    var fragments = listOf<Fragment>(HomeFragment(), LiveFragment(), CacheFragment(), MyFragment())
     var useCacheConfig = false
     private var exitTime = 0L
 
@@ -52,10 +59,20 @@ class MainActivity : BaseVbActivity<ActivityMainBinding>() {
                 mBinding.bottomNav.menu.getItem(position).setChecked(true)
             }
         })
+
+        goToTab(intent.getIntExtra(EXTRA_TAB, 0))
+    }
+
+    public override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        // singleTop 复用实例(通知点击/缓存页转跳)时切到指定 tab
+        goToTab(intent.getIntExtra(EXTRA_TAB, 0))
     }
 
     /** 切换底部 tab(直播标题栏返回/我的页入口/通知点击等统一入口) */
     fun goToTab(index: Int) {
+        if (index < 0 || index >= fragments.size) return
         mBinding.vp.currentItem = index
     }
 

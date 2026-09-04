@@ -12,7 +12,6 @@ import com.github.tvbox.osc.base.BaseVbFragment;
 import com.github.tvbox.osc.databinding.FragmentMyBinding;
 import com.github.tvbox.osc.ui.activity.CollectActivity;
 import com.github.tvbox.osc.ui.activity.DetailActivity;
-import com.github.tvbox.osc.ui.activity.DownloadActivity;
 import com.github.tvbox.osc.ui.activity.HistoryActivity;
 import com.github.tvbox.osc.ui.activity.MainActivity;
 import com.github.tvbox.osc.ui.activity.SettingActivity;
@@ -60,7 +59,9 @@ public class MyFragment extends BaseVbFragment<FragmentMyBinding> {
 
         mBinding.tvFavorite.setOnClickListener(v -> jumpActivity(CollectActivity.class));
 
-        mBinding.tvCache.setOnClickListener(v -> jumpActivity(DownloadActivity.class));
+        mBinding.tvCache.setOnClickListener(v -> {
+            if (mActivity instanceof MainActivity) ((MainActivity) mActivity).goToTab(2);
+        });
 
         mBinding.llSubscription.setOnClickListener(v -> jumpActivity(SubscriptionActivity.class));
 
