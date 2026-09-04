@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- M3 卡片容器：16dp 圆角 tonal surface -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+	android:shape="rectangle">
+	<solid android:color="@color/md_surface_container_low" />
+	<corners android:radius="@dimen/m3_corner_card" />
+</shape>

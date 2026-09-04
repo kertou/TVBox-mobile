@@ -29,7 +29,7 @@
         android:id="@+id/ll_menu"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/white"
+        android:background="@color/md_surface"
         android:elevation="8dp"
         android:orientation="horizontal"
         android:visibility="gone"

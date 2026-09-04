@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="140dp"
     android:layout_margin="3dp"
-    app:hl_cornerRadius="14dp"
+    app:hl_cornerRadius="16dp"
     >
 
     <RelativeLayout
@@ -21,8 +21,8 @@
         <com.lihang.ShadowLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:hl_layoutBackground="@color/orange"
-            app:hl_cornerRadius_rightBottom="8dp">
+            app:hl_layoutBackground="@color/md_primary_container"
+            app:hl_cornerRadius_rightBottom="10dp">
             <TextView
                 android:id="@+id/tvYear"
                 android:layout_width="wrap_content"
@@ -32,7 +32,7 @@
                 android:padding="5dp"
                 android:singleLine="true"
                 tools:text="1970"
-                android:textColor="@color/white"
+                android:textColor="@color/md_on_primary_container"
                 android:textSize="10dp" />
         </com.lihang.ShadowLayout>
 

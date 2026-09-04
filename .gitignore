@@ -97,4 +97,5 @@ lint/tmp/
 .idea/
 /app/release/
 /.idea/
-*.jks.mimosa/
+*.jks
+.mimosa/

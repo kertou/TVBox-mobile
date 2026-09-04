@@ -3,11 +3,11 @@
 
 
     <!--应用的主要色调,actionBar默认使用该颜色,Toolbar导航栏的底色-->
-    <color name="colorPrimary">#567df4</color>
+    <color name="colorPrimary">@color/md_primary</color>
     <!--CheckBox,RadioButton,SwitchCompat等一般控件的选中效果默认采用该颜色-->
-    <color name="colorAccent">#3e4fb1</color>
+    <color name="colorAccent">@color/md_primary</color>
     <!--    默认window窗口(activity)背景颜色-->
-    <color name="windowBackground">#fff</color>
+    <color name="windowBackground">@color/md_background</color>
 
     <color name="bg_gray">#f7f7f7</color>
     <color name="gray_darker">#7f7b79</color>

@@ -69,6 +69,7 @@
                             android:text="详情 >>"
                             android:layout_marginRight="10dp"
                             android:textSize="12dp"
+                            android:textColor="@color/md_primary"
                             android:layout_gravity="bottom|right"/>
                     </LinearLayout>
 
@@ -80,15 +81,16 @@
 
                             <TextView
                                 android:id="@+id/tvSite"
-                                android:background="@drawable/bg_large_round_gray"
+                                android:background="@drawable/bg_m3_search"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:ellipsize="end"
                                 android:maxLines="1"
                                 android:singleLine="true"
                                 tools:text="非凡影视"
-                                android:textColor="@color/text_foreground"
+                                android:textColor="@color/md_on_surface"
                                 android:drawableRight="@drawable/ic_change_20"
+                                android:drawableTint="@color/md_on_surface_variant"
                                 android:drawablePadding="4dp"
                                 android:paddingHorizontal="12dp"
                                 android:paddingVertical="6dp"/>
@@ -125,7 +127,7 @@
                             android:gravity="center"
                             android:paddingHorizontal="10dp"
                             android:text="投屏"
-                            android:textColor="@color/text_foreground" />
+                            android:textColor="@color/md_on_surface" />
 
                         <View
                             android:layout_width="1dp"
@@ -142,7 +144,7 @@
                             android:gravity="center"
                             android:paddingHorizontal="10dp"
                             android:text="收藏"
-                            android:textColor="@color/text_foreground" />
+                            android:textColor="@color/md_on_surface" />
 
                         <View
                             android:layout_width="1dp"
@@ -159,13 +161,13 @@
                             android:gravity="center"
                             android:paddingHorizontal="10dp"
                             android:text="下载"
-                            android:textColor="@color/text_foreground" />
+                            android:textColor="@color/md_on_surface" />
                     </LinearLayout>
 
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
-                        android:background="@color/bg_gray"
+                        android:background="@color/md_surface_container_high"
                         android:layout_marginVertical="4dp"/>
                 </LinearLayout>
 
@@ -245,7 +247,8 @@
                         android:layout_height="wrap_content"
                         android:text="快捷换线"
                         android:drawableRight="@drawable/ic_change_20"
-                        android:textColor="@color/text_foreground"
+                        android:textColor="@color/md_primary"
+                        android:drawableTint="@color/md_primary"
                         android:drawablePadding="4dp"
                         android:paddingVertical="6dp"
                         android:paddingLeft="20dp"
@@ -290,7 +293,8 @@
                         android:layout_height="wrap_content"
                         android:text="倒序"
                         android:drawableRight="@drawable/ic_sort_18"
-                        android:textColor="@color/text_foreground"
+                        android:textColor="@color/md_primary"
+                        android:drawableTint="@color/md_primary"
                         android:drawablePadding="4dp"
                         android:paddingVertical="6dp"
                         />
@@ -307,7 +311,8 @@
                         android:layout_height="wrap_content"
                         android:text="全部"
                         android:drawableRight="@drawable/ic_expand_all_18"
-                        android:textColor="@color/text_foreground"
+                        android:textColor="@color/md_primary"
+                        android:drawableTint="@color/md_primary"
                         android:drawablePadding="4dp"
                         android:paddingVertical="6dp"
                         />

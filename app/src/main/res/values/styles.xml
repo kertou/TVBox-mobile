@@ -109,6 +109,47 @@
     </style>
 
 
+    <!-- M3 列表行（我的页/设置页通用） -->
+    <style name="M3MenuRow">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:paddingLeft">20dp</item>
+        <item name="android:paddingRight">16dp</item>
+        <item name="android:paddingTop">15dp</item>
+        <item name="android:paddingBottom">15dp</item>
+        <item name="android:foreground">?android:attr/selectableItemBackground</item>
+    </style>
+    <style name="M3MenuRowLast" parent="M3MenuRow" />
+
+    <style name="M3MenuIcon">
+        <item name="android:layout_width">24dp</item>
+        <item name="android:layout_height">24dp</item>
+        <item name="android:layout_gravity">center_vertical</item>
+        <item name="android:tint">@color/md_primary</item>
+        <item name="android:importantForAccessibility">no</item>
+    </style>
+
+    <style name="M3MenuText">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_gravity">center_vertical</item>
+        <item name="android:layout_marginLeft">20dp</item>
+        <item name="android:textColor">@color/md_on_surface</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+
+    <style name="M3MenuChevron">
+        <item name="android:layout_width">22dp</item>
+        <item name="android:layout_height">22dp</item>
+        <item name="android:layout_gravity">center_vertical</item>
+        <item name="android:src">@drawable/icon_pre</item>
+        <item name="android:tint">@color/md_on_surface_variant</item>
+        <item name="android:alpha">0.7</item>
+        <item name="android:importantForAccessibility">no</item>
+    </style>
+
     <!-- 实心通用主题色,MaterialButton样式（M3 pill 形）-->
     <style name="mbSolid" parent="@style/Widget.Material3.Button.UnelevatedButton">
 

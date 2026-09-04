@@ -66,17 +66,17 @@
             android:screenOrientation="landscape" />
         <activity
             android:name=".ui.activity.MainActivity"
-            android:configChanges="orientation|screenSize|keyboardHidden|uiMode"
+            android:configChanges="orientation|screenSize|keyboardHidden"
             android:exported="true"/>
         <activity
             android:name=".ui.activity.LiveActivity"
             android:launchMode="singleTop"
-            android:configChanges="orientation|screenSize|keyboardHidden|uiMode|screenLayout"/>
+            android:configChanges="orientation|screenSize|keyboardHidden|screenLayout"/>
         <activity
             android:name=".ui.activity.DetailActivity"
             android:supportsPictureInPicture="true"
             android:launchMode="singleTask"
-            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation|uiMode"/>
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"/>
         <activity
             android:name=".ui.activity.FastSearchActivity"
             android:configChanges="orientation|screenSize|keyboardHidden"

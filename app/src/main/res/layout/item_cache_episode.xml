@@ -20,7 +20,7 @@
             android:layout_weight="1"
             android:ellipsize="end"
             android:singleLine="true"
-            android:textColor="@color/text_foreground"
+            android:textColor="@color/md_on_surface"
             android:textSize="14sp" />
 
         <TextView
@@ -32,7 +32,7 @@
             android:paddingHorizontal="12dp"
             android:paddingVertical="4dp"
             android:text="暂停"
-            android:textColor="@color/text_foreground"
+            android:textColor="@color/md_on_surface"
             android:textSize="12sp" />
     </LinearLayout>
 
@@ -41,7 +41,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
-        android:textColor="@color/gray_darker"
+        android:textColor="@color/md_on_surface_variant"
         android:textSize="12sp" />
 
     <ProgressBar

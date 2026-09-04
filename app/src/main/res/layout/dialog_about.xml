@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/ll_root"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -37,65 +38,94 @@
             android:padding="10dp"/>
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/tv_version"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:textColor="@color/text_foreground"
-        android:textStyle="bold"/>
-
-    <TextView
+    <ScrollView
+        android:id="@+id/sv_content"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:lineSpacingExtra="10dp"
-        android:text="@string/about"
-        android:textColor="@color/text_foreground"
-         />
+        android:fillViewport="true"
+        android:scrollbars="none">
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:text="项目地址"
-        android:textColor="@color/text_foreground"
-        />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="https://github.com/kertou/TVBox-mobile"
-        android:textIsSelectable="true"
-        android:textColor="@color/text_sub_foreground"
-        android:layout_marginTop="4dp"/>
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:text="上游项目（致谢）"
-        android:textColor="@color/text_foreground"
-        />
+            <TextView
+                android:id="@+id/tv_version"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:textColor="@color/text_foreground"
+                android:textStyle="bold"/>
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:lineSpacingExtra="4dp"
-        android:layout_marginVertical="4dp"
-        android:textIsSelectable="true"
-        android:textColor="@color/text_sub_foreground"
-        android:text="https://github.com/q215613905/TVBoxOS"/>
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textIsSelectable="true"
-        android:textColor="@color/text_sub_foreground"
-        android:text="https://github.com/CatVodTVOfficial/TVBoxOSC"/>
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textIsSelectable="true"
-        android:textColor="@color/text_sub_foreground"
-        android:text="https://github.com/XiaoRanLiu3119/TVBoxOS-Mobile"/>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:lineSpacingExtra="3dp"
+                android:text="@string/about"
+                android:textColor="@color/text_foreground"
+                 />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="项目地址"
+                android:textColor="@color/text_foreground"
+                />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="https://github.com/kertou/TVBox-mobile"
+                android:textIsSelectable="true"
+                android:textColor="@color/text_sub_foreground"
+                android:layout_marginTop="4dp"/>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="上游项目（致谢）"
+                android:textColor="@color/text_foreground"
+                />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:lineSpacingExtra="4dp"
+                android:layout_marginVertical="4dp"
+                android:textIsSelectable="true"
+                android:textColor="@color/text_sub_foreground"
+                android:text="https://github.com/q215613905/TVBoxOS"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textIsSelectable="true"
+                android:textColor="@color/text_sub_foreground"
+                android:text="https://github.com/CatVodTVOfficial/TVBoxOSC"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textIsSelectable="true"
+                android:textColor="@color/text_sub_foreground"
+                android:text="https://github.com/XiaoRanLiu3119/TVBoxOS-Mobile"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="UI 设计参考（致谢）"
+                android:textColor="@color/text_foreground"
+                />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textIsSelectable="true"
+                android:textColor="@color/text_sub_foreground"
+                android:layout_marginTop="4dp"
+                android:text="https://github.com/jarnedemeulemeester/findroid"/>
+        </LinearLayout>
+    </ScrollView>
 
 </LinearLayout>

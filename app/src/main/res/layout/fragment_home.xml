@@ -49,11 +49,13 @@
             android:layout_width="wrap_content"
             android:layout_weight="1"
             android:layout_height="36dp"
-            android:background="@drawable/bg_large_round_gray"
+            android:background="@drawable/bg_m3_search"
             android:gravity="center_vertical"
-            android:paddingHorizontal="12sp"
+            android:paddingHorizontal="14dp"
+            android:textColor="@color/md_on_surface"
+            android:textColorHint="@color/md_on_surface_variant"
             android:hint="搜索"
-            android:drawableTint="@color/gray_darker"
+            android:drawableTint="@color/md_on_surface_variant"
             android:layout_marginLeft="10dp"
             android:layout_marginRight="6dp"
             android:drawableRight="@drawable/ic_search_18"/>
@@ -63,6 +65,7 @@
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:padding="8dp"
+            app:tint="@color/md_on_surface_variant"
             android:src="@drawable/ic_collect_48"/>
 
         <ImageView
@@ -70,6 +73,7 @@
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:padding="8dp"
+            app:tint="@color/md_on_surface_variant"
             android:src="@drawable/ic_history_48"/>
 
     </LinearLayout>
@@ -90,7 +94,7 @@
             app:tab_indicator_enable_flash_clip="true"
             app:tab_indicator_height="5dp"
             app:tab_indicator_width="16dp"
-            app:tab_select_color="@color/colorPrimary"
+            app:tab_select_color="@color/md_primary"
             app:tab_text_min_size="14dp"
             app:tab_text_max_size="16dp"
             app:tab_enable_gradient_text_size="false"

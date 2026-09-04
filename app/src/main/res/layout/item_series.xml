@@ -4,15 +4,15 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    app:hl_cornerRadius="@dimen/common_corners"
+    app:hl_cornerRadius="12dp"
     app:hl_layoutBackground="@android:color/transparent"
-    app:hl_strokeWith="0.6dp"
-    app:hl_strokeColor="@color/colorPrimary"
-    app:hl_layoutBackground_true="@color/colorPrimary"
+    app:hl_strokeWith="0.8dp"
+    app:hl_strokeColor="@color/md_outline"
+    app:hl_layoutBackground_true="@color/md_primary"
     app:hl_shapeMode="selected"
     app:hl_bindTextView="@+id/tvSeries"
-    app:hl_textColor_true="#fff"
-    app:hl_textColor="@color/colorPrimary">
+    app:hl_textColor_true="@color/md_on_primary"
+    app:hl_textColor="@color/md_on_surface">
 
     <TextView
         android:id="@+id/tvSeries"

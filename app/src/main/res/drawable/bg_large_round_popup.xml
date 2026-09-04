@@ -5,6 +5,6 @@
 			android:color="@color/bg_popup" />
 
 	<corners 
-			android:radius="25dp" />
+			android:radius="28dp" />
 
 </shape>

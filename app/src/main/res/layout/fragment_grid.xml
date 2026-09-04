@@ -23,9 +23,9 @@
         android:layout_alignParentEnd="true"
         android:layout_alignParentBottom="true"
         android:layout_margin="20dp"
-        android:backgroundTint="@color/colorPrimary"
+        android:backgroundTint="@color/md_primary_container"
         app:borderWidth="0dp"
         android:src="@drawable/ic_filter_list"
-        app:tint="@android:color/white"
+        app:tint="@color/md_on_primary_container"
         />
 </RelativeLayout>

@@ -3,6 +3,9 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:layout_marginHorizontal="12dp"
+    android:layout_marginVertical="5dp"
+    android:background="@drawable/bg_m3_surface_card"
     android:gravity="center_vertical"
     android:orientation="horizontal"
     android:paddingHorizontal="14dp"
@@ -28,7 +31,7 @@
             android:layout_height="wrap_content"
             android:ellipsize="end"
             android:singleLine="true"
-            android:textColor="@color/text_foreground"
+            android:textColor="@color/md_on_surface"
             android:textSize="15sp"
             android:textStyle="bold" />
 
@@ -37,7 +40,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:textColor="@color/gray_darker"
+            android:textColor="@color/md_on_surface_variant"
             android:textSize="12sp" />
     </LinearLayout>
 
@@ -49,7 +52,7 @@
         android:paddingHorizontal="14dp"
         android:paddingVertical="6dp"
         android:text="播放"
-        android:textColor="#fff"
+        android:textColor="@color/md_on_primary"
         android:textSize="13sp" />
 
     <TextView
@@ -61,6 +64,6 @@
         android:paddingHorizontal="14dp"
         android:paddingVertical="6dp"
         android:text="删除"
-        android:textColor="@color/text_foreground"
+        android:textColor="@color/md_on_surface"
         android:textSize="13sp" />
 </LinearLayout>
