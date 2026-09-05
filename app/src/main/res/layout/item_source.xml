@@ -27,7 +27,7 @@
             android:textSize="16dp"
             android:ellipsize="end"
             tools:text="影视多多聚合仓"
-            android:textColor="@color/text_foreground"
+            android:textColor="?attr/colorOnSurface"
             />
 
         <TextView

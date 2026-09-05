@@ -53,7 +53,7 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:text="鬼灭之刃"
         android:layout_marginTop="20dp"
-        android:textColor="@color/text_foreground"/>
+        android:textColor="?attr/colorOnSurface"/>
 
     <TextView
         android:id="@+id/tv_year"
@@ -157,10 +157,10 @@
         app:ep_max_line="5"
         app:ep_need_contract="true"
         app:ep_need_animation="false"
-        app:ep_expand_color="@color/colorAccent"
+        app:ep_expand_color="?attr/colorPrimary"
         app:ep_contract_text="收回"
         app:ep_expand_text="展开"
-        app:ep_contract_color="@color/colorAccent"
+        app:ep_contract_color="?attr/colorPrimary"
         app:ep_need_always_showright="true"
         app:ep_need_expand="true"
         tools:text="简介: 中"

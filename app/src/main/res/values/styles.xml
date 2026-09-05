@@ -63,8 +63,8 @@
         <!--        <item name="android:windowBackground">@drawable/main_bg</item>-->
         <item name="android:windowBackground">@android:color/transparent</item>
     </style>
-    <!-- 自定义dialog样式 -->
-    <style name="CustomDialogStyle" parent="@android:style/Theme.Dialog">
+    <!-- 自定义dialog样式:挂 M3 父主题,布局里的 ?attr/color* 才能解析 -->
+    <style name="CustomDialogStyle" parent="Theme.Material3.DayNight.Dialog">
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowContentOverlay">@null</item>
         <item name="android:windowIsFloating">true</item>
@@ -74,7 +74,7 @@
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowFullscreen">true</item>
     </style>
-    <style name="CustomDialogStyleDim" parent="@android:style/Theme.Dialog">
+    <style name="CustomDialogStyleDim" parent="Theme.Material3.DayNight.Dialog">
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowContentOverlay">@null</item>
         <item name="android:windowIsFloating">true</item>

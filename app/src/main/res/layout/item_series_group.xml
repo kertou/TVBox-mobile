@@ -19,6 +19,6 @@
         android:gravity="center"
         android:singleLine="true"
         tools:text="20-40"
-        android:textColor="@color/text_foreground"
+        android:textColor="?attr/colorOnSurface"
         android:textSize="16dp" />
 </LinearLayout>

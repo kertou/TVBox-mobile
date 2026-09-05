@@ -21,7 +21,7 @@
         android:singleLine="true"
         android:text="@{name}"
         tools:text="11111111111111"
-        android:textColor="@color/text_foreground"/>
+        android:textColor="?attr/colorOnSurface"/>
 
     <ImageView
         android:id="@+id/tvDel"

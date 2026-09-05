@@ -33,7 +33,7 @@
         android:id="@+id/ll_menu"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/md_surface"
+        android:background="?attr/colorSurface"
         android:elevation="8dp"
         android:orientation="horizontal"
         android:visibility="gone"
@@ -44,7 +44,7 @@
             android:layout_width="0dp"
             android:layout_height="48dp"
             android:layout_weight="1"
-            android:textColor="@color/colorPrimary"
+            android:textColor="?attr/colorPrimary"
             android:foreground="?selectableItemBackgroundBorderless"
             android:gravity="center"
             android:text="全选" />
@@ -55,7 +55,7 @@
             android:foreground="?selectableItemBackgroundBorderless"
             android:layout_weight="1"
             android:gravity="center"
-            android:textColor="@color/colorPrimary"
+            android:textColor="?attr/colorPrimary"
             android:enabled="false"
             android:text="删除" />
         <TextView
@@ -64,7 +64,7 @@
             android:layout_height="48dp"
             android:foreground="?selectableItemBackgroundBorderless"
             android:layout_weight="1"
-            android:textColor="@color/colorPrimary"
+            android:textColor="?attr/colorPrimary"
             android:gravity="center"
             android:text="取消全选" />
 

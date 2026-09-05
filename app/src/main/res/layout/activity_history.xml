@@ -35,7 +35,7 @@
         android:layout_gravity="center_horizontal"
         android:layout_marginVertical="10dp"
         android:text="长按记录逐条删除"
-        android:textColor="@color/md_on_surface_variant"
+        android:textColor="?attr/colorOnSurfaceVariant"
         android:textSize="13sp"
         android:visibility="gone"
         tools:visibility="visible"

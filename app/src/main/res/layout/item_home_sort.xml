@@ -17,7 +17,7 @@
         android:layout_gravity="center"
         android:focusable="false"
         android:gravity="center"
-        android:textColor="@color/text_foreground"
+        android:textColor="?attr/colorOnSurface"
         android:text="首页" />
 
 </LinearLayout>

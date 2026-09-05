@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 海报卡角标底:仅右下圆角,沿用原 ShadowLayout 形状 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="?attr/colorPrimaryContainer" />
+    <corners
+        android:bottomRightRadius="10dp" />
+</shape>

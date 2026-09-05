@@ -25,5 +25,5 @@
         android:paddingHorizontal="6dp"
         android:singleLine="true"
         tools:text="中国大陆"
-        android:textColor="@color/text_foreground" />
+        android:textColor="?attr/colorOnSurface" />
 </com.lihang.ShadowLayout>

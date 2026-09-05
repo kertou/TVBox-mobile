@@ -26,7 +26,7 @@
         android:ellipsize="end"
         android:marqueeRepeatLimit="marquee_forever"
         tools:text="小账订阅小账订阅小账订阅"
-        android:textColor="@color/md_on_surface"
+        android:textColor="?attr/colorOnSurface"
         android:layout_toRightOf="@+id/cb"
         />
 
@@ -40,7 +40,7 @@
         android:layout_below="@+id/tv_name"
         android:layout_marginTop="8dp"
         tools:text="https://"
-        android:textColor="@color/md_on_surface_variant"
+        android:textColor="?attr/colorOnSurfaceVariant"
         android:textSize="13sp"
         android:layout_toRightOf="@+id/cb"/>
 

@@ -23,15 +23,15 @@
         app:layout_constraintTop_toTopOf="@id/item" />
 
     <!-- 定义一个用于显示图像的 ImageView -->
-    <com.lihang.ShadowLayout
+    <com.google.android.material.card.MaterialCardView
         android:id="@+id/iv_container"
         android:layout_width="132dp"
         android:layout_height="62dp"
         android:layout_gravity="center_horizontal"
         android:baselineAlignBottom="true"
-        app:clickable="false"
-        app:hl_cornerRadius="@dimen/common_corners"
-        app:hl_layoutBackground="@android:color/transparent"
+        app:cardBackgroundColor="?attr/colorSurfaceContainerHigh"
+        app:cardCornerRadius="@dimen/common_corners"
+        app:cardElevation="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@+id/cb"
         app:layout_constraintTop_toTopOf="parent">
@@ -62,7 +62,7 @@
                 android:progressDrawable="@drawable/bg_progressbar" />
 
         </RelativeLayout>
-    </com.lihang.ShadowLayout>
+    </com.google.android.material.card.MaterialCardView>
 
 
     <TextView

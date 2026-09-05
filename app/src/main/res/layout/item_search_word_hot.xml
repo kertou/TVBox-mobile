@@ -14,7 +14,7 @@
     android:paddingHorizontal="14dp"
     android:singleLine="true"
     android:textAlignment="center"
-    android:textColor="@color/md_on_surface"
+    android:textColor="?attr/colorOnSurface"
     android:layout_marginTop="4dp"
     android:layout_marginRight="4dp"
     tools:text="釜山行"/>

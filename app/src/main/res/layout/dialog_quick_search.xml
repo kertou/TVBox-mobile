@@ -22,7 +22,7 @@
             android:focusableInTouchMode="false"
             android:gravity="center"
             android:text="其他数据源相关搜索"
-            android:textColor="@color/text_foreground"
+            android:textColor="?attr/colorOnSurface"
             android:textSize="16sp"
              />
 

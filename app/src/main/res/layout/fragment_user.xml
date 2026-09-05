@@ -23,7 +23,7 @@
         android:layout_alignParentEnd="true"
         android:layout_alignParentBottom="true"
         android:layout_margin="20dp"
-        android:backgroundTint="@color/colorPrimary"
+        android:backgroundTint="?attr/colorPrimary"
         app:borderWidth="0dp"
         android:src="@drawable/ic_live_tv_48"
         app:tint="@android:color/white"

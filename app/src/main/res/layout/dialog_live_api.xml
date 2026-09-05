@@ -15,7 +15,7 @@
         <TextView
             android:id="@+id/tv_title"
             android:text="直播源"
-            android:textColor="@color/text_foreground"
+            android:textColor="?attr/colorOnSurface"
             android:layout_width="wrap_content"
             android:textSize="16sp"
             android:layout_height="wrap_content"
@@ -28,7 +28,7 @@
             android:paddingHorizontal="6dp"
             android:layout_alignParentRight="true"
             android:src="@drawable/ic_history_48"
-            app:tint="@color/text_foreground"/>
+            app:tint="?attr/colorOnSurface"/>
     </RelativeLayout>
 
 
@@ -37,7 +37,7 @@
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
         android:layout_height="wrap_content"
         android:layout_marginVertical="10dp"
-        android:textColorHint="@color/text_sub_foreground">
+        android:textColorHint="?attr/colorOnSurfaceVariant">
 
         <EditText
             android:id="@+id/et_url"
@@ -48,7 +48,7 @@
             android:hint="清空则跟随订阅"
             android:ellipsize="middle"
             android:singleLine="true"
-            android:textColor="@color/text_foreground"
+            android:textColor="?attr/colorOnSurface"
             android:textSize="14sp"/>
 
     </com.google.android.material.textfield.TextInputLayout>
@@ -67,7 +67,7 @@
             android:layout_height="33dp"
             android:layout_marginRight="20dp"
             android:text="取 消"
-            android:textColor="@color/text_sub_foreground"
+            android:textColor="?attr/colorOnSurfaceVariant"
             style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
 
         <com.google.android.material.button.MaterialButton
@@ -78,7 +78,7 @@
             android:insetBottom="0dp"
             android:layout_height="33dp"
             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-            app:strokeColor="@color/colorPrimary"
+            app:strokeColor="?attr/colorPrimary"
             android:text="设 置"/>
 
     </LinearLayout>

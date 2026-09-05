@@ -12,15 +12,15 @@
     >
 
     <!-- 定义一个用于显示图像的 ImageView -->
-    <com.lihang.ShadowLayout
+    <com.google.android.material.card.MaterialCardView
         android:id="@+id/iv_container"
         android:layout_width="120dp"
         android:layout_height="72dp"
         android:layout_gravity="center_horizontal"
         android:baselineAlignBottom="true"
-        app:clickable="false"
-        app:hl_cornerRadius="10dp"
-        app:hl_layoutBackground="@android:color/transparent"
+        app:cardBackgroundColor="?attr/colorSurfaceContainerHigh"
+        app:cardCornerRadius="10dp"
+        app:cardElevation="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -31,7 +31,7 @@
             android:layout_height="match_parent"
             android:src="@drawable/iv_video" />
 
-    </com.lihang.ShadowLayout>
+    </com.google.android.material.card.MaterialCardView>
 
 
     <TextView
@@ -43,7 +43,7 @@
         android:ellipsize="end"
         android:gravity="start"
         android:maxLines="1"
-        android:textColor="@color/text_foreground"
+        android:textColor="?attr/colorOnSurface"
         android:textSize="16sp"
         app:layout_constrainedWidth="true"
         app:layout_constraintEnd_toEndOf="parent"
@@ -57,7 +57,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
-        android:textColor="@color/text_foreground"
+        android:textColor="?attr/colorOnSurface"
         android:textSize="12sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="@+id/tv_name"

@@ -14,7 +14,7 @@
         android:layout_gravity="center"
         android:clickable="false"
         android:focusable="false"
-        android:textColor="@color/text_foreground"
+        android:textColor="?attr/colorOnSurface"
         android:button="@drawable/button_checkbox"
         android:paddingLeft="12dp"
         android:maxLines="2"

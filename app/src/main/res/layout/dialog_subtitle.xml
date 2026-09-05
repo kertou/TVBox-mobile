@@ -43,7 +43,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginHorizontal="10dp"
                         android:textStyle="bold"
-                        android:textColor="@color/text_foreground" />
+                        android:textColor="?attr/colorOnSurface" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/subtitleClose"
@@ -81,7 +81,7 @@
                         android:layout_marginHorizontal="10dp"
                         android:text="16"
                         android:textStyle="bold"
-                        android:textColor="@color/text_foreground" />
+                        android:textColor="?attr/colorOnSurface" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/subtitleSizePlus"
@@ -108,7 +108,7 @@
                         android:layout_height="wrap_content"
                         android:focusable="true"
                         android:text="样式一"
-                        android:shadowColor="@color/text_foreground"
+                        android:shadowColor="?attr/colorOnSurface"
                         android:shadowRadius="2"
                         android:shadowDx="1"
                         android:shadowDy="1"/>
@@ -169,7 +169,7 @@
                             android:gravity="center"
                             android:text="0"
                             android:textStyle="bold"
-                            android:textColor="@color/text_foreground"/>
+                            android:textColor="?attr/colorOnSurface"/>
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -178,7 +178,7 @@
                             android:text="(仅外挂)"
                             android:layout_marginLeft="10dp"
                             android:textSize="10sp"
-                            android:textColor="@color/text_foreground"/>
+                            android:textColor="?attr/colorOnSurface"/>
                     </LinearLayout>
 
                     <com.google.android.material.button.MaterialButton

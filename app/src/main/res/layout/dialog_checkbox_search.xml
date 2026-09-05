@@ -29,7 +29,7 @@
                 android:focusable="true"
                 android:paddingVertical="8dp"
                 android:text="全选"
-                android:textColor="@color/text_foreground"
+                android:textColor="?attr/colorOnSurface"
                 android:textStyle="bold"/>
 
             <TextView
@@ -44,7 +44,7 @@
                 android:focusable="true"
                 android:paddingVertical="8dp"
                 android:text="全不选"
-                android:textColor="@color/text_foreground"
+                android:textColor="?attr/colorOnSurface"
                 android:textStyle="bold"/>
         </LinearLayout>
 

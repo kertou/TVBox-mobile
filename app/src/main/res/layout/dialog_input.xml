@@ -12,7 +12,7 @@
     <TextView
         android:id="@+id/tv_title"
         android:text="提示"
-        android:textColor="@color/text_foreground"
+        android:textColor="?attr/colorOnSurface"
         android:layout_width="wrap_content"
         android:textSize="16sp"
         android:layout_height="wrap_content"/>
@@ -20,7 +20,7 @@
     <TextView
         android:id="@+id/tv_content"
         tools:text="内容"
-        android:textColor="@color/text_foreground"
+        android:textColor="?attr/colorOnSurface"
         android:layout_width="wrap_content"
         android:layout_marginTop="10dp"
         android:visibility="gone"
@@ -33,7 +33,7 @@
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
-        android:textColorHint="@color/text_sub_foreground">
+        android:textColorHint="?attr/colorOnSurfaceVariant">
 
         <EditText
             android:id="@+id/et_input"
@@ -43,8 +43,8 @@
             android:layout_marginTop="10dp"
             android:hint="请输入..."
             android:inputType="textUri"
-            android:textColor="@color/text_foreground"
-            android:textColorHint="@color/text_sub_foreground"
+            android:textColor="?attr/colorOnSurface"
+            android:textColorHint="?attr/colorOnSurfaceVariant"
             android:textSize="14sp"/>
 
     </com.google.android.material.textfield.TextInputLayout>
@@ -64,7 +64,7 @@
             android:layout_height="33dp"
             android:layout_marginRight="20dp"
             android:text="取 消"
-            android:textColor="@color/text_sub_foreground"
+            android:textColor="?attr/colorOnSurfaceVariant"
             style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
 
         <com.google.android.material.button.MaterialButton
@@ -75,7 +75,7 @@
             android:insetBottom="0dp"
             android:layout_height="33dp"
             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-            app:strokeColor="@color/colorPrimary"
+            app:strokeColor="?attr/colorPrimary"
             android:text="确 定"/>
 
     </LinearLayout>

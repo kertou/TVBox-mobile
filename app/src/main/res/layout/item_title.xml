@@ -18,5 +18,5 @@
         android:paddingHorizontal="10dp"
         android:paddingVertical="6dp"
         android:textStyle="bold"
-        android:textColor="@color/text_foreground"/>
+        android:textColor="?attr/colorOnSurface"/>
 </LinearLayout>

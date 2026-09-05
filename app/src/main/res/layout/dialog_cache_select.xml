@@ -13,7 +13,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="缓存剧集"
-        android:textColor="@color/md_on_surface"
+        android:textColor="?attr/colorOnSurface"
         android:textSize="18sp"
         android:textStyle="bold" />
 
@@ -23,7 +23,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
         android:text="剧名 · 线路"
-        android:textColor="@color/md_on_surface_variant"
+        android:textColor="?attr/colorOnSurfaceVariant"
         android:textSize="13sp" />
 
     <LinearLayout
@@ -40,7 +40,7 @@
             android:paddingHorizontal="14dp"
             android:paddingVertical="6dp"
             android:text="全选"
-        android:textColor="@color/md_on_surface"
+        android:textColor="?attr/colorOnSurface"
         android:textSize="13sp" />
 
         <TextView
@@ -52,7 +52,7 @@
             android:paddingHorizontal="14dp"
             android:paddingVertical="6dp"
             android:text="反选"
-            android:textColor="@color/md_on_surface"
+            android:textColor="?attr/colorOnSurface"
             android:textSize="13sp" />
 
         <TextView
@@ -64,7 +64,7 @@
             android:paddingHorizontal="14dp"
             android:paddingVertical="6dp"
             android:text="仅当前集"
-            android:textColor="@color/md_on_surface"
+            android:textColor="?attr/colorOnSurface"
             android:textSize="13sp" />
     </LinearLayout>
 
@@ -81,7 +81,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
         android:text="提示:开始播放后才会自动开始下载"
-        android:textColor="@color/md_on_surface_variant"
+        android:textColor="?attr/colorOnSurfaceVariant"
         android:textSize="12sp" />
 
     <LinearLayout
@@ -99,7 +99,7 @@
             android:paddingHorizontal="16dp"
             android:paddingVertical="8dp"
             android:text="用1DM下载当前集"
-            android:textColor="@color/md_primary"
+            android:textColor="?attr/colorPrimary"
             android:textSize="12sp" />
 
         <Space
@@ -115,7 +115,7 @@
             android:paddingHorizontal="30dp"
             android:paddingVertical="10dp"
             android:text="开始缓存(0集)"
-            android:textColor="@color/md_on_primary"
+            android:textColor="?attr/colorOnPrimary"
             android:textSize="14sp" />
     </LinearLayout>
 </LinearLayout>

@@ -36,7 +36,7 @@
         android:layout_gravity="center_horizontal"
         android:layout_marginVertical="8dp"
         android:text="已占用: 0B"
-        android:textColor="@color/md_on_surface_variant"
+        android:textColor="?attr/colorOnSurfaceVariant"
         android:textSize="12sp" />
 
     <FrameLayout
@@ -57,7 +57,7 @@
             android:layout_gravity="center"
             android:gravity="center"
             android:text="暂无缓存\n到视频详情页点击“下载”按钮即可缓存剧集"
-            android:textColor="@color/md_on_surface_variant"
+            android:textColor="?attr/colorOnSurfaceVariant"
             android:textSize="14sp"
             android:visibility="gone" />
     </FrameLayout>

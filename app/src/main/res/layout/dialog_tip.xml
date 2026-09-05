@@ -43,7 +43,7 @@
             android:lineSpacingExtra="30dp"
             android:lineSpacingMultiplier="0"
             android:textAlignment="gravity"
-            android:textColor="@color/text_foreground"
+            android:textColor="?attr/colorOnSurface"
             tools:text="解析失败解析失败解析失败解析失败解析失败解析失败解析失败解析失败" />
 
         <LinearLayout
@@ -59,7 +59,7 @@
                 android:layout_height="33dp"
                 android:layout_marginRight="20dp"
                 android:text="重 试"
-                app:strokeColor="@color/colorPrimary"
+                app:strokeColor="?attr/colorPrimary"
                 />
 
             <com.google.android.material.button.MaterialButton
@@ -70,8 +70,8 @@
                 android:insetTop="0dp"
                 android:insetBottom="0dp"
                 android:layout_height="33dp"
-                android:textColor="@color/text_sub_foreground"
-                app:strokeColor="@color/text_sub_foreground"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                app:strokeColor="?attr/colorOnSurfaceVariant"
                 android:text="取 消"/>
 
         </LinearLayout>

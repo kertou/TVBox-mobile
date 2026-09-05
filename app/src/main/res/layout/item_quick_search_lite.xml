@@ -13,5 +13,5 @@
         android:gravity="center_vertical"
         android:padding="@dimen/dp_10"
         android:singleLine="true"
-        android:textColor="@color/text_foreground"/>
+        android:textColor="?attr/colorOnSurface"/>
 </FrameLayout>

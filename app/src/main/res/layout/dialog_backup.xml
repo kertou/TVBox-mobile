@@ -46,7 +46,7 @@
             android:padding="20dp"
             android:singleLine="true"
             android:text="点击下方数据还原"
-            android:textColor="@color/text_foreground"
+            android:textColor="?attr/colorOnSurface"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="parent"

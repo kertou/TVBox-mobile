@@ -16,7 +16,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="投屏"
-        android:textColor="@color/text_foreground"
+        android:textColor="?attr/colorOnSurface"
         android:textStyle="bold"
         android:textSize="18sp"/>
 
@@ -41,7 +41,7 @@
             android:layout_height="33dp"
             android:layout_marginRight="20dp"
             android:text="关 闭"
-            android:textColor="@color/text_foreground"
+            android:textColor="?attr/colorOnSurface"
             style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
 
         <com.google.android.material.button.MaterialButton
@@ -52,7 +52,7 @@
             android:insetBottom="0dp"
             android:layout_height="33dp"
             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-            app:strokeColor="@color/colorPrimary"
+            app:strokeColor="?attr/colorPrimary"
             android:text="刷 新"/>
 
     </LinearLayout>

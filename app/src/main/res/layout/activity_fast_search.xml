@@ -23,7 +23,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/bar_arrows_left_black"
-            app:tint="@color/md_on_surface"/>
+            app:tint="?attr/colorOnSurface"/>
 
         <com.github.tvbox.osc.ui.widget.ClearEditText
             android:id="@+id/et_search"
@@ -31,8 +31,8 @@
             android:layout_weight="1"
             android:layout_height="wrap_content"
             android:hint="搜索"
-            android:textColorHint="@color/md_on_surface_variant"
-            android:textColor="@color/md_on_surface"
+            android:textColorHint="?attr/colorOnSurfaceVariant"
+            android:textColor="?attr/colorOnSurface"
             android:textSize="16sp"
             android:layout_marginHorizontal="10dp"
             android:background="@drawable/bg_m3_search"
@@ -48,13 +48,13 @@
             android:layout_height="40dp"
             android:padding="4dp"
             android:src="@drawable/ic_filter_list"
-            app:tint="@color/md_on_surface_variant"
+            app:tint="?attr/colorOnSurfaceVariant"
             android:layout_marginRight="4dp"/>
 
         <View
             android:layout_width="2dp"
             android:layout_height="18dp"
-            android:background="@color/md_outline"/>
+            android:background="?attr/colorOutline"/>
 
         <ImageView
             android:id="@+id/iv_search"
@@ -62,7 +62,7 @@
             android:layout_height="40dp"
             android:src="@drawable/ic_search_48"
             android:paddingHorizontal="6dp"
-            app:tint="@color/md_on_surface_variant"/>
+            app:tint="?attr/colorOnSurfaceVariant"/>
     </LinearLayout>
     <LinearLayout
         android:id="@+id/llSearchSuggest"
@@ -92,7 +92,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="历史搜索"
-                    android:textColor="@color/md_on_surface"
+                    android:textColor="?attr/colorOnSurface"
                     android:textSize="15sp"
                     />
 
@@ -102,7 +102,7 @@
                     android:layout_height="24dp"
                     android:paddingVertical="4dp"
                     android:src="@drawable/ic_clear"
-                    app:tint="@color/md_on_surface_variant"
+                    app:tint="?attr/colorOnSurfaceVariant"
                     />
             </LinearLayout>
 
@@ -120,7 +120,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:text="热门搜索"
-            android:textColor="@color/md_on_surface"
+            android:textColor="?attr/colorOnSurface"
             android:textSize="15sp"
             android:textAlignment="center"/>
 
@@ -156,8 +156,8 @@
                 app:tab_draw_highlight="false"
                 app:tab_indicator_drawable="@drawable/bg_m3_tab_pill"
                 app:tab_orientation="VERTICAL"
-                app:tab_deselect_color="@color/md_on_surface_variant"
-                app:tab_select_color="@color/md_on_primary">
+                app:tab_deselect_color="?attr/colorOnSurfaceVariant"
+                app:tab_select_color="?attr/colorOnPrimary">
 
 
             </com.angcyo.tablayout.DslTabLayout>
