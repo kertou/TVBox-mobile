@@ -18,7 +18,7 @@
         android:paddingRight="5mm"
         android:singleLine="true"
         android:text="+新增直播"
-        android:textColor="@color/color_CBF46A"
+        android:textColor="?attr/colorPrimary"
         android:textSize="24mm"
         android:visibility="gone" />
 

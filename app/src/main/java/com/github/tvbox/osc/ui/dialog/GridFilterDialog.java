@@ -17,7 +17,7 @@ import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.github.tvbox.osc.R;
 import com.github.tvbox.osc.bean.MovieSort;
 import com.github.tvbox.osc.ui.adapter.GridFilterKVAdapter;
-import com.lihang.ShadowLayout;
+import android.widget.TextView;
 import com.owen.tvrecyclerview.widget.TvRecyclerView;
 import com.owen.tvrecyclerview.widget.V7LinearLayoutManager;
 
@@ -82,17 +82,17 @@ public class GridFilterDialog extends BaseDialog {
                     if (filterSelect == null || !filterSelect.equals(keys.get(position))) {// 没选 或 不是重选
                         sortData.filterSelect.put(key, keys.get(position));
                         if (pre != null) {//上一次点击的view
-                            ShadowLayout val = pre.findViewById(R.id.sl);
+                            TextView val = pre.findViewById(R.id.sl);
                             val.setSelected(false);
                         }
-                        ShadowLayout val = view.findViewById(R.id.sl);
+                        TextView val = view.findViewById(R.id.sl);
                         val.setSelected(true);
                         //记录点击的view,下次点击对上一个view做处理
                         pre = view;
                     } else {// 重选 取消
                         sortData.filterSelect.remove(key);
                         if (pre != null){
-                            ShadowLayout val = pre.findViewById(R.id.sl);
+                            TextView val = pre.findViewById(R.id.sl);
                             val.setSelected(false);
                         }
                         pre = null;

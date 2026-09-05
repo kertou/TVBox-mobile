@@ -54,7 +54,7 @@
         android:src="@drawable/dkplayer_ic_action_close"
         android:layout_alignParentRight="true"
         android:layout_alignParentTop="true"
-        app:tint="@color/red"/>
+        app:tint="?attr/colorError"/>
 
     <ImageView
         android:id="@+id/iv_pushpin"
@@ -65,7 +65,7 @@
         android:paddingHorizontal="6dp"
         android:src="@drawable/ic_pushpin"
         android:layout_toLeftOf="@+id/iv_del"
-        app:tint="@color/red"
+        app:tint="?attr/colorError"
         android:visibility="gone"
         tools:visibility="visible"/>
 

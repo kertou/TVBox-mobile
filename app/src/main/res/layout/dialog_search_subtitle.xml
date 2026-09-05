@@ -7,11 +7,12 @@
     xmlns:tools="http://schemas.android.com/tools"
     >
 
-    <com.lihang.ShadowLayout
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:hl_layoutBackground="#6632364E"
-        app:hl_cornerRadius="10dp"
+        app:cardBackgroundColor="?attr/colorSurfaceContainerHigh"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="0dp"
         android:layout_marginHorizontal="10dp">
 
         <LinearLayout
@@ -87,7 +88,7 @@
                 </LinearLayout>
             </ScrollView>
         </LinearLayout>
-    </com.lihang.ShadowLayout>
+    </com.google.android.material.card.MaterialCardView>
     <ProgressBar
         android:id="@+id/loadingBar"
         android:layout_width="20dp"

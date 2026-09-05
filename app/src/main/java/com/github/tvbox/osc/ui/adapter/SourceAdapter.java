@@ -5,7 +5,6 @@ import com.chad.library.adapter.base.BaseViewHolder;
 import com.github.tvbox.osc.R;
 import com.github.tvbox.osc.bean.Source;
 import com.github.tvbox.osc.bean.VodInfo;
-import com.lihang.ShadowLayout;
 
 import java.util.ArrayList;
 

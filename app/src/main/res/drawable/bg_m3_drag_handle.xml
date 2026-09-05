@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- M3 拖拽指示条 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="?attr/colorOnSurfaceVariant" />
+    <corners android:radius="2dp" />
+</shape>

@@ -32,7 +32,7 @@
         android:focusable="true"
         android:padding="12dp"
         android:src="@drawable/icon_delete"
-        app:tint="@color/red" />
+        app:tint="?attr/colorError" />
 
 </LinearLayout>
 

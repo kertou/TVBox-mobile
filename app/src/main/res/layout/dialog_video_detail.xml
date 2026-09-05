@@ -9,24 +9,25 @@
     android:orientation="vertical"
     android:padding="20dp">
 
-    <com.lihang.ShadowLayout
+        <View
         android:id="@+id/v_gesture_line"
-        android:layout_width="30dp"
-        android:layout_height="2dp"
-        app:hl_cornerRadius="10dp"
-        app:hl_layoutBackground="@color/gray_darker"
+        android:layout_width="32dp"
+        android:layout_height="4dp"
+        android:background="@drawable/bg_m3_drag_handle"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.lihang.ShadowLayout
+        <com.google.android.material.card.MaterialCardView
         android:id="@+id/ll_thum"
         android:layout_width="100dp"
         android:layout_height="0dp"
         app:layout_constrainedHeight="true"
         android:layout_marginTop="10dp"
         android:layout_marginBottom="8dp"
-        app:hl_cornerRadius="@dimen/common_corners"
+        app:cardBackgroundColor="?attr/colorSurfaceContainerHigh"
+        app:cardCornerRadius="@dimen/common_corners"
+        app:cardElevation="0dp"
         app:layout_constraintBottom_toBottomOf="@+id/tv_director"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/tv_name">
@@ -37,7 +38,7 @@
             android:layout_height="match_parent"
             android:scaleType="centerCrop"
             app:srcCompat="@drawable/img_loading_placeholder" />
-    </com.lihang.ShadowLayout>
+        </com.google.android.material.card.MaterialCardView>
 
     <TextView
         android:id="@+id/tv_name"

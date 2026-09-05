@@ -13,6 +13,6 @@ public class GridFilterKVAdapter extends BaseQuickAdapter<String, BaseViewHolder
 
     @Override
     protected void convert(BaseViewHolder helper, String item) {
-        helper.setText(R.id.filterValue, item);
+        helper.setText(R.id.sl, item);
     }
 }
