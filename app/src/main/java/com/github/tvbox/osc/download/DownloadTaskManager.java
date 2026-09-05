@@ -506,6 +506,7 @@ public class DownloadTaskManager {
             task.totalBytes = target.length();
         } else {
             File outFile = new File(dir, "index.mp4");
+            postMerging(task);
             if (MediaMerger.remuxToMp4(target, outFile)) {
                 target.delete();
                 task.localFilePath = outFile.getAbsolutePath();
@@ -555,6 +556,7 @@ public class DownloadTaskManager {
             return;
         }
         // 4. 合并 MP4(分片已解密拼接,无损转封装)
+        postMerging(task);
         File playlistFile = new File(r.localPlaylistPath);
         File mergeInput = new File(r.mergeInputPath);
         File outFile = new File(dir, "index.mp4");
@@ -702,6 +704,39 @@ public class DownloadTaskManager {
 
     private void postChanged() {
         EventBus.getDefault().post(new DownloadEvent(DownloadEvent.TYPE_TASKS_CHANGED));
+    }
+
+    /** 通知 UI:该集分片已下完,正在合并/转封装 MP4(状态保持 DOWNLOADING,不落库) */
+    private void postMerging(DownloadEpisode task) {
+        android.util.Log.d("DownloadTask", "postMerging episode=" + task.getId());
+        DownloadEvent event = new DownloadEvent(DownloadEvent.TYPE_MERGING);
+        event.episodeId = task.getId();
+        event.title = task.vodName;
+        EventBus.getDefault().post(event);
+    }
+
+    /** 一键重试全部失败集:置回等待中并强制重新解析(不碰暂停/等待中的任务),返回重试数量 */
+    public int retryAllFailed() {
+        List<DownloadEpisode> all = RoomDataManger.getAllDownloadEpisodes();
+        int count = 0;
+        for (DownloadEpisode t : all) {
+            if (t.status != DownloadEpisode.STATUS_FAILED) continue;
+            clearRetryState(t.getId());
+            // 失败集重试重新解析:缓存地址可能已失效(源站多节点轮换)
+            t.resolvedUrl = null;
+            t.headersJson = null;
+            t.status = DownloadEpisode.STATUS_WAITING;
+            t.errMsg = null;
+            t.updateTime = System.currentTimeMillis();
+            RoomDataManger.updateDownloadEpisode(t);
+            count++;
+        }
+        if (count > 0) {
+            postChanged();
+            DownloadService.start();
+            kick();
+        }
+        return count;
     }
 
     private boolean isWifiOnly() {

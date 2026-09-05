@@ -110,12 +110,23 @@ public class CacheFragment extends BaseVbFragment<FragmentCacheBinding> {
             loadData();
             return;
         }
+        if (event.type == DownloadEvent.TYPE_MERGING) {
+            // 合并期角标沿用已下字节;标记 merging 供列表行展示(网格不显示该文案)
+            DownloadAdapter.Live live = liveProgress.get(event.episodeId);
+            if (live == null) {
+                live = new DownloadAdapter.Live();
+                liveProgress.put(event.episodeId, live);
+            }
+            live.merging = true;
+            return;
+        }
         if (event.type == DownloadEvent.TYPE_PROGRESS) {
             DownloadAdapter.Live live = liveProgress.get(event.episodeId);
             if (live == null) {
                 live = new DownloadAdapter.Live();
                 liveProgress.put(event.episodeId, live);
             }
+            live.merging = false;
             live.downloadedBytes = event.downloadedBytes;
             live.totalBytes = event.totalBytes;
             live.speedBytes = event.speedBytes;

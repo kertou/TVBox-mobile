@@ -3,7 +3,6 @@ package com.github.tvbox.osc.ui.adapter;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
@@ -15,6 +14,7 @@ import com.chad.library.adapter.base.BaseViewHolder;
 import com.github.tvbox.osc.R;
 import com.github.tvbox.osc.cache.DownloadEpisode;
 import com.github.tvbox.osc.download.DownloadStorage;
+import com.google.android.material.progressindicator.LinearProgressIndicator;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -32,6 +32,8 @@ public class DownloadAdapter extends BaseSectionQuickAdapter<DownloadSection, Ba
         public volatile long speedBytes;
         public volatile int segmentsDone = -1;
         public volatile int segmentsTotal = -1;
+        /** 分片已下完,正在合并/转封装 MP4(收到新进度或完成时清掉) */
+        public volatile boolean merging;
     }
 
     private Map<Integer, Live> liveMap;
@@ -50,8 +52,9 @@ public class DownloadAdapter extends BaseSectionQuickAdapter<DownloadSection, Ba
         TextView tvName = helper.getView(R.id.tvEpName);
         TextView tvState = helper.getView(R.id.tvEpState);
         TextView btnAction = helper.getView(R.id.btnAction);
-        ProgressBar pb = helper.getView(R.id.pbProgress);
+        LinearProgressIndicator pb = helper.getView(R.id.pbProgress);
         tvName.setText(ep.episodeName);
+        btnAction.setVisibility(View.VISIBLE);
         int progress = 0;
         switch (ep.status) {
             case DownloadEpisode.STATUS_WAITING:
@@ -69,6 +72,13 @@ public class DownloadAdapter extends BaseSectionQuickAdapter<DownloadSection, Ba
             case DownloadEpisode.STATUS_DOWNLOADING: {
                 pb.setVisibility(View.VISIBLE);
                 Live live = liveMap != null ? liveMap.get(ep.getId()) : null;
+                if (live != null && live.merging) {
+                    // 合并/转封装期间:不确定进度条,无速度概念,隐藏操作按钮
+                    tvState.setText("正在合成视频…");
+                    pb.setIndeterminate(true);
+                    btnAction.setVisibility(View.GONE);
+                    break;
+                }
                 long done = live != null && live.downloadedBytes > 0 ? live.downloadedBytes : ep.downloadedBytes;
                 long speed = live != null ? live.speedBytes : 0;
                 String speedText = speed > 0 ? " · " + DownloadStorage.formatSize(speed) + "/s" : "";
@@ -126,13 +136,30 @@ public class DownloadAdapter extends BaseSectionQuickAdapter<DownloadSection, Ba
         TextView tvName = helper.getView(R.id.tvSeriesName);
         TextView tvState = helper.getView(R.id.tvSeriesState);
         ImageView ivPic = helper.getView(R.id.ivPic);
+        TextView btnRetryFailed = helper.getView(R.id.btnRetryFailed);
         tvName.setText(section.seriesName);
         tvState.setText("已缓存 " + section.doneCount + "/" + section.totalCount + " 集 · "
                 + DownloadStorage.formatSize(section.sizeBytes));
+        // 统计本组失败集,有失败才显示一键重试按钮(episode section 的分组 key 要经 t.groupKey() 取)
+        int failed = 0;
+        for (DownloadSection s : getData()) {
+            if (!s.isHeader && s.t != null
+                    && section.groupKey.equals(s.t.groupKey())
+                    && s.t.status == DownloadEpisode.STATUS_FAILED) {
+                failed++;
+            }
+        }
+        if (failed > 0) {
+            btnRetryFailed.setVisibility(View.VISIBLE);
+            btnRetryFailed.setText("重试失败(" + failed + ")");
+        } else {
+            btnRetryFailed.setVisibility(View.GONE);
+        }
         if (!TextUtils.isEmpty(section.pic)) {
             Glide.with(ivPic.getContext()).load(section.pic).placeholder(R.color.bg_gray).into(ivPic);
         }
         helper.addOnClickListener(R.id.btnPlayAll);
         helper.addOnClickListener(R.id.btnDeleteSeries);
+        helper.addOnClickListener(R.id.btnRetryFailed);
     }
 }

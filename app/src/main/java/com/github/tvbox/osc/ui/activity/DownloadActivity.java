@@ -100,6 +100,11 @@ public class DownloadActivity extends BaseVbActivity<ActivityDownloadBinding> {
         if (section.isHeader) {
             if (view.getId() == R.id.btnPlayAll) {
                 playFirstOfGroup(section.groupKey);
+            } else if (view.getId() == R.id.btnRetryFailed) {
+                int n = DownloadTaskManager.get().retryAllFailed();
+                if (n > 0) {
+                    ToastUtils.showShort("已重新排队 " + n + " 个失败集");
+                }
             } else if (view.getId() == R.id.btnDeleteSeries) {
                 confirmDeleteSeries(section.groupKey, seriesNameOf(section));
             }
@@ -183,12 +188,24 @@ public class DownloadActivity extends BaseVbActivity<ActivityDownloadBinding> {
             loadData();
             return;
         }
+        if (event.type == DownloadEvent.TYPE_MERGING) {
+            // 分片下完进入合并:列表行显示"正在合成视频…"(状态仍 DOWNLOADING)
+            DownloadAdapter.Live live = liveProgress.get(event.episodeId);
+            if (live == null) {
+                live = new DownloadAdapter.Live();
+                liveProgress.put(event.episodeId, live);
+            }
+            live.merging = true;
+            loadData();
+            return;
+        }
         if (event.type == DownloadEvent.TYPE_PROGRESS) {
             DownloadAdapter.Live live = liveProgress.get(event.episodeId);
             if (live == null) {
                 live = new DownloadAdapter.Live();
                 liveProgress.put(event.episodeId, live);
             }
+            live.merging = false;
             live.downloadedBytes = event.downloadedBytes;
             live.totalBytes = event.totalBytes;
             live.speedBytes = event.speedBytes;

@@ -10,6 +10,8 @@ public class DownloadEvent {
     public static final int TYPE_PROGRESS = 1;
     /** 单集缓存完成 */
     public static final int TYPE_DONE = 2;
+    /** 单集分片下载完成,正在合并/转封装 MP4(状态仍是 DOWNLOADING,不落库) */
+    public static final int TYPE_MERGING = 3;
 
     public int type;
     public int episodeId;

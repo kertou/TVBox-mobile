@@ -138,6 +138,12 @@ public class DownloadService extends Service {
             stopSelf();
             return;
         }
+        if (event.type == DownloadEvent.TYPE_MERGING) {
+            // 合并/转封装期间:不确定进度圈 + 固定文案
+            String title = (event.title == null || event.title.isEmpty()) ? "正在缓存视频" : event.title;
+            updateNotification(buildNotification(title, "正在合成视频…", 0, true));
+            return;
+        }
         if (event.type != DownloadEvent.TYPE_PROGRESS) {
             return;
         }

@@ -56,6 +56,19 @@
         android:textSize="13sp" />
 
     <TextView
+        android:id="@+id/btnRetryFailed"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="10dp"
+        android:background="@drawable/bg_m3_button_outline"
+        android:paddingHorizontal="14dp"
+        android:paddingVertical="6dp"
+        android:text="重试失败(0)"
+        android:textColor="@color/md_primary"
+        android:textSize="13sp"
+        android:visibility="gone" />
+
+    <TextView
         android:id="@+id/btnDeleteSeries"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
