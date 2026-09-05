@@ -187,7 +187,7 @@ public class DownloadService extends Service {
 
     private Notification buildNotification(String title, String text, int percent, boolean withPauseAction) {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_PROGRESS)
-                .setSmallIcon(R.drawable.app_icon)
+                .setSmallIcon(R.drawable.ic_notification)
                 .setContentTitle(title)
                 .setContentText(text)
                 .setOngoing(true)
@@ -209,7 +209,7 @@ public class DownloadService extends Service {
     private void notifyDone(DownloadEvent event) {
         try {
             NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_DONE)
-                    .setSmallIcon(R.drawable.app_icon)
+                    .setSmallIcon(R.drawable.ic_notification)
                     .setContentTitle("缓存完成")
                     .setContentText((event.title == null ? "视频" : event.title) + " 已保存到应用内缓存")
                     .setAutoCancel(true)

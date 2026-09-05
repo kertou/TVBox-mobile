@@ -98,7 +98,7 @@ public class PlayService extends Service {
         remoteViewsSmall.setTextViewText(R.id.tv_subtitle, "正在播放: "+episodes);
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setSmallIcon(R.drawable.app_icon)
+                .setSmallIcon(R.drawable.ic_notification)
                 .setContent(remoteViews)
                 .setCustomContentView(remoteViewsSmall)
                 .setCustomBigContentView(remoteViews)
