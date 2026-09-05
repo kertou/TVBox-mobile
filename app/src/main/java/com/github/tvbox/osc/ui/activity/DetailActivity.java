@@ -1021,7 +1021,7 @@ public class DetailActivity extends BaseVbActivity<ActivityDetailBinding> {
                         DetailActivity.this,
                         actionCode,
                         new Intent(IntentKey.BROADCAST_ACTION).putExtra("action", actionCode),
-                        0);
+                        PendingIntent.FLAG_IMMUTABLE);
         final Icon icon = Icon.createWithResource(DetailActivity.this, iconResId);
         return (new RemoteAction(icon, title, desc, intent));
     }

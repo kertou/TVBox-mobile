@@ -109,7 +109,7 @@ class MyBatteryView : View {
         setMeasuredDimension(specWidthSize, specHeightSize)
     }
 
-    override fun onDraw(canvas: Canvas?) {
+    override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
         // 满电的长度

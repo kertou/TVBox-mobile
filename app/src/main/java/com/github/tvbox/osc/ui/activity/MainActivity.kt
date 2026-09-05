@@ -108,11 +108,11 @@ class MainActivity : BaseVbActivity<ActivityMainBinding>() {
         }
     }
 
-    override fun dispatchKeyEvent(event: KeyEvent?): Boolean {
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         // 直播 tab 内遥控器按键(换台/呼出频道列表)交给直播页处理
         if (mBinding.vp.currentItem == 1) {
             val liveFragment = fragments[1] as LiveFragment
-            if (event != null && liveFragment.isUiReady()) {
+            if (liveFragment.isUiReady()) {
                 liveFragment.handleKeyEvent(event)
             }
         }
