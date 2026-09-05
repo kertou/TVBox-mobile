@@ -10,6 +10,7 @@ import com.blankj.utilcode.util.GsonUtils;
 import com.blankj.utilcode.util.ToastUtils;
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.github.tvbox.osc.R;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.github.tvbox.osc.base.BaseVbActivity;
 import com.github.tvbox.osc.bean.VideoInfo;
 import com.github.tvbox.osc.cache.DownloadEpisode;
@@ -76,14 +77,14 @@ public class DownloadActivity extends BaseVbActivity<ActivityDownloadBinding> {
 
     private void initView() {
         RecyclerView rv = mBinding.rvList;
-        mBinding.titleBar.getLeftView().setOnClickListener(v -> finish());
+        mBinding.titleBar.setNavigationOnClickListener(v -> finish());
         rv.setLayoutManager(new LinearLayoutManager(this));
         mAdapter = new DownloadAdapter();
         mAdapter.setLiveProgress(liveProgress);
         rv.setAdapter(mAdapter);
         mAdapter.setOnItemClickListener(mItemClickListener);
         mAdapter.setOnItemChildClickListener(mEpisodeChildClick);
-        mBinding.titleBar.getRightView().setOnClickListener(v -> confirmDeleteSeries(detailGroupKey, detailSeriesName));
+        mBinding.rightView.setOnClickListener(v -> confirmDeleteSeries(detailGroupKey, detailSeriesName));
     }
 
     private final BaseQuickAdapter.OnItemClickListener mItemClickListener = (adapter, view, position) -> {
@@ -129,9 +130,11 @@ public class DownloadActivity extends BaseVbActivity<ActivityDownloadBinding> {
     }
 
     private void confirmDeleteSeries(String groupKey, String seriesName) {
-        new XPopup.Builder(this)
-                .isDarkTheme(Utils.isDarkTheme())
-                .asConfirm("删除缓存", "确定删除《" + (seriesName == null ? "" : seriesName) + "》的全部缓存文件吗?", "取消", "确定", () -> {
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("删除缓存")
+                .setMessage("确定删除《" + (seriesName == null ? "" : seriesName) + "》的全部缓存文件吗?")
+                .setNegativeButton("取消", null)
+                .setPositiveButton("确定", (dialog, which) -> {
                     // 递归删除整个剧集目录是大量磁盘操作,放后台执行
                     loadExecutor.execute(() -> {
                         try {
@@ -155,7 +158,8 @@ public class DownloadActivity extends BaseVbActivity<ActivityDownloadBinding> {
                             loadData();
                         }
                     });
-                }, null, false).show();
+                                })
+                .show();
     }
 
     private void handleEpisodeAction(DownloadEpisode ep) {
@@ -294,7 +298,6 @@ public class DownloadActivity extends BaseVbActivity<ActivityDownloadBinding> {
             if (!titleApplied) {
                 titleApplied = true;
                 mBinding.titleBar.setTitle(detailSeriesName);
-                mBinding.titleBar.setRightTitle("删除");
                 mBinding.tvStorage.setVisibility(View.GONE);
             }
             mAdapter.setNewData(sections);
@@ -364,9 +367,11 @@ public class DownloadActivity extends BaseVbActivity<ActivityDownloadBinding> {
     }
 
     private void confirmDelete(DownloadEpisode ep) {
-        new XPopup.Builder(this)
-                .isDarkTheme(Utils.isDarkTheme())
-                .asConfirm("删除缓存", "确定删除 " + ep.displayTitle() + " 的缓存文件吗?", "取消", "确定", () -> {
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("删除缓存")
+                .setMessage("确定删除 " + ep.displayTitle() + " 的缓存文件吗?")
+                .setNegativeButton("取消", null)
+                .setPositiveButton("确定", (dialog, which) -> {
                     loadExecutor.execute(() -> {
                         try {
                             DownloadTaskManager.get().cancel(ep.getId());
@@ -384,10 +389,11 @@ public class DownloadActivity extends BaseVbActivity<ActivityDownloadBinding> {
                         CacheFragment.markSizesDirty();
                         loadData();
                     });
-                }, null, false).show();
+                                })
+                .show();
     }
 
-    @Override
+    
     protected void onDestroy() {
         loadExecutor.shutdownNow();
         super.onDestroy();

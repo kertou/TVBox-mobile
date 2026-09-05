@@ -6,16 +6,16 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <com.hjq.bar.TitleBar
+    <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/title_bar"
         android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:background="@color/md_surface"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorSurface"
         app:title="设置"
-        app:titleStyle="bold"
-        app:titleColor="@color/md_on_surface"
-        app:leftIconTint="@color/md_on_surface"
-        app:lineVisible="false"/>
+        app:titleTextAppearance="?attr/textAppearanceTitleLarge"
+        app:titleTextColor="?attr/colorOnSurface"
+        app:navigationIcon="@drawable/ic_arrow_back"
+        app:navigationIconTint="?attr/colorOnSurface" />
 
     <ScrollView
         android:layout_width="match_parent"

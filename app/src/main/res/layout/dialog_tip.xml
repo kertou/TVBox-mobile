@@ -13,22 +13,26 @@
         android:orientation="vertical"
         android:padding="20dp">
 
-        <com.hjq.bar.TitleBar
+        <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/title_bar"
             android:layout_width="match_parent"
-            android:layout_height="40dp"
-            app:leftIcon="@null"
+            android:layout_height="48dp"
             android:background="@android:color/transparent"
-            app:leftTitle="提示"
-            app:leftTitleStyle="bold"
-            app:leftTitleSize="16sp"
-            app:leftTitleColor="@color/text_foreground"
-            app:titleColor="@color/text_foreground"
-            app:rightTitle="切换订阅"
-            app:rightTitleColor="@color/colorPrimary">
+            app:title="提示"
+            app:titleTextAppearance="?attr/textAppearanceTitleMedium"
+            app:titleTextColor="?attr/colorOnSurface">
 
-
-        </com.hjq.bar.TitleBar>
+            <TextView
+                android:id="@+id/right_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end|center_vertical"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:paddingHorizontal="8dp"
+                android:text="切换订阅"
+                android:textColor="?attr/colorPrimary"
+                android:textSize="14sp" />
+        </com.google.android.material.appbar.MaterialToolbar>
 
         <TextView
             android:id="@+id/tipInfo"

@@ -11,7 +11,7 @@ public class AboutActivity extends BaseVbActivity<ActivityAboutBinding> {
 
     @Override
     protected void init() {
-        mBinding.titleBar.getLeftView().setOnClickListener(v -> finish());
+        mBinding.titleBar.setNavigationOnClickListener(v -> finish());
         mBinding.tvVersion.setText("TVBox-Mobile v" + AppUtils.getAppVersionName());
     }
 }

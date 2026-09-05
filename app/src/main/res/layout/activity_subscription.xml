@@ -8,28 +8,37 @@
     android:gravity="center_horizontal"
     tools:context=".ui.activity.SubscriptionActivity">
 
-    <com.hjq.bar.TitleBar
+    <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/title_bar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/md_surface"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorSurface"
         app:title="订阅管理"
-        app:titleColor="@color/md_on_surface"
-        app:leftIconTint="@color/md_on_surface"
-        app:rightIcon="@drawable/ic_add_24"
-        app:rightIconTint="@color/md_on_surface"
-        >
+        app:titleTextAppearance="?attr/textAppearanceTitleLarge"
+        app:titleTextColor="?attr/colorOnSurface"
+        app:navigationIcon="@drawable/ic_arrow_back"
+        app:navigationIconTint="?attr/colorOnSurface">
 
         <ImageView
             android:id="@+id/iv_use_tip"
             android:layout_width="wrap_content"
             android:layout_height="20dp"
             android:src="@drawable/ic_use_description_24"
-            app:tint="@color/md_on_surface_variant"
+            app:tint="?attr/colorOnSurfaceVariant"
             android:layout_gravity="end|center_vertical"
             android:paddingLeft="20dp"
-            android:layout_marginRight="50dp"/>
-    </com.hjq.bar.TitleBar>
+            android:layout_marginRight="56dp"/>
+
+        <ImageView
+            android:id="@+id/right_view"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="end|center_vertical"
+            android:layout_marginEnd="16dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_add_24"
+            app:tint="?attr/colorOnSurface" />
+    </com.google.android.material.appbar.MaterialToolbar>
 
     <androidx.recyclerview.widget.RecyclerView
         android:background="@drawable/bg_m3_surface_card"

@@ -28,6 +28,7 @@ import com.hjq.permissions.OnPermissionCallback
 import com.hjq.permissions.Permission
 import com.hjq.permissions.XXPermissions
 import com.lxj.xpopup.XPopup
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.orhanobut.hawk.Hawk
 import okhttp3.HttpUrl
 import tv.danmaku.ijk.media.player.IjkMediaPlayer
@@ -45,7 +46,7 @@ class SettingActivity : BaseVbActivity<ActivitySettingBinding>() {
     private var currentLiveApi = Hawk.get(HawkConfig.LIVE_URL, "")
     override fun init() {
 
-        mBinding.titleBar.leftView.setOnClickListener { onBackPressed() }
+        mBinding.titleBar.setNavigationOnClickListener { onBackPressed() }
         mBinding.tvMediaCodec.text = Hawk.get(HawkConfig.IJK_CODEC, "")
 
         mBinding.tvDns.text = OkGoHelper.dnsHttpsList[Hawk.get(HawkConfig.DOH_URL, 0)]
@@ -366,9 +367,12 @@ class SettingActivity : BaseVbActivity<ActivitySettingBinding>() {
             dialog.show()
         }
         mBinding.llClearCache.setOnClickListener { view: View ->
-            XPopup.Builder(this)
-                .isDarkTheme(Utils.isDarkTheme())
-                .asConfirm("提示", "确定清空吗？", "取消", "确定", { onClickClearCache(view) }, null, false).show()
+            MaterialAlertDialogBuilder(this)
+                .setTitle("提示")
+                .setMessage("确定清空吗？")
+                .setNegativeButton("取消", null)
+                .setPositiveButton("确定") { _, _ -> onClickClearCache(view) }
+                .show()
         }
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
             mBinding.llTheme.visibility = View.GONE

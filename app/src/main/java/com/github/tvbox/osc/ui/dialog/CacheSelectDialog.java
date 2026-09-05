@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.blankj.utilcode.util.ScreenUtils;
 import com.blankj.utilcode.util.ToastUtils;
 import com.github.tvbox.osc.R;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.github.tvbox.osc.bean.VodInfo;
 import com.github.tvbox.osc.cache.DownloadEpisode;
 import com.github.tvbox.osc.download.DownloadTaskManager;
@@ -199,16 +200,15 @@ public class CacheSelectDialog extends BottomPopupView {
             return true;
         }
         Activity activity = (Activity) getContext();
-        new com.lxj.xpopup.XPopup.Builder(activity)
-                .isDarkTheme(Utils.isDarkTheme())
-                .asConfirm("免责声明",
-                        "使用应用内缓存功能前,请仔细阅读并同意以下条款:\n\n" +
+        new MaterialAlertDialogBuilder(activity)
+                .setTitle("免责声明")
+                .setMessage("使用应用内缓存功能前,请仔细阅读并同意以下条款:\n\n" +
                                 "1. 视频内容均来自第三方数据源,本应用不存储、不上传、不分发任何视频内容;\n\n" +
                                 "2. 缓存的视频仅供您本人在本应用内离线观看,严禁传播、分发或用于任何商业用途;\n\n" +
                                 "3. 请尊重内容版权,支持正版;因使用本功能产生的任何法律责任由您自行承担。\n\n" +
-                                "点击\"同意\"即表示您已阅读并接受以上条款。",
-                        "取消", "同意",
-                        () -> {
+                                "点击\"同意\"即表示您已阅读并接受以上条款。")
+                .setNegativeButton("取消", null)
+                .setPositiveButton("同意", (dialog, which) -> {
                             Hawk.put(HawkConfig.DOWNLOAD_DISCLAIMER_AGREED, true);
                             // 用户同意后再真正入队
                             List<CacheSelectAdapter.Item> selected = new ArrayList<>();
@@ -218,7 +218,8 @@ public class CacheSelectDialog extends BottomPopupView {
                             if (!selected.isEmpty()) {
                                 startDownload(selected);
                             }
-                        }, null, false).show();
+                                        })
+                .show();
         return false;
     }
 
@@ -249,12 +250,11 @@ public class CacheSelectDialog extends BottomPopupView {
                 return;
             }
             Hawk.put(HawkConfig.DOWNLOAD_BATTERY_PROMPTED, true);
-            new com.lxj.xpopup.XPopup.Builder(context)
-                    .isDarkTheme(Utils.isDarkTheme())
-                    .asConfirm("下载保活提示",
-                            "锁屏或长时间缓存时,系统休眠/省电冻结可能中断下载任务。\n\n建议把 TVBox 加入电池优化白名单:系统 设置→电池→启动管理 中允许后台运行、保持关联启动。\n\n现在打开电池优化设置吗?",
-                            "下次再说", "去设置",
-                            () -> {
+            new MaterialAlertDialogBuilder(context)
+                    .setTitle("下载保活提示")
+                    .setMessage("锁屏或长时间缓存时,系统休眠/省电冻结可能中断下载任务。\n\n建议把 TVBox 加入电池优化白名单:系统 设置→电池→启动管理 中允许后台运行、保持关联启动。\n\n现在打开电池优化设置吗?")
+                    .setNegativeButton("下次再说", null)
+                    .setPositiveButton("去设置", (dialog, which) -> {
                                 try {
                                     context.startActivity(new Intent(android.provider.Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
                                             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
@@ -262,7 +262,8 @@ public class CacheSelectDialog extends BottomPopupView {
                                     // 个别 ROM 没有该页面,只能由用户到系统设置手动放开
                                     ToastUtils.showShort("未能打开系统设置,请到 系统设置→电池 中手动放开");
                                 }
-                            }, null, false).show();
+                                            })
+                .show();
         } catch (Throwable th) {
             th.printStackTrace();
         }

@@ -8,7 +8,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 
 import com.github.tvbox.osc.R;
-import com.hjq.bar.TitleBar;
+import com.google.android.material.appbar.MaterialToolbar;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -21,7 +21,7 @@ public class TipDialog extends BaseDialog {
         TextView tipInfo = findViewById(R.id.tipInfo);
         TextView leftBtn = findViewById(R.id.leftBtn);
         TextView rightBtn = findViewById(R.id.rightBtn);
-        TitleBar titleBar = findViewById(R.id.title_bar);
+        MaterialToolbar titleBar = findViewById(R.id.title_bar);
         tipInfo.setText(tip);
         leftBtn.setText(left);
         rightBtn.setText(right);
@@ -43,7 +43,7 @@ public class TipDialog extends BaseDialog {
                 listener.cancel();
             }
         });
-        titleBar.getRightView().setOnClickListener(view -> {
+        findViewById(R.id.right_view).setOnClickListener(view -> {
             listener.onTitleClick();
         });
     }

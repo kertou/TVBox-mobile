@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.blankj.utilcode.util.ToastUtils;
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.github.tvbox.osc.R;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.github.tvbox.osc.base.BaseVbFragment;
 import com.github.tvbox.osc.cache.DownloadEpisode;
 import com.github.tvbox.osc.cache.RoomDataManger;
@@ -384,9 +385,11 @@ public class CacheFragment extends BaseVbFragment<FragmentCacheBinding> {
     }
 
     private void confirmDeleteSeries(String groupKey, String seriesName) {
-        new XPopup.Builder(requireActivity())
-                .isDarkTheme(Utils.isDarkTheme())
-                .asConfirm("删除缓存", "确定删除《" + (seriesName == null ? "" : seriesName) + "》的全部缓存文件吗?", "取消", "确定", () -> {
+        new MaterialAlertDialogBuilder(requireActivity())
+                .setTitle("删除缓存")
+                .setMessage("确定删除《" + (seriesName == null ? "" : seriesName) + "》的全部缓存文件吗?")
+                .setNegativeButton("取消", null)
+                .setPositiveButton("确定", (dialog, which) -> {
                     // 递归删除整个剧集目录是大量磁盘操作,放后台执行
                     loadExecutor.execute(() -> {
                         try {
@@ -405,13 +408,16 @@ public class CacheFragment extends BaseVbFragment<FragmentCacheBinding> {
                         markSizesDirty();
                         loadData();
                     });
-                }, null, false).show();
+                                })
+                .show();
     }
 
     private void confirmClearAll() {
-        new XPopup.Builder(requireActivity())
-                .isDarkTheme(Utils.isDarkTheme())
-                .asConfirm("清空缓存", "确定删除全部缓存文件吗?", "取消", "确定", () -> {
+        new MaterialAlertDialogBuilder(requireActivity())
+                .setTitle("清空缓存")
+                .setMessage("确定删除全部缓存文件吗?")
+                .setNegativeButton("取消", null)
+                .setPositiveButton("确定", (dialog, which) -> {
                     // 不能在这里 pauseAll():全局暂停置位后没有界面入口可以恢复,
                     // 之后新入队的任务会永远停在"等待中";逐集 cancel 已足以打断在途下载
                     loadExecutor.execute(() -> {
@@ -431,10 +437,11 @@ public class CacheFragment extends BaseVbFragment<FragmentCacheBinding> {
                         markSizesDirty();
                         loadData();
                     });
-                }, null, false).show();
+                                })
+                .show();
     }
 
-    @Override
+    
     public void onDestroy() {
         if (eventBusRegistered) {
             eventBusRegistered = false;

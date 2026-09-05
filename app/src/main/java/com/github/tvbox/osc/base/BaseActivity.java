@@ -28,8 +28,7 @@ import com.github.tvbox.osc.util.AppManager;
 import com.github.tvbox.osc.util.HawkConfig;
 import com.github.tvbox.osc.util.Utils;
 import com.gyf.immersionbar.ImmersionBar;
-import com.hjq.bar.OnTitleBarListener;
-import com.hjq.bar.TitleBar;
+import com.google.android.material.appbar.MaterialToolbar;
 import com.kingja.loadsir.callback.Callback;
 import com.kingja.loadsir.core.LoadService;
 import com.kingja.loadsir.core.LoadSir;
@@ -47,12 +46,11 @@ import java.io.InputStreamReader;
 
 import me.jessyan.autosize.internal.CustomAdapt;
 
-public abstract class BaseActivity extends AppCompatActivity implements CustomAdapt, OnTitleBarListener {
+public abstract class BaseActivity extends AppCompatActivity implements CustomAdapt {
     protected Context mContext;
     private LoadService mLoadService;
 
     private ImmersionBar mImmersionBar;
-    private TitleBar mTitleBar;
     private LoadingPopupView loadingPopup;
 
     @Override
@@ -68,7 +66,6 @@ public abstract class BaseActivity extends AppCompatActivity implements CustomAd
         mContext = this;
         AppManager.getInstance().addActivity(this);
         initStatusBar();
-        initTitleBar();
         init();
         if (!App.getInstance().isNormalStart){
             AppUtils.relaunchApp(true);
@@ -82,11 +79,16 @@ public abstract class BaseActivity extends AppCompatActivity implements CustomAd
 
 
     private void initStatusBar(){
+        MaterialToolbar toolbar = findToolbar(getWindow().getDecorView().findViewById(android.R.id.content));
         ImmersionBar.with(this)
                 .statusBarDarkFont(!Utils.isDarkTheme())
-                .titleBar(findTitleBar(getWindow().getDecorView().findViewById(android.R.id.content)))
+                .titleBar(toolbar)
                 .navigationBarColor(android.R.color.transparent)
                 .init();
+        // 工具栏返回键默认退出本页,页面在 init() 里自行 setNavigationOnClickListener 可覆盖
+        if (toolbar != null) {
+            toolbar.setNavigationOnClickListener(v -> finish());
+        }
         // 全面屏(手势小白条)适配:内容延伸到导航栏下,导航栏透明,由各页面用 insets 避让
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         applyNavigationBarInset();
@@ -118,35 +120,22 @@ public abstract class BaseActivity extends AppCompatActivity implements CustomAd
         return true;
     }
 
-    private void initTitleBar(){
-        if (getTitleBar() != null) {
-            getTitleBar().setOnTitleBarListener(this);
-        }
-    }
-
     /**
-     * 递归获取 ViewGroup 中的 TitleBar 对象
+     * 递归查找视图树中的 MaterialToolbar(沉浸栏会把它当标题栏处理状态栏高度)
      */
-    private TitleBar findTitleBar(ViewGroup group) {
+    private MaterialToolbar findToolbar(ViewGroup group) {
         for (int i = 0; i < group.getChildCount(); i++) {
             View view = group.getChildAt(i);
-            if ((view instanceof TitleBar)) {
-                return (TitleBar) view;
+            if ((view instanceof MaterialToolbar)) {
+                return (MaterialToolbar) view;
             } else if (view instanceof ViewGroup) {
-                TitleBar titleBar = findTitleBar((ViewGroup) view);
-                if (titleBar != null) {
-                    return titleBar;
+                MaterialToolbar toolbar = findToolbar((ViewGroup) view);
+                if (toolbar != null) {
+                    return toolbar;
                 }
             }
         }
         return null;
-    }
-
-    private TitleBar getTitleBar() {
-        if (mTitleBar == null) {
-            mTitleBar = findTitleBar(getWindow().getDecorView().findViewById(android.R.id.content));
-        }
-        return mTitleBar;
     }
 
 
@@ -242,11 +231,6 @@ public abstract class BaseActivity extends AppCompatActivity implements CustomAd
     @Override
     public boolean isBaseOnWidth() {
         return true;
-    }
-
-    @Override
-    public void onLeftClick(TitleBar titleBar) {
-        finish();
     }
 
 

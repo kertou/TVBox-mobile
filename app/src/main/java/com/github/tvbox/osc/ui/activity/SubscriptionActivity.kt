@@ -25,6 +25,7 @@ import com.hjq.permissions.OnPermissionCallback
 import com.hjq.permissions.Permission
 import com.hjq.permissions.XXPermissions
 import com.lxj.xpopup.XPopup
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.lzy.okgo.OkGo
 import com.lzy.okgo.callback.AbsCallback
 import com.lzy.okgo.model.Response
@@ -56,7 +57,7 @@ class SubscriptionActivity : BaseVbActivity<ActivitySubscriptionBinding>() {
                 .show()
         }
 
-        mBinding.titleBar.rightView.setOnClickListener {//添加订阅
+        mBinding.rightView.setOnClickListener {//添加订阅
             XPopup.Builder(this)
                 .autoFocusEditText(false)
                 .asCustom(
@@ -100,12 +101,16 @@ class SubscriptionActivity : BaseVbActivity<ActivitySubscriptionBinding>() {
                     ToastUtils.showShort("不能删除当前使用的订阅")
                     return@setOnItemChildClickListener
                 }
-                XPopup.Builder(this@SubscriptionActivity)
-                    .asConfirm("删除订阅", "确定删除订阅吗？", "取消", "确定", {
+                MaterialAlertDialogBuilder(this@SubscriptionActivity)
+                    .setTitle("删除订阅")
+                    .setMessage("确定删除订阅吗？")
+                    .setNegativeButton("取消", null)
+                    .setPositiveButton("确定") { _, _ ->
                         mSubscriptions.removeAt(position)
                         //删除/选择只刷新,不触发重新排序
                         mSubscriptionAdapter.notifyDataSetChanged()
-                    }, null, false).show()
+                    }
+.show()
             }
         }
 
@@ -174,9 +179,11 @@ class SubscriptionActivity : BaseVbActivity<ActivitySubscriptionBinding>() {
     }
 
     private fun showPermissionTipPopup(checked: Boolean) {
-        XPopup.Builder(this@SubscriptionActivity)
-            .isDarkTheme(Utils.isDarkTheme())
-            .asConfirm("提示", "这将访问您设备文件的读取权限", "取消", "确定", {
+        MaterialAlertDialogBuilder(this@SubscriptionActivity)
+            .setTitle("提示")
+            .setMessage("这将访问您设备文件的读取权限")
+            .setNegativeButton("取消", null)
+            .setPositiveButton("确定") { _, _ ->
                 XXPermissions.with(this)
                     .permission(Permission.MANAGE_EXTERNAL_STORAGE)
                     .request(object : OnPermissionCallback {
@@ -202,7 +209,8 @@ class SubscriptionActivity : BaseVbActivity<ActivitySubscriptionBinding>() {
                             }
                         }
                     })
-            }, null, false).show()
+            }
+            .show()
     }
 
     /**

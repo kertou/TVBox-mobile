@@ -16,6 +16,7 @@ import com.github.tvbox.osc.ui.adapter.CollectAdapter
 import com.github.tvbox.osc.util.FastClickCheckUtil
 import com.github.tvbox.osc.util.Utils
 import com.lxj.xpopup.XPopup
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.owen.tvrecyclerview.widget.V7GridLayoutManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -35,10 +36,12 @@ class CollectActivity : BaseVbActivity<ActivityCollectBinding>() {
         mBinding.mGridView.setHasFixedSize(true)
         mBinding.mGridView.setLayoutManager(GridLayoutManager(this, 3))
         mBinding.mGridView.setAdapter(collectAdapter)
-        mBinding.titleBar.rightView.setOnClickListener {
-            XPopup.Builder(this)
-                .isDarkTheme(Utils.isDarkTheme())
-                .asConfirm("提示", "确定清空?", "取消", "确定", {
+        mBinding.rightView.setOnClickListener {
+            MaterialAlertDialogBuilder(this)
+                .setTitle("提示")
+                .setMessage("确定清空?")
+                .setNegativeButton("取消", null)
+                .setPositiveButton("确定") { _, _ ->
                     showLoadingDialog()
                     lifecycleScope.launch(Dispatchers.IO){
                         RoomDataManger.deleteVodCollectAll()
@@ -49,7 +52,8 @@ class CollectActivity : BaseVbActivity<ActivityCollectBinding>() {
                             showEmpty()
                         }
                     }
-                }, null, false).show()
+                }
+.show()
         }
         collectAdapter.onItemLongClickListener =
             BaseQuickAdapter.OnItemLongClickListener { adapter: BaseQuickAdapter<*, *>?, view: View?, position: Int ->

@@ -6,12 +6,16 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <com.hjq.bar.TitleBar
+    <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/title_bar"
         app:title="本地视频"
         android:layout_width="match_parent"
-        android:layout_height="44dp"
-        />
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorSurface"
+        app:titleTextAppearance="?attr/textAppearanceTitleLarge"
+        app:titleTextColor="?attr/colorOnSurface"
+        app:navigationIcon="@drawable/ic_arrow_back"
+        app:navigationIconTint="?attr/colorOnSurface" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv"

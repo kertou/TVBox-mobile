@@ -5,18 +5,29 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <com.hjq.bar.TitleBar
+    <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/title_bar"
         android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:background="@color/md_surface"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorSurface"
         app:title="我的缓存"
-        app:leftTitleSize="16sp"
-        app:titleColor="@color/md_on_surface"
-        app:leftIconTint="@color/md_on_surface"
-        app:rightTitle="清空"
-        app:rightTitleColor="@color/md_on_surface"
-        app:lineVisible="false" />
+        app:titleTextAppearance="?attr/textAppearanceTitleLarge"
+        app:titleTextColor="?attr/colorOnSurface"
+        app:navigationIcon="@drawable/ic_arrow_back"
+        app:navigationIconTint="?attr/colorOnSurface">
+
+        <TextView
+            android:id="@+id/right_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end|center_vertical"
+            android:layout_marginEnd="16dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:paddingHorizontal="8dp"
+            android:text="删除"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="14sp" />
+    </com.google.android.material.appbar.MaterialToolbar>
 
     <TextView
         android:id="@+id/tvStorage"

@@ -19,6 +19,7 @@ import com.github.tvbox.osc.ui.adapter.LocalVideoAdapter
 import com.github.tvbox.osc.util.FastClickCheckUtil
 import com.github.tvbox.osc.util.Utils
 import com.lxj.xpopup.XPopup
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -83,9 +84,11 @@ class VideoListActivity : BaseVbActivity<ActivityMovieFoldersBinding>() {
 
         mBinding.tvDelete.setOnClickListener { view: View? ->
             FastClickCheckUtil.check(view)
-            XPopup.Builder(this)
-                .isDarkTheme(Utils.isDarkTheme())
-                .asConfirm("提示", "确定删除所选视频吗？", "取消", "确定", {
+            MaterialAlertDialogBuilder(this)
+                .setTitle("提示")
+                .setMessage("确定删除所选视频吗？")
+                .setNegativeButton("取消", null)
+                .setPositiveButton("确定") { _, _ ->
                     showLoadingDialog()
                     lifecycleScope.launch(Dispatchers.IO) {
                         val data = mLocalVideoAdapter.data
@@ -111,7 +114,8 @@ class VideoListActivity : BaseVbActivity<ActivityMovieFoldersBinding>() {
                             toggleListSelectMode(false)
                         }
                     }
-                }, null, false).show()
+                }
+.show()
         }
     }
 

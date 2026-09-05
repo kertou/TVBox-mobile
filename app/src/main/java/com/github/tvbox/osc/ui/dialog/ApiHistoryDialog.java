@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.github.tvbox.osc.R;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.github.tvbox.osc.databinding.DialogTitleListBinding;
 import com.github.tvbox.osc.ui.adapter.TitleWithDelAdapter;
 import com.github.tvbox.osc.ui.widget.LinearSpacingItemDecoration;
@@ -49,8 +50,10 @@ public class ApiHistoryDialog extends BottomPopupView {
         binding.title.setText("历史直播源");
 
         binding.ivUseTip.setOnClickListener(view -> {
-            new XPopup.Builder(getContext())
-                    .asConfirm("使用帮助","订阅的内置直播源会被解析并存到历史记录,即使未使用,最多20条,按需选择!","","知道了",null,null,true)
+            new MaterialAlertDialogBuilder(getContext())
+                    .setTitle("使用帮助")
+                    .setMessage("订阅的内置直播源会被解析并存到历史记录,即使未使用,最多20条,按需选择!")
+                    .setPositiveButton("知道了", null)
                     .show();
         });
 
