@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 播放器进制度指示药丸底:视频上的深色半透明遮罩(不随主题变色) -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="#3C808080" />
+    <corners android:radius="25dp" />
+</shape>

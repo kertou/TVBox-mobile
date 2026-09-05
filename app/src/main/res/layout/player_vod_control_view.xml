@@ -200,7 +200,7 @@
                 android:layout_marginRight="@dimen/dp_5"
                 android:paddingRight="@dimen/dp_10"
                 android:text="解析"
-                android:textColor="@color/color_FFFFFF"
+                android:textColor="@color/white"
                  />
 
             <com.owen.tvrecyclerview.widget.TvRecyclerView
@@ -248,7 +248,7 @@
                 android:paddingEnd="@dimen/dp_10"
                 android:paddingRight="@dimen/dp_10"
                 android:text="00:00"
-                android:textColor="@color/color_FFFFFF"
+                android:textColor="@color/white"
                 android:layout_marginLeft="4dp"
                  />
 
@@ -278,7 +278,7 @@
                 android:paddingStart="@dimen/dp_10"
                 android:paddingLeft="@dimen/dp_10"
                 android:text="00:00"
-                android:textColor="@color/color_FFFFFF"
+                android:textColor="@color/white"
                 android:layout_marginRight="4dp"
                  />
 
@@ -534,14 +534,13 @@
         android:textColor="@color/white"
         tools:text="音量+10" />
 
-    <com.lihang.ShadowLayout
+    <FrameLayout
         android:id="@+id/tv_progress_container"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:orientation="vertical"
-        app:hl_layoutBackground="@color/gray_darker_press_alpha"
-        app:hl_cornerRadius="25dp"
+        android:background="@drawable/bg_player_pill"
         android:visibility="gone"
         tools:visibility="visible">
 
@@ -573,7 +572,7 @@
                 android:textColor="@color/white"/>
 
         </LinearLayout>
-    </com.lihang.ShadowLayout>
+    </FrameLayout>
 
     <com.airbnb.lottie.LottieAnimationView
         android:id="@+id/play_loading"
@@ -599,7 +598,7 @@
         android:focusableInTouchMode="false"
         android:tag="play_load_net_speed"
         tools:text="10kb/s"
-        android:textColor="@color/color_FFFFFF"
+        android:textColor="@color/white"
          />
 
     <LinearLayout
