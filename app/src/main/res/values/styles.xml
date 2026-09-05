@@ -26,6 +26,14 @@
         <item name="colorSurfaceVariant">@color/md_surface_variant</item>
         <item name="colorOnSurfaceVariant">@color/md_on_surface_variant</item>
         <item name="colorOutline">@color/md_outline</item>
+        <item name="colorOutlineVariant">@color/md_outline_variant</item>
+        <item name="colorSurfaceDim">@color/md_surface_dim</item>
+        <item name="colorSurfaceBright">@color/md_surface_bright</item>
+        <item name="colorSurfaceContainerLowest">@color/md_surface_container_lowest</item>
+        <item name="colorSurfaceContainerLow">@color/md_surface_container_low</item>
+        <item name="colorSurfaceContainer">@color/md_surface_container</item>
+        <item name="colorSurfaceContainerHigh">@color/md_surface_container_high</item>
+        <item name="colorSurfaceContainerHighest">@color/md_surface_container_highest</item>
         <item name="colorPrimaryInverse">@color/md_inverse_primary</item>
         <item name="colorSurfaceInverse">@color/md_inverse_surface</item>
         <item name="colorOnSurfaceInverse">@color/md_inverse_on_surface</item>
@@ -127,7 +135,7 @@
         <item name="android:layout_width">24dp</item>
         <item name="android:layout_height">24dp</item>
         <item name="android:layout_gravity">center_vertical</item>
-        <item name="android:tint">@color/md_primary</item>
+        <item name="android:tint">?attr/colorPrimary</item>
         <item name="android:importantForAccessibility">no</item>
     </style>
 
@@ -136,7 +144,7 @@
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_gravity">center_vertical</item>
         <item name="android:layout_marginLeft">20dp</item>
-        <item name="android:textColor">@color/md_on_surface</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
         <item name="android:textSize">16sp</item>
     </style>
 
@@ -145,7 +153,7 @@
         <item name="android:layout_height">22dp</item>
         <item name="android:layout_gravity">center_vertical</item>
         <item name="android:src">@drawable/icon_pre</item>
-        <item name="android:tint">@color/md_on_surface_variant</item>
+        <item name="android:tint">?attr/colorOnSurfaceVariant</item>
         <item name="android:alpha">0.7</item>
         <item name="android:importantForAccessibility">no</item>
     </style>
@@ -153,18 +161,18 @@
     <!-- 实心通用主题色,MaterialButton样式（M3 pill 形）-->
     <style name="mbSolid" parent="@style/Widget.Material3.Button.UnelevatedButton">
 
-        <item name="android:textColor">@color/md_on_primary</item>
+        <item name="android:textColor">?attr/colorOnPrimary</item>
         <item name="android:textSize">14sp</item>
         <item name="android:textAllCaps">false</item>
         <item name="android:insetTop">0dp</item>
         <item name="android:insetBottom">0dp</item>
         <item name="android:gravity">center</item>
         <item name="backgroundTintMode">src_atop</item>
-        <item name="backgroundTint">@color/md_primary</item>
+        <item name="backgroundTint">?attr/colorPrimary</item>
         <!--        <item name="rippleColor">@color/white</item>-->
 
         <item name="iconTintMode">src_atop</item>
-        <item name="iconTint">@color/md_on_primary</item>
+        <item name="iconTint">?attr/colorOnPrimary</item>
         <item name="iconGravity">textStart</item>
         <item name="iconPadding">0dp</item>
         <!--        <item name="iconSize">20dp</item>-->
@@ -174,14 +182,14 @@
 
     <!-- 带边框的空心MaterialButton样式（M3 pill 形）-->
     <style name="mbOutline" parent="@style/Widget.Material3.Button.OutlinedButton">
-        <item name="android:textColor">@color/md_primary</item>
+        <item name="android:textColor">?attr/colorPrimary</item>
         <item name="android:textAllCaps">false</item>
         <item name="android:insetTop">0dp</item>
         <item name="android:insetBottom">0dp</item>
         <item name="android:gravity">center</item>
         <item name="android:textSize">13sp</item>
-        <item name="strokeColor">@color/md_primary</item>
-        <item name="rippleColor">@color/md_primary</item>
+        <item name="strokeColor">?attr/colorPrimary</item>
+        <item name="rippleColor">?attr/colorPrimary</item>
         <item name="cornerRadius">@dimen/m3_corner_pill</item>
     </style>
 

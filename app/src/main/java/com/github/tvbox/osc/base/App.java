@@ -21,6 +21,7 @@ import com.github.tvbox.osc.util.LOG;
 import com.github.tvbox.osc.util.OkGoHelper;
 import com.github.tvbox.osc.util.PlayerHelper;
 import com.github.tvbox.osc.util.Utils;
+import com.google.android.material.color.DynamicColors;
 import com.kingja.loadsir.core.LoadSir;
 import com.orhanobut.hawk.Hawk;
 import com.p2p.P2PClass;
@@ -51,6 +52,8 @@ public class App extends MultiDexApplication {
         super.onCreate();
         instance = this;
         initParams();
+        // Material You 动态取色(Android 12+ 跟随壁纸, 低版本无操作保持品牌蓝)
+        DynamicColors.applyToActivitiesIfAvailable(this);
         // OKGo
         OkGoHelper.init(); //台标获取
         EpgUtil.init();
