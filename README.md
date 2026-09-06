@@ -49,11 +49,11 @@ TVBox 竖屏手机增强版 —— 为手机单手操作打造的影视聚合播
 
 ## 构建
 
-- 构建环境：JDK 11~17（Gradle 7.3.3 / AGP 7.2.2），`local.properties` 指向本机 Android SDK
+- 构建环境：JDK 17（Gradle 8.13 / AGP 8.13.2），`local.properties` 指向本机 Android SDK
 - 当前仅产出 **arm64-v8a**
-- 签名文件 `TVBoxOSC.jks` 不入库（已在 .gitignore 排除），构建前请自行生成或替换：
+- 签名文件 `kertou-tvplayer.jks` 不入库（已在 .gitignore 排除）。构建前请自行生成签名并替换 `app/build.gradle` 中 signingConfigs 的别名与密码：
 
-  `keytool -genkeypair -keystore TVBoxOSC.jks -alias TVBoxOSC -keypass TVBoxOSC -storepass TVBoxOSC -keyalg RSA -keysize 2048 -validity 36500`
+  `keytool -genkeypair -keystore kertou-tvplayer.jks -alias kertou -keypass 你的密码 -storepass 你的密码 -keyalg RSA -keysize 2048 -validity 10950`
 
 - `./gradlew assembleDebug`
 
