@@ -42,4 +42,13 @@
     <string-array name="api">
         <item />
     </string-array>
+    <string name="back">返回</string>
+    <string name="pip">画中画</string>
+    <string name="cast">投屏</string>
+    <string name="setting">设置</string>
+    <string name="lock">锁定</string>
+    <string name="play_pause">播放/暂停</string>
+    <string name="pre_episode">上一集</string>
+    <string name="next_episode">下一集</string>
+    <string name="fullscreen">全屏</string>
 </resources>

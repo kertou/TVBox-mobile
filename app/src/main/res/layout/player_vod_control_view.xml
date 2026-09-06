@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 播放器控制层(Material 3 重构):视频上叠加深色渐变 scrim,图标按钮按官方 48dp 触控目标/24dp 图标,进度条按 M3 Slider 形制(全圆角轨道+竖条手柄)。所有 id/tag 与 VodController/LocalVideoController 的绑定保持兼容 -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -8,152 +9,146 @@
     android:id="@+id/rootView"
     tools:background="@color/black">
 
-    <LinearLayout
-            android:id="@+id/tv_top_l_container"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:visibility="gone"
-            tools:visibility="visible"
-            android:layout_marginStart="@dimen/dp_20"
-            android:layout_marginLeft="@dimen/dp_20"
-            android:layout_marginTop="22dp"
-            android:orientation="vertical">
-
-            <TextView
-                android:id="@+id/tv_info_name1"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:maxWidth="200dp"
-                android:ellipsize="marquee"
-                android:singleLine="true"
-                tools:text="http://http://http://http://http://http://http://"
-                android:textColor="@color/white"
-                android:drawablePadding="20dp"
-                android:drawableLeft="@drawable/dkplayer_ic_action_arrow_back"
-                android:marqueeRepeatLimit="marquee_forever"
-                android:focusable="true"
-                android:focusableInTouchMode="true"
-                 />
-
-            <TextView
-                android:id="@+id/tv_videosize"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="left"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:paddingLeft="@dimen/dp_20"
-                android:tag="vod_video_size"
-                tools:text="1024 x 768"
-                android:textColor="@color/white"
-                 />
-
-    </LinearLayout>
-
-    <ImageView
-        android:id="@+id/iv_lock"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:layout_gravity="right|center"
-        android:layout_marginHorizontal="24dp"
-        android:clickable="true"
-        android:focusable="true"
-        android:paddingHorizontal="6dp"
-        android:src="@drawable/ic_unlock"
-        android:visibility="invisible"
-        tools:visibility="visible"/>
-
-    <LinearLayout
-        android:id="@+id/tv_top_r_container"
-        android:layout_width="wrap_content"
-        android:layout_height="71dp"
-        android:layout_gravity="end"
-        android:layout_marginRight="@dimen/dp_20"
-        android:gravity="end"
-        android:orientation="vertical"
+    <!-- 顶部:整体遮罩内左(返回/标题/分辨率) 右(网速/时钟/电量/画中画/投屏/设置) -->
+    <FrameLayout
+        android:id="@+id/top_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top"
+        android:background="@drawable/player_scrim_top"
+        android:paddingTop="10dp"
+        android:paddingBottom="8dp"
         android:visibility="gone"
         tools:visibility="visible">
 
         <LinearLayout
-            android:id="@+id/container_top_right_device_info"
+            android:id="@+id/tv_top_l_container"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
             android:gravity="center_vertical"
-            android:layout_marginTop="6dp"
-            android:visibility="invisible"
-            tools:visibility="visible"
-            >
-            <TextView
-                android:id="@+id/tv_play_load_net_speed_right_top"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/tv_sys_time"
-                android:layout_gravity="right"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:paddingRight="10dp"
-                android:tag="vod_control_pause_time"
-                android:text="0Kb/s"
-                android:textColor="@color/white" />
-            <TextView
-                android:id="@+id/tv_sys_time"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="right"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:paddingRight="14dp"
-                android:tag="vod_control_pause_time"
-                android:text="12:00"
-                android:textColor="@color/white" />
+            android:orientation="horizontal">
 
-            <com.github.tvbox.osc.ui.widget.MyBatteryView
-                android:id="@+id/battery"
-                android:layout_width="26dp"
-                android:layout_height="14dp"
-                android:layout_toEndOf="@+id/tv_sys_time" />
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/back_btn"
+                style="@style/PlayerIconButton"
+                android:contentDescription="@string/back"
+                android:src="@drawable/ic_arrow_back"
+                app:tint="@color/white" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tv_info_name1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="marquee"
+                    android:marqueeRepeatLimit="marquee_forever"
+                    android:maxWidth="260dp"
+                    android:singleLine="true"
+                    android:textColor="@color/white"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    tools:text="剧集名称" />
+
+                <TextView
+                    android:id="@+id/tv_videosize"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:tag="vod_video_size"
+                    android:textColor="#CCFFFFFF"
+                    android:textSize="12sp"
+                    tools:text="1024 x 768" />
+
+            </LinearLayout>
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/tv_top_r_container"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:gravity="end">
+            android:layout_gravity="end"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:id="@+id/container_top_right_device_info"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:visibility="invisible"
+                tools:visibility="visible">
+
+                <TextView
+                    android:id="@+id/tv_play_load_net_speed_right_top"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:paddingEnd="6dp"
+                    android:tag="vod_control_pause_time"
+                    android:text="0Kb/s"
+                    android:textColor="#CCFFFFFF"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/tv_sys_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:paddingEnd="8dp"
+                    android:tag="vod_control_pause_time"
+                    android:text="12:00"
+                    android:textColor="#CCFFFFFF"
+                    android:textSize="12sp" />
+
+                <com.github.tvbox.osc.ui.widget.MyBatteryView
+                    android:id="@+id/battery"
+                    android:layout_width="26dp"
+                    android:layout_height="14dp"
+                    android:layout_marginEnd="4dp" />
+            </LinearLayout>
 
             <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/pip"
-                android:layout_width="34dp"
-                android:layout_height="34dp"
-                android:layout_marginEnd="8dp"
-                android:padding="3dp"
-                android:scaleType="centerCrop"
-                android:src="@drawable/ic_pip"
+                style="@style/PlayerIconButton"
+                android:contentDescription="@string/pip"
+                android:src="@drawable/ic_m3_pip"
                 app:tint="@color/white" />
 
             <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/cast"
-                android:layout_width="34dp"
-                android:layout_height="34dp"
-                android:layout_marginEnd="8dp"
-                android:padding="4dp"
-                android:scaleType="centerCrop"
-                android:src="@drawable/ic_cast"
-                android:layout_marginStart="4dp"
+                style="@style/PlayerIconButton"
+                android:contentDescription="@string/cast"
+                android:src="@drawable/ic_m3_cast"
                 app:tint="@color/white" />
 
             <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/setting"
-                android:layout_width="34dp"
-                android:layout_height="34dp"
-                android:scaleType="centerCrop"
-                android:padding="4dp"
-                android:src="@drawable/ic_player_setting"
-                android:tint="@color/white"
-                android:layout_marginStart="4dp"
-                />
+                style="@style/PlayerIconButton"
+                android:contentDescription="@string/setting"
+                android:src="@drawable/ic_m3_settings"
+                app:tint="@color/white" />
 
         </LinearLayout>
+    </FrameLayout>
 
-    </LinearLayout>
+    <ImageView
+        android:id="@+id/iv_lock"
+        style="@style/PlayerIconButton"
+        android:layout_gravity="right|center"
+        android:contentDescription="@string/lock"
+        android:src="@drawable/ic_unlock"
+        android:visibility="invisible"
+        tools:visibility="visible"/>
 
     <com.github.tvbox.osc.subtitle.widget.SimpleSubtitleView
         android:id="@+id/subtitle_view"
@@ -170,15 +165,16 @@
         android:textSize="16sp"
         android:textStyle="bold"/>
 
+    <!-- 底部:整体遮罩内 解析行 / 播放控制行 / (保留的旧设置行,入口已移至播放控制弹窗) -->
     <LinearLayout
         android:id="@+id/bottom_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        tools:background="@color/black"
+        android:background="@drawable/player_scrim_bottom"
         android:gravity="center_vertical"
         android:orientation="vertical"
-        android:paddingTop="@dimen/dp_20"
+        android:paddingTop="28dp"
         android:visibility="gone"
         tools:visibility="visible">
 
@@ -217,26 +213,22 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="14dp"
-            android:layout_marginHorizontal="20dp"
+            android:layout_marginBottom="10dp"
+            android:layout_marginHorizontal="2dp"
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
             <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/play_status"
-                android:layout_width="34dp"
-                android:layout_height="34dp"
-                android:scaleType="centerCrop"
-                android:padding="4dp"
-                android:src="@drawable/ic_pause"/>
+                style="@style/PlayerIconButton"
+                android:contentDescription="@string/play_pause"
+                android:src="@drawable/ic_m3_pause"/>
 
             <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/play_pre"
-                android:layout_width="34dp"
-                android:layout_height="34dp"
-                android:scaleType="centerCrop"
-                android:padding="4dp"
-                android:src="@drawable/ic_play_pre"
+                style="@style/PlayerIconButton"
+                android:contentDescription="@string/pre_episode"
+                android:src="@drawable/ic_m3_skip_previous"
                 android:visibility="gone"
                 tools:visibility="visible"
                 />
@@ -245,76 +237,76 @@
                 android:id="@+id/curr_time"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:paddingEnd="@dimen/dp_10"
-                android:paddingRight="@dimen/dp_10"
+                android:layout_marginStart="2dp"
+                android:paddingEnd="6dp"
+                android:paddingRight="6dp"
                 android:text="00:00"
                 android:textColor="@color/white"
-                android:layout_marginLeft="4dp"
+                android:textSize="14sp"
                  />
 
             <SeekBar
                 android:id="@+id/seekBar"
                 android:layout_width="0dp"
-                android:layout_height="match_parent"
+                android:layout_height="48dp"
                 android:layout_gravity="center"
                 android:layout_weight="1"
                 android:background="@null"
                 android:focusable="false"
                 android:focusableInTouchMode="false"
                 android:max="1000"
-                android:maxHeight="3dp"
-                android:minHeight="3dp"
-                android:padding="@dimen/dp_0"
-                android:paddingStart="@dimen/dp_0"
-                android:paddingEnd="@dimen/dp_0"
-                android:progressDrawable="@drawable/shape_player_control_vod_seek"
-                android:thumb="@drawable/shape_player_control_vod_seek_thumb"
-                android:thumbOffset="@dimen/dp_0" />
+                android:maxHeight="4dp"
+                android:minHeight="4dp"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
+                android:progressDrawable="@drawable/player_seek_track"
+                android:thumb="@drawable/player_seek_thumb"
+                android:thumbOffset="6dp" />
 
             <TextView
                 android:id="@+id/total_time"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:paddingStart="@dimen/dp_10"
-                android:paddingLeft="@dimen/dp_10"
+                android:paddingStart="6dp"
+                android:paddingLeft="6dp"
                 android:text="00:00"
                 android:textColor="@color/white"
-                android:layout_marginRight="4dp"
+                android:textSize="14sp"
+                android:layout_marginEnd="2dp"
                  />
 
             <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/play_next"
-                android:layout_width="34dp"
-                android:layout_height="34dp"
-                android:scaleType="centerCrop"
-                android:padding="4dp"
-                android:layout_marginLeft="4dp"
-                android:src="@drawable/ic_play_next"
+                style="@style/PlayerIconButton"
+                android:contentDescription="@string/next_episode"
+                android:src="@drawable/ic_m3_skip_next"
                 android:visibility="gone"
                 tools:visibility="visible"/>
 
             <TextView
                 android:id="@+id/choose_series"
                 android:layout_width="wrap_content"
-                android:layout_height="34dp"
-                android:scaleType="centerCrop"
-                android:padding="4dp"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_player_pill"
                 android:gravity="center"
+                android:paddingHorizontal="14dp"
+                android:paddingVertical="5dp"
                 android:textColor="@color/white"
+                android:textSize="13sp"
                 android:visibility="gone"
                 tools:visibility="visible"
                 android:text="选集"
-                android:textSize="16sp"
-                android:layout_marginLeft="4dp"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="2dp"
                 />
 
             <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/iv_fullscreen"
-                android:layout_width="34dp"
-                android:layout_height="34dp"
-                android:scaleType="centerCrop"
-                android:padding="4dp"
-                android:src="@drawable/ic_fullscreen"/>
+                style="@style/PlayerIconButton"
+                android:contentDescription="@string/fullscreen"
+                android:src="@drawable/ic_m3_fullscreen"/>
         </LinearLayout>
 
             <HorizontalScrollView
@@ -521,17 +513,21 @@
 <!--    亮度+音量调整-->
     <TextView
         android:id="@+id/tv_slide_progress_text"
-        android:layout_width="@dimen/dp_200"
-        android:layout_height="@dimen/dp_100"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_gravity="center"
+        android:background="@drawable/bg_player_pill"
         android:focusable="false"
         android:focusableInTouchMode="false"
         android:gravity="center"
+        android:paddingHorizontal="24dp"
+        android:paddingVertical="14dp"
         android:tag="vod_control_slide_info"
         android:textAlignment="gravity"
         tools:visibility="visible"
         android:visibility="gone"
         android:textColor="@color/white"
+        android:textSize="14sp"
         tools:text="音量+10" />
 
     <FrameLayout
@@ -547,15 +543,15 @@
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingHorizontal="40dp"
+            android:paddingHorizontal="32dp"
             android:paddingVertical="10dp"
             android:gravity="center"
             android:orientation="vertical">
 
             <ImageView
                 android:id="@+id/tv_progress_icon"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
                 android:focusable="false"
                 android:focusableInTouchMode="false"
                 tools:src="@drawable/icon_back" />
@@ -569,36 +565,42 @@
                 android:focusable="false"
                 android:focusableInTouchMode="false"
                 tools:text="30:10/40:10"
-                android:textColor="@color/white"/>
+                android:textColor="@color/white"
+                android:textSize="14sp"/>
 
         </LinearLayout>
     </FrameLayout>
 
-    <com.airbnb.lottie.LottieAnimationView
+    <com.github.tvbox.osc.ui.widget.M3Loading
         android:id="@+id/play_loading"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
         android:layout_gravity="center"
-        app:lottie_autoPlay="true"
-        android:scaleType="centerCrop"
-        app:lottie_fileName="anim_loading.json"
-        app:lottie_speed="2"
-        app:lottie_loop="true"
-        app:lottie_repeatMode="reverse"
+        android:indeterminate="true"
+        android:saveEnabled="false"
         android:tag="vod_control_loading"
-        android:visibility="gone" />
+        android:visibility="gone"
+        app:indicatorColor="@color/white"
+        app:indicatorSize="48dp"
+        app:trackCornerRadius="2dp"
+        app:trackThickness="3dp"
+        tools:visibility="visible" />
 
     <TextView
         android:id="@+id/tv_play_load_net_speed"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:layout_marginTop="@dimen/dp_40"
+        android:layout_marginTop="76dp"
+        android:background="@drawable/bg_player_pill"
         android:focusable="false"
         android:focusableInTouchMode="false"
+        android:paddingHorizontal="14dp"
+        android:paddingVertical="6dp"
         android:tag="play_load_net_speed"
         tools:text="10kb/s"
         android:textColor="@color/white"
+        android:textSize="12sp"
          />
 
     <LinearLayout
@@ -607,6 +609,9 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center|top"
         android:layout_marginTop="50dp"
+        android:background="@drawable/bg_player_pill"
+        android:paddingHorizontal="20dp"
+        android:paddingVertical="10dp"
         android:gravity="center_vertical"
         android:visibility="gone"
         tools:visibility="visible">

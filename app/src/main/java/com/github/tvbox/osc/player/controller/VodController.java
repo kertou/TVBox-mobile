@@ -9,7 +9,6 @@ import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.animation.AccelerateInterpolator;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
@@ -161,22 +160,24 @@ public class VodController extends BaseController {
     private boolean isLock = false;
     private ParseAdapter mParseAdapter;
 
+    private final SimpleDateFormat mClockFormat = new SimpleDateFormat("HH:mm");
     private Runnable myRunnable2 = new Runnable() {
         @Override
         public void run() {
-            Date date = new Date();
-            SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");
-            mPlayPauseTime.setText(timeFormat.format(date));
             String speed = PlayerHelper.getDisplaySpeed(mControlWrapper.getTcpSpeed());
-            mPlayLoadNetSpeedRightTop.setText(speed);
-            mPlayLoadNetSpeed.setText(speed);
-
-            if (mControlWrapper.getVideoSize()[0] > 0 && mControlWrapper.getVideoSize()[1] > 0) {
-                String width = Integer.toString(mControlWrapper.getVideoSize()[0]);
-                String height = Integer.toString(mControlWrapper.getVideoSize()[1]);
-                mVideoSize.setText(width + " x " + height);
+            //控制层隐藏时跳过其内部视图的刷新,缓冲网速提示仅在其可见时刷新(避免每秒做无效 UI 工作)
+            boolean topVisible = mTopRoot2 != null && mTopRoot2.getVisibility() == VISIBLE;
+            if (topVisible) {
+                mPlayPauseTime.setText(mClockFormat.format(new Date()));
+                mPlayLoadNetSpeedRightTop.setText(speed);
+                int[] videoSize = mControlWrapper.getVideoSize();
+                if (videoSize[0] > 0 && videoSize[1] > 0) {
+                    mVideoSize.setText(videoSize[0] + " x " + videoSize[1]);
+                }
             }
-
+            if (mPlayLoadNetSpeed.getVisibility() == VISIBLE) {
+                mPlayLoadNetSpeed.setText(speed);
+            }
             mHandler.postDelayed(this, 1000);
         }
     };
@@ -208,7 +209,8 @@ public class VodController extends BaseController {
         mProgressText = findViewById(R.id.tv_progress_text);
         mBottomRoot = findViewById(R.id.bottom_container);
         mTopRoot1 = findViewById(R.id.tv_top_l_container);
-        mTopRoot2 = findViewById(R.id.tv_top_r_container);
+        //M3 重构后顶部遮罩/返回/标题统一挂在 top_container 上,一起显隐
+        mTopRoot2 = findViewById(R.id.top_container);
         mParseRoot = findViewById(R.id.parse_root);
         mGridView = findViewById(R.id.mGridView);
         mNextBtn = findViewById(R.id.play_next);
@@ -638,6 +640,18 @@ public class VodController extends BaseController {
         }
     }
 
+    /**
+     * 当前生效的倍速(取自播放配置而非播放器实时状态:起播/缓冲期间实时值会短暂回读 1.0,
+     * 控制弹窗按实时值比对会造成选中态滞后/闪烁)
+     */
+    public float getConfigSpeed() {
+        try {
+            return (float) mPlayerConfig.getDouble("sp");
+        } catch (Exception e) {
+            return mControlWrapper != null ? mControlWrapper.getSpeed() : 1.0f;
+        }
+    }
+
     private void hideLiveAboutBtn() {
         if (mControlWrapper != null && mControlWrapper.getDuration() == 0) {
             mPlayerSpeedBtn.setVisibility(GONE);
@@ -864,13 +878,16 @@ public class VodController extends BaseController {
         simSeekPosition = position;
     }
 
+    private int mLastSeekIconDir = 0;
+
     @Override
     protected void updateSeekUI(int curr, int seekTo, int duration) {
         super.updateSeekUI(curr, seekTo, duration);
-        if (seekTo > curr) {
-            mProgressIcon.setImageResource(R.drawable.icon_pre);
-        } else {
-            mProgressIcon.setImageResource(R.drawable.icon_back);
+        //滑动每次 move 事件都会走到这里,方向不变时不重复 setImageResource(避免 60/s 的无效重绘)
+        int dir = seekTo > curr ? 1 : -1;
+        if (dir != mLastSeekIconDir) {
+            mLastSeekIconDir = dir;
+            mProgressIcon.setImageResource(dir > 0 ? R.drawable.icon_pre : R.drawable.icon_back);
         }
         mProgressText.setText(PlayerUtils.stringForTime(seekTo) + " / " + PlayerUtils.stringForTime(duration));
         mHandler.sendEmptyMessage(1000);
@@ -881,7 +898,12 @@ public class VodController extends BaseController {
     @Override
     protected void onPlayStateChanged(int playState) {
         super.onPlayStateChanged(playState);
-        EventBus.getDefault().post(new RefreshEvent(RefreshEvent.TYPE_REFRESH_NOTIFY, null));
+        //跳过高频瞬态:缓冲中/缓冲完成/准备中每次触发都会导致 PlayService 全量重建通知,网络抖动时通知风暴
+        if (playState != VideoView.STATE_PREPARING
+                && playState != VideoView.STATE_BUFFERING
+                && playState != VideoView.STATE_BUFFERED) {
+            EventBus.getDefault().post(new RefreshEvent(RefreshEvent.TYPE_REFRESH_NOTIFY, null));
+        }
         videoPlayState = playState;
         switch (playState) {
             case VideoView.STATE_IDLE:
@@ -889,10 +911,10 @@ public class VodController extends BaseController {
             case VideoView.STATE_PLAYING:
                 initLandscapePortraitBtnInfo();
                 startProgress();
-                mIvPlayStatus.setImageResource(R.drawable.ic_pause);
+                mIvPlayStatus.setImageResource(R.drawable.ic_m3_pause);
                 break;
             case VideoView.STATE_PAUSED:
-                mIvPlayStatus.setImageResource(R.drawable.ic_play);
+                mIvPlayStatus.setImageResource(R.drawable.ic_m3_play_arrow);
                 break;
             case VideoView.STATE_ERROR:
                 listener.errReplay();
@@ -1091,19 +1113,23 @@ public class VodController extends BaseController {
     }
 
     private void toggleViewShowWithAlpha(View view, boolean show) {
+        //先取消在途动画:否则上一次隐藏的 withEndAction 会在重新显示后把视图打回 GONE(表现为控制栏点不出来/闪没)
+        view.animate().cancel();
         if (show) {
             view.setVisibility(View.VISIBLE);
             view.animate()
                     .alpha(1.0f)
-                    .setDuration(100)
-                    .setInterpolator(new AccelerateInterpolator())
+                    .setDuration(150)
                     .start();
         } else {
             view.animate()
                     .alpha(0.0f)
-                    .setDuration(100)
-                    .setInterpolator(new AccelerateInterpolator())
-                    .withEndAction(() -> view.setVisibility(View.GONE))
+                    .setDuration(150)
+                    .withEndAction(() -> {
+                        if (view.getAlpha() == 0f) {
+                            view.setVisibility(View.GONE);
+                        }
+                    })
                     .start();
         }
     }

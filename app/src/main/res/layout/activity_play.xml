@@ -12,17 +12,17 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <com.airbnb.lottie.LottieAnimationView
+    <com.github.tvbox.osc.ui.widget.M3Loading
         android:id="@+id/play_loading"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
         android:layout_gravity="center"
-        app:lottie_autoPlay="true"
-        android:scaleType="centerCrop"
-        app:lottie_fileName="anim_loading.json"
-        app:lottie_speed="2"
-        app:lottie_loop="true"
-        app:lottie_repeatMode="reverse"/>
+        android:indeterminate="true"
+        android:saveEnabled="false"
+        app:indicatorColor="@color/white"
+        app:indicatorSize="48dp"
+        app:trackCornerRadius="2dp"
+        app:trackThickness="3dp"/>
 
     <ImageView
         android:id="@+id/play_load_error"

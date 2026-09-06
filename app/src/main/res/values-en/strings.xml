@@ -2,4 +2,13 @@
     <!-- ExpandableTextView AAR 自带 values-en/app_name=ExpandableTextViewLibrary，
          应用侧必须以同限定符覆盖，否则英语 locale 下桌面名会显示库名 -->
     <string name="app_name">TVBox</string>
+    <string name="back">Back</string>
+    <string name="pip">Picture-in-picture</string>
+    <string name="cast">Cast</string>
+    <string name="setting">Settings</string>
+    <string name="lock">Lock</string>
+    <string name="play_pause">Play/Pause</string>
+    <string name="pre_episode">Previous episode</string>
+    <string name="next_episode">Next episode</string>
+    <string name="fullscreen">Fullscreen</string>
 </resources>

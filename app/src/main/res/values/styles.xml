@@ -211,6 +211,15 @@
         <item name="ensureMinTouchTargetSize">false</item>
     </style>
 
+    <!-- 播放器图标按钮(视频上覆盖层专用,不随主题变色):
+         按 M3 官方 icon button 规格=48dp 触控目标 + 24dp 图标居中,无边框 state layer(波纹) -->
+    <style name="PlayerIconButton">
+        <item name="android:layout_width">48dp</item>
+        <item name="android:layout_height">48dp</item>
+        <item name="android:background">?attr/selectableItemBackgroundBorderless</item>
+        <item name="android:scaleType">center</item>
+    </style>
+
 <!--文件选择器样式,在此只改变了背景和基本颜色-->
     <style name="FileChooser" parent="FileChooserStyle">
         <item name="android:textColor">@color/colorPrimary</item>

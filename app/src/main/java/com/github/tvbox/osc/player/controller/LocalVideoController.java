@@ -139,22 +139,24 @@ public class LocalVideoController extends BaseController {
 
     int videoPlayState = 0;
 
+    private final SimpleDateFormat mClockFormat = new SimpleDateFormat("HH:mm");
     private Runnable myRunnable2 = new Runnable() {
         @Override
         public void run() {
-            Date date = new Date();
-            SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");
-            mPlayPauseTime.setText(timeFormat.format(date));
             String speed = PlayerHelper.getDisplaySpeed(mControlWrapper.getTcpSpeed());
-            mPlayLoadNetSpeedRightTop.setText(speed);
-            mPlayLoadNetSpeed.setText(speed);
-
-            if (mControlWrapper.getVideoSize()[0] > 0 && mControlWrapper.getVideoSize()[1] > 0) {
-                String width = Integer.toString(mControlWrapper.getVideoSize()[0]);
-                String height = Integer.toString(mControlWrapper.getVideoSize()[1]);
-                mVideoSize.setText(width + " x " + height);
+            //控制层隐藏时跳过其内部视图的刷新(避免每秒做无效 UI 工作)
+            boolean topVisible = mTopRoot2 != null && mTopRoot2.getVisibility() == VISIBLE;
+            if (topVisible) {
+                mPlayPauseTime.setText(mClockFormat.format(new Date()));
+                mPlayLoadNetSpeedRightTop.setText(speed);
+                int[] videoSize = mControlWrapper.getVideoSize();
+                if (videoSize[0] > 0 && videoSize[1] > 0) {
+                    mVideoSize.setText(videoSize[0] + " x " + videoSize[1]);
+                }
             }
-
+            if (mPlayLoadNetSpeed.getVisibility() == VISIBLE) {
+                mPlayLoadNetSpeed.setText(speed);
+            }
             mHandler.postDelayed(this, 1000);
         }
     };
@@ -180,7 +182,8 @@ public class LocalVideoController extends BaseController {
         mProgressText = findViewById(R.id.tv_progress_text);
         mBottomRoot = findViewById(R.id.bottom_container);
         mTopRoot1 = findViewById(R.id.tv_top_l_container);
-        mTopRoot2 = findViewById(R.id.tv_top_r_container);
+        //M3 重构后顶部遮罩/返回/标题统一挂在 top_container 上,一起显隐
+        mTopRoot2 = findViewById(R.id.top_container);
 
         mNextBtn = findViewById(R.id.play_next);
         mPreBtn = findViewById(R.id.play_pre);
@@ -797,13 +800,16 @@ public class LocalVideoController extends BaseController {
         simSeekPosition = position;
     }
 
+    private int mLastSeekIconDir = 0;
+
     @Override
     protected void updateSeekUI(int curr, int seekTo, int duration) {
         super.updateSeekUI(curr, seekTo, duration);
-        if (seekTo > curr) {
-            mProgressIcon.setImageResource(R.drawable.icon_pre);
-        } else {
-            mProgressIcon.setImageResource(R.drawable.icon_back);
+        //滑动每次 move 事件都会走到这里,方向不变时不重复 setImageResource(避免 60/s 的无效重绘)
+        int dir = seekTo > curr ? 1 : -1;
+        if (dir != mLastSeekIconDir) {
+            mLastSeekIconDir = dir;
+            mProgressIcon.setImageResource(dir > 0 ? R.drawable.icon_pre : R.drawable.icon_back);
         }
         mProgressText.setText(PlayerUtils.stringForTime(seekTo) + " / " + PlayerUtils.stringForTime(duration));
         mHandler.sendEmptyMessage(1000);
@@ -821,10 +827,10 @@ public class LocalVideoController extends BaseController {
             case VideoView.STATE_PLAYING:
                 initLandscapePortraitBtnInfo();
                 startProgress();
-                mIvPlayStatus.setImageResource(R.drawable.ic_pause);
+                mIvPlayStatus.setImageResource(R.drawable.ic_m3_pause);
                 break;
             case VideoView.STATE_PAUSED:
-                mIvPlayStatus.setImageResource(R.drawable.ic_play);
+                mIvPlayStatus.setImageResource(R.drawable.ic_m3_play_arrow);
                 break;
             case VideoView.STATE_ERROR:
                 listener.errReplay();

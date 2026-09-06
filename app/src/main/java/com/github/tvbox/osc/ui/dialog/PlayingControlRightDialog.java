@@ -140,9 +140,10 @@ public class PlayingControlRightDialog extends DrawerPopupView {
     }
 
     private void updateSpeedUi(){
+        String speed = String.valueOf(mController.getConfigSpeed());
         for (int i = 0; i <mBinding.containerSpeed.getChildCount(); i++) {
             TextView tv= (TextView) mBinding.containerSpeed.getChildAt(i);
-            tv.setSelected(String.valueOf(mPlayer.getSpeed()).equals(tv.getText().toString().replace("x","")));
+            tv.setSelected(speed.equals(tv.getText().toString().replace("x","")));
         }
     }
 

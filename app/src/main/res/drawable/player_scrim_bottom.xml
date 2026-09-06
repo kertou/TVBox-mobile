@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 播放器底部遮罩:底部深色渐隐,保证控制层文字/图标在亮画面上的可读性 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <gradient
+        android:angle="90"
+        android:startColor="#B3000000"
+        android:endColor="#00000000" />
+</shape>
