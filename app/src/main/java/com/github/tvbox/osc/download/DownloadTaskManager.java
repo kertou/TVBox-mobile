@@ -532,8 +532,20 @@ public class DownloadTaskManager {
                 postProgress(task, DownloadEpisode.STATUS_DOWNLOADING, bytes, 0, bytes, done, total);
             }
         };
+        // 签名短时效源(实测解析链接一两分钟内失效,分片下到一半被 CDN 以 401/404 拒绝):
+        // 下载中途就地重新解析拿新链接续传,与在线播放每次现解析对齐;已下分片靠续传跳过
+        HlsDownloader.PlaylistRefresher refresher = () -> {
+            PlayUrlResolver.Result rr = PlayUrlResolver.resolve(task.sourceKey, task.flag, task.rawUrl);
+            if (!rr.ok || TextUtils.isEmpty(rr.url)) return null;
+            task.resolvedUrl = rr.url;
+            task.headersJson = PlayUrlResolver.headersToJson(rr.headers);
+            HlsDownloader.Refreshed fresh = new HlsDownloader.Refreshed();
+            fresh.url = rr.url;
+            fresh.headers = rr.headers;
+            return fresh;
+        };
         HlsDownloader.Result r = HlsDownloader.download(task.resolvedUrl, headers, dir,
-                () -> pausedAll || pauseIds.containsKey(id) || cancelIds.containsKey(id), listener);
+                () -> pausedAll || pauseIds.containsKey(id) || cancelIds.containsKey(id), listener, refresher);
         if (r.cancelled || cancelIds.containsKey(id)) {
             removeTask(task);
             postChanged();
@@ -664,8 +676,12 @@ public class DownloadTaskManager {
 
     /** 限流型失败:显式 403,或单次尝试已推进大量分片后才失败(配额耗尽特征,常表现为成批网络重置);
      *  占位图/假分片型失败(内容无效):源当前解析到的节点是死的,窗口内立刻重试只会重复拿到
-     *  同一死节点,同样需要拉开间隔等源站节点轮换 */
+     *  同一死节点,同样需要拉开间隔等源站节点轮换。
+     *  401/404 同属限流:实测这类防失联 CDN 放行约 4GB 后进入分钟级~小时级封禁窗口,
+     *  窗口内重新解析出的新链接同样秒死(分片一律 401),快速重试只会把重试预算烧光;
+     *  就地刷新(见 HlsDownloader)负责在放行窗口内吃满每一分钟,这里负责等窗口回来 */
     private static boolean isThrottledFailure(String errMsg, int attemptSegments) {
+        if (errMsg != null && (errMsg.contains("HTTP 401") || errMsg.contains("HTTP 404"))) return true;
         if (errMsg != null && errMsg.contains("HTTP 403")) return true;
         if (errMsg != null && errMsg.contains("内容无效")) return true;
         return attemptSegments >= 20;

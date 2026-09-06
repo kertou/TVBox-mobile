@@ -32,6 +32,7 @@ import okhttp3.Response;
  * - 支持 AES-128 加密(密钥一并下载,重写为本地相对路径,保留 IV)
  * - 支持 #EXT-X-MAP(init 段)
  * - 分片按序号命名,已存在且非空的分片直接跳过 → 断点续传
+ * - 分片被 401/404 拒绝(签名短时效/死节点源)时经 PlaylistRefresher 重新解析续传
  * - 输出本地 index.m3u8,分片/密钥引用全部重写为相对路径
  */
 public class HlsDownloader {
@@ -44,6 +45,16 @@ public class HlsDownloader {
         void onProgress(int segmentsDone, int segmentsTotal, long bytesDone);
     }
 
+    /** 分片被 CDN 以 401/404 拒绝(签名短时效/节点失效)时,由上层重新解析拿新播放列表地址 */
+    public interface PlaylistRefresher {
+        Refreshed refresh();
+    }
+
+    public static class Refreshed {
+        public String url;
+        public Map<String, String> headers;
+    }
+
     public static class Result {
         public boolean success;
         public boolean paused;
@@ -51,6 +62,8 @@ public class HlsDownloader {
         public String errMsg;
         /** 本次尝试完成的分片数(失败时也有效,用于上层识别限流型失败) */
         public int segmentsDone;
+        /** 失败原因是链接级失效(分片 401/404 或播放列表过期),重新解析有可能修复 */
+        public boolean refreshable;
         /** 本地 index.m3u8(合并失败时的分片播放模式) */
         public String localPlaylistPath;
         /** 解密/拼接后的待合并文件(ts 或 fMP4) */
@@ -60,12 +73,38 @@ public class HlsDownloader {
 
     private static final int THREADS = 4;
     private static final int SEGMENT_RETRY = 2;
+    /** 单次尝试内播放列表刷新上限:签名短时效源(实测解析链接一两分钟内失效)靠反复
+     *  重新解析续传推进,已下分片跨刷新跳过;上限防止死循环烧解析接口 */
+    private static final int MAX_PLAYLIST_REFRESH = 3;
     private static final String DEFAULT_UA = "Mozilla/5.0 (Linux; Android 11) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36";
 
     private static final Pattern ATTR_URI = Pattern.compile("URI=\"([^\"\\s]+)\"");
 
     public static Result download(String playlistUrl, Map<String, String> headers, File episodeDir,
-                                  AbortChecker abort, ProgressListener listener) {
+                                  AbortChecker abort, ProgressListener listener, PlaylistRefresher refresher) {
+        Result result = new Result();
+        for (int refresh = 0; ; refresh++) {
+            result = downloadOnce(playlistUrl, headers, episodeDir, abort, listener);
+            if (result.success || result.paused || !result.refreshable || refresher == null) {
+                return result;
+            }
+            if (refresh >= MAX_PLAYLIST_REFRESH || abort.shouldAbort()) {
+                return abort.shouldAbort() ? aborted(result) : result;
+            }
+            android.util.Log.w("HlsDownloader", "分片链接失效,刷新播放列表重试(" + (refresh + 1)
+                    + "/" + MAX_PLAYLIST_REFRESH + ") 已推进分片 " + result.segmentsDone);
+            Refreshed fresh = refresher.refresh();
+            if (fresh == null || TextUtils.isEmpty(fresh.url)) {
+                android.util.Log.w("HlsDownloader", "刷新播放列表失败(重新解析未成功),按原失败返回");
+                return result;
+            }
+            playlistUrl = fresh.url;
+            headers = fresh.headers;
+        }
+    }
+
+    private static Result downloadOnce(String playlistUrl, Map<String, String> headers, File episodeDir,
+                                       AbortChecker abort, ProgressListener listener) {
         Result result = new Result();
         File partsDir = DownloadStorage.partsDir(episodeDir);
         try {
@@ -74,6 +113,7 @@ public class HlsDownloader {
             if (abort.shouldAbort()) return aborted(result);
             if (TextUtils.isEmpty(content) || !content.contains("#EXTM3U")) {
                 result.errMsg = "播放列表获取失败(可能已失效,重试会重新解析)";
+                result.refreshable = true;
                 return result;
             }
             // master 播放列表 → 选最高码率的子流
@@ -88,6 +128,7 @@ public class HlsDownloader {
                 if (abort.shouldAbort()) return aborted(result);
                 if (TextUtils.isEmpty(content) || !content.contains("#EXTM3U")) {
                     result.errMsg = "播放列表获取失败(可能已失效,重试会重新解析)";
+                    result.refreshable = true;
                     return result;
                 }
             }
@@ -244,6 +285,11 @@ public class HlsDownloader {
                         // 带 HTTP 码:源站分片批量 404/403 时用户能直接看出是源失效而非应用问题
                         failMsg.append(": ").append(seg.localName)
                                 .append("(").append(httpText(lastCode)).append(")");
+                        // 401=签名/授权过期,404=分片地址失效或死节点:重新解析可能修复,
+                        // 由外层刷新循环处理,而不是直接让整轮尝试报废
+                        if (lastCode == 401 || lastCode == 404) {
+                            result.refreshable = true;
+                        }
                         return;
                     }
                     // 分片完成即累计字节(含续传跳过的已有分片),供上层替代每 500ms 扫盘统计
