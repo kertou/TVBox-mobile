@@ -32,11 +32,13 @@ public class LiveChannelGroupNewAdapter extends BaseQuickAdapter<LiveChannelGrou
         tvGroupName.setText(item.getGroupName());
         int groupIndex = item.getGroupIndex();
         if (groupIndex == selectedGroupIndex && groupIndex != focusedGroupIndex) {
-            tvGroupName.setTextColor(mContext.getResources().getColor(R.color.white));
-            root.setBackground(mContext.getResources().getDrawable(R.drawable.bg_r_common_solid_primary));
+            root.setSelected(true);
+            root.setBackground(mContext.getResources().getDrawable(R.drawable.bg_m3_chip_selector));
+            tvGroupName.setTextColor(mContext.getResources().getColor(R.color.md_on_primary));
         } else {
-            tvGroupName.setTextColor(ColorUtils.getColor(R.color.text_foreground));
+            root.setSelected(false);
             root.setBackground(mContext.getResources().getDrawable(R.drawable.bg_transparent));
+            tvGroupName.setTextColor(ColorUtils.getColor(R.color.text_foreground));
         }
     }
 

@@ -20,21 +20,13 @@
             app:layout_constraintBottom_toBottomOf="parent"
             android:layout_marginBottom="20dp">
 
-            <TextView
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/backupNow"
+                style="@style/mbSolid"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_marginEnd="@dimen/dp_5"
-                android:layout_marginRight="@dimen/dp_5"
                 android:layout_weight="1"
-                android:background="@drawable/bg_r_common_solid_primary"
-                android:focusable="true"
-                android:gravity="center"
-                android:padding="@dimen/dp_10"
-                android:text="立即备份"
-                android:textColor="@color/color_FFFFFF"
-                android:textSize="16sp"/>
+                android:layout_height="wrap_content"
+                android:text="立即备份" />
 
         </LinearLayout>
 

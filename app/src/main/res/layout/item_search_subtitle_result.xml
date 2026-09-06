@@ -2,7 +2,7 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/bg_r_common_solid_primary"
+    android:background="@drawable/bg_m3_surface_card"
     android:focusable="true">
 
     <LinearLayout
@@ -27,7 +27,7 @@
             android:singleLine="true"
             android:maxLines="1"
             android:text="字幕搜索结果"
-            android:textColor="@color/white"/>
+            android:textColor="?attr/colorOnSurface"/>
         <TextView
             android:id="@+id/subtitleNameInfo"
             android:layout_width="wrap_content"
@@ -35,7 +35,7 @@
             android:singleLine="true"
             android:maxLines="1"
             android:text="压缩包"
-            android:textColor="@color/white"/>
+            android:textColor="?attr/colorOnSurface"/>
 
     </LinearLayout>
 </FrameLayout>
