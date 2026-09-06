@@ -86,9 +86,6 @@ public class UserFragment extends BaseLazyFragment {
     @Override
     protected void init() {
         tvHotList1 = findViewById(R.id.tvHotList1);
-        findViewById(R.id.btn_live).setOnClickListener(view -> {
-            if (mActivity instanceof MainActivity) ((MainActivity) mActivity).goToTab(1);
-        });
         homeHotVodAdapter = new GridAdapter();
         homeHotVodAdapter.setOnItemClickListener(new BaseQuickAdapter.OnItemClickListener() {
             @Override
