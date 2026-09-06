@@ -11,8 +11,6 @@
 
     <color name="bg_gray">#f7f7f7</color>
     <color name="gray_darker">#7f7b79</color>
-    <!-- 自适应图标背景: 与立方体标志顶面一致的浅底 -->
-    <color name="ic_launcher_background">#E9EFFA</color>
     <!--    深灰点击透明度-->
     <color name="gray_darker_press_alpha">#3C808080</color>
 
