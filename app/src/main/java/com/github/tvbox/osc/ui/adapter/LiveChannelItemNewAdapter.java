@@ -3,11 +3,11 @@ package com.github.tvbox.osc.ui.adapter;
 import android.view.View;
 import android.widget.TextView;
 
-import com.blankj.utilcode.util.ColorUtils;
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.BaseViewHolder;
 import com.github.tvbox.osc.R;
 import com.github.tvbox.osc.bean.LiveChannelItem;
+import com.google.android.material.color.MaterialColors;
 
 import java.util.ArrayList;
 
@@ -36,13 +36,13 @@ public class LiveChannelItemNewAdapter extends BaseQuickAdapter<LiveChannelItem,
         if (channelIndex == selectedChannelIndex && channelIndex != focusedChannelIndex) {
             root.setSelected(true);
             root.setBackground(mContext.getResources().getDrawable(R.drawable.bg_m3_chip_selector));
-            tvChannelNum.setTextColor(mContext.getResources().getColor(R.color.md_on_primary));
-            tvChannel.setTextColor(mContext.getResources().getColor(R.color.md_on_primary));
+            tvChannelNum.setTextColor(MaterialColors.getColor(tvChannelNum, com.google.android.material.R.attr.colorOnPrimary));
+            tvChannel.setTextColor(MaterialColors.getColor(tvChannel, com.google.android.material.R.attr.colorOnPrimary));
         } else{
             root.setSelected(false);
             root.setBackground(mContext.getResources().getDrawable(R.drawable.bg_transparent));
-            tvChannelNum.setTextColor(ColorUtils.getColor(R.color.text_foreground));
-            tvChannel.setTextColor(ColorUtils.getColor(R.color.text_foreground));
+            tvChannelNum.setTextColor(MaterialColors.getColor(tvChannelNum, com.google.android.material.R.attr.colorOnSurface));
+            tvChannel.setTextColor(MaterialColors.getColor(tvChannel, com.google.android.material.R.attr.colorOnSurface));
         }
     }
 

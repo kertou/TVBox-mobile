@@ -2,11 +2,11 @@ package com.github.tvbox.osc.ui.adapter;
 
 import android.widget.TextView;
 
-import com.blankj.utilcode.util.ColorUtils;
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.BaseViewHolder;
 import com.github.tvbox.osc.R;
 import com.github.tvbox.osc.bean.LiveSettingGroup;
+import com.google.android.material.color.MaterialColors;
 
 import java.util.ArrayList;
 
@@ -30,9 +30,9 @@ public class LiveSettingGroupAdapter extends BaseQuickAdapter<LiveSettingGroup, 
         tvGroupName.setText(group.getGroupName());
         int groupIndex = group.getGroupIndex();
         if (groupIndex == selectedGroupIndex && groupIndex != focusedGroupIndex) {
-            tvGroupName.setTextColor(mContext.getResources().getColor(R.color.color_1890FF));
+            tvGroupName.setTextColor(MaterialColors.getColor(tvGroupName, R.attr.colorPrimary));
         } else {
-            tvGroupName.setTextColor(ColorUtils.getColor(R.color.text_foreground));
+            tvGroupName.setTextColor(MaterialColors.getColor(tvGroupName, R.attr.colorOnSurface));
         }
     }
 

@@ -3,11 +3,11 @@ package com.github.tvbox.osc.ui.adapter;
 import android.view.View;
 import android.widget.TextView;
 
-import com.blankj.utilcode.util.ColorUtils;
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.BaseViewHolder;
 import com.github.tvbox.osc.R;
 import com.github.tvbox.osc.bean.LiveChannelGroup;
+import com.google.android.material.color.MaterialColors;
 
 import java.util.ArrayList;
 
@@ -34,11 +34,11 @@ public class LiveChannelGroupNewAdapter extends BaseQuickAdapter<LiveChannelGrou
         if (groupIndex == selectedGroupIndex && groupIndex != focusedGroupIndex) {
             root.setSelected(true);
             root.setBackground(mContext.getResources().getDrawable(R.drawable.bg_m3_chip_selector));
-            tvGroupName.setTextColor(mContext.getResources().getColor(R.color.md_on_primary));
+            tvGroupName.setTextColor(MaterialColors.getColor(tvGroupName, com.google.android.material.R.attr.colorOnPrimary));
         } else {
             root.setSelected(false);
             root.setBackground(mContext.getResources().getDrawable(R.drawable.bg_transparent));
-            tvGroupName.setTextColor(ColorUtils.getColor(R.color.text_foreground));
+            tvGroupName.setTextColor(MaterialColors.getColor(tvGroupName, com.google.android.material.R.attr.colorOnSurface));
         }
     }
 
