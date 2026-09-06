@@ -1,19 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- M3 chip: 选中=填充 primary 文字 on_primary, 未选中=描边 outline 文字 on_surface;
-     状态由 View.setSelected 驱动(原 ShadowLayout 换标准 selector) -->
-<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- M3 官方 FilterChip: 选中=secondary_container 色调填充, 未选中=surface+1dp outline 描边;
+     状态由 View.setSelected 驱动(见 ui/widget/FilterChip 的 selected→checked 映射);
+     外层 FrameLayout 让 chip 在固定宽格子里内容居中, 点击仍由 item 根接收 -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/tvSeries"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:background="@drawable/bg_m3_chip_selector"
-    android:ellipsize="marquee"
-    android:gravity="center"
-    android:marqueeRepeatLimit="marquee_forever"
-    android:text="第210集"
-    android:singleLine="true"
-    android:paddingHorizontal="10dp"
-    android:paddingVertical="6dp"
-    android:textColor="@color/selector_chip_text"
-    android:textSize="12sp"
-    tools:text="第210集" />
+    android:layout_height="wrap_content">
+
+    <com.github.tvbox.osc.ui.widget.FilterChip
+        android:id="@+id/tvSeries"
+        style="@style/AppChip"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:clickable="false"
+        android:focusable="false"
+        android:singleLine="true"
+        android:text="第210集"
+        tools:text="第210集" />
+</FrameLayout>

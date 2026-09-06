@@ -193,6 +193,24 @@
         <item name="cornerRadius">@dimen/m3_corner_pill</item>
     </style>
 
+    <!-- M3 官方 Filter Chip（选集/缓存/筛选/播放控制）:
+         形状=corner-small(8dp) 高度=32dp 文字=label-large(14sp) 均来自官方样式默认值;
+         选中=secondary_container 色调填充+描边消失（配合 ui/widget/FilterChip 的 selected→checked 状态映射,
+         既有 setSelected() 业务代码零改动）; 网格密度考虑关掉勾选图标与 48dp 最小触控目标 -->
+    <style name="AppChip" parent="@style/Widget.Material3.Chip.Filter">
+        <item name="android:textColor">@color/selector_chip_text</item>
+        <item name="chipBackgroundColor">@color/selector_chip_bg</item>
+        <item name="chipStrokeColor">@color/selector_chip_stroke</item>
+        <item name="chipStrokeWidth">1dp</item>
+        <item name="checkedIconVisible">false</item>
+        <item name="chipStartPadding">10dp</item>
+        <item name="chipEndPadding">10dp</item>
+        <item name="textStartPadding">0dp</item>
+        <item name="textEndPadding">0dp</item>
+        <item name="chipMinTouchTargetSize">32dp</item>
+        <item name="ensureMinTouchTargetSize">false</item>
+    </style>
+
 <!--文件选择器样式,在此只改变了背景和基本颜色-->
     <style name="FileChooser" parent="FileChooserStyle">
         <item name="android:textColor">@color/colorPrimary</item>

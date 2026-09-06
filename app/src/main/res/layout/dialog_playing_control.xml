@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 播放控制弹窗:全部选项为 M3 官方 FilterChip（AppChip 样式），选中态由 Java setSelected 驱动 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -38,93 +39,60 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal">
 
-                    <TextView
+                    <com.github.tvbox.osc.ui.widget.FilterChip
                         android:id="@+id/speed0"
+                        style="@style/AppChip"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="8dp"
-                        android:background="@drawable/bg_m3_chip_selector"
-                        android:gravity="center"
-                        android:singleLine="true"
-                        android:textColor="@color/selector_chip_text"
-                        android:paddingVertical="4dp"
-                        android:paddingHorizontal="10dp"
                         android:text="x0.5" />
 
-                    <TextView
+                    <com.github.tvbox.osc.ui.widget.FilterChip
                         android:id="@+id/speed1"
+                        style="@style/AppChip"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="8dp"
-                        android:background="@drawable/bg_m3_chip_selector"
-                        android:gravity="center"
-                        android:singleLine="true"
-                        android:textColor="@color/selector_chip_text"
-                        android:paddingVertical="4dp"
-                        android:paddingHorizontal="10dp"
                         android:text="x1.0" />
 
-                    <TextView
+                    <com.github.tvbox.osc.ui.widget.FilterChip
                         android:id="@+id/speed1a"
+                        style="@style/AppChip"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="8dp"
-                        android:background="@drawable/bg_m3_chip_selector"
-                        android:gravity="center"
-                        android:singleLine="true"
-                        android:textColor="@color/selector_chip_text"
-                        android:paddingVertical="4dp"
-                        android:paddingHorizontal="10dp"
                         android:text="x1.25" />
 
-                    <TextView
+                    <com.github.tvbox.osc.ui.widget.FilterChip
                         android:id="@+id/speed2"
+                        style="@style/AppChip"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="8dp"
-                        android:background="@drawable/bg_m3_chip_selector"
-                        android:gravity="center"
-                        android:paddingHorizontal="10dp"
-                        android:paddingVertical="4dp"
-                        android:singleLine="true"
-                        android:text="x1.5"
-                        android:textColor="@color/selector_chip_text" />
+                        android:text="x1.5" />
 
-                    <TextView
+                    <com.github.tvbox.osc.ui.widget.FilterChip
                         android:id="@+id/speed3"
+                        style="@style/AppChip"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="8dp"
-                        android:background="@drawable/bg_m3_chip_selector"
-                        android:gravity="center"
-                        android:singleLine="true"
-                        android:textColor="@color/selector_chip_text"
-                        android:paddingVertical="4dp"
-                        android:paddingHorizontal="10dp"
                         android:text="x2.0" />
-                    <TextView
+
+                    <com.github.tvbox.osc.ui.widget.FilterChip
                         android:id="@+id/speed4"
+                        style="@style/AppChip"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="8dp"
-                        android:background="@drawable/bg_m3_chip_selector"
-                        android:gravity="center"
-                        android:singleLine="true"
-                        android:textColor="@color/selector_chip_text"
-                        android:paddingVertical="4dp"
-                        android:paddingHorizontal="10dp"
                         android:text="x2.5" />
-                    <TextView
+
+                    <com.github.tvbox.osc.ui.widget.FilterChip
                         android:id="@+id/speed5"
+                        style="@style/AppChip"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="8dp"
-                        android:background="@drawable/bg_m3_chip_selector"
-                        android:gravity="center"
-                        android:singleLine="true"
-                        android:textColor="@color/selector_chip_text"
-                        android:paddingVertical="4dp"
-                        android:paddingHorizontal="10dp"
                         android:text="x3.0" />
                 </LinearLayout>
             </HorizontalScrollView>
@@ -140,18 +108,14 @@
                 android:textStyle="bold"
                 />
 
-            <TextView
+            <com.github.tvbox.osc.ui.widget.FilterChip
                 android:id="@+id/scale"
+                style="@style/AppChip"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@drawable/bg_m3_chip_selector"
-                android:gravity="center"
-                android:singleLine="true"
-                android:textColor="@color/selector_chip_text"
-                android:paddingVertical="4dp"
-                android:paddingHorizontal="10dp"
-                android:drawableRight="@drawable/ic_change_20"
-                android:drawablePadding="8dp"
+                app:closeIcon="@drawable/ic_change_20"
+                app:closeIconVisible="true"
+                app:closeIconStartPadding="8dp"
                 tools:text="16:9"
                 />
 
@@ -179,17 +143,12 @@
                     android:src="@drawable/icon_back"
                     app:tint="?attr/colorOnSurface"
                     />
-                <TextView
+                <com.github.tvbox.osc.ui.widget.FilterChip
                     android:id="@+id/play_time_start"
+                    style="@style/AppChip"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="8dp"
-                    android:background="@drawable/bg_m3_chip_selector"
-                    android:gravity="center"
-                    android:singleLine="true"
-                    android:textColor="@color/selector_chip_text"
-                    android:paddingVertical="4dp"
-                    android:paddingHorizontal="10dp"
                     tools:text="片头" />
                 <ImageView
                     android:id="@+id/increase_start"
@@ -207,17 +166,12 @@
                     app:tint="?attr/colorOnSurface"
                     android:layout_marginStart="10dp"
                     />
-                <TextView
+                <com.github.tvbox.osc.ui.widget.FilterChip
                     android:id="@+id/play_time_end"
+                    style="@style/AppChip"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="8dp"
-                    android:background="@drawable/bg_m3_chip_selector"
-                    android:gravity="center"
-                    android:singleLine="true"
-                    android:textColor="@color/selector_chip_text"
-                    android:paddingVertical="4dp"
-                    android:paddingHorizontal="10dp"
                     tools:text="片尾" />
                 <ImageView
                     android:id="@+id/increase_end"
@@ -227,17 +181,12 @@
                     app:tint="?attr/colorOnSurface"
                     />
 
-                <TextView
+                <com.github.tvbox.osc.ui.widget.FilterChip
                     android:id="@+id/start_end_reset"
+                    style="@style/AppChip"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="8dp"
-                    android:background="@drawable/bg_m3_chip_selector"
-                    android:gravity="center"
-                    android:singleLine="true"
-                    android:textColor="@color/selector_chip_text"
-                    android:paddingVertical="4dp"
-                    android:paddingHorizontal="10dp"
                     android:layout_marginStart="10dp"
                     android:text="重置" />
             </LinearLayout>
@@ -258,34 +207,26 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
 
-                <TextView
+                <com.github.tvbox.osc.ui.widget.FilterChip
                     android:id="@+id/player"
+                    style="@style/AppChip"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="8dp"
-                    android:background="@drawable/bg_m3_chip_selector"
-                    android:gravity="center"
-                    android:singleLine="true"
-                    android:textColor="@color/selector_chip_text"
-                    android:paddingVertical="4dp"
-                    android:paddingHorizontal="10dp"
-                    android:drawableRight="@drawable/ic_change_20"
-                    android:drawablePadding="8dp"
+                    app:closeIcon="@drawable/ic_change_20"
+                    app:closeIconVisible="true"
+                    app:closeIconStartPadding="8dp"
                     tools:text="EXO" />
 
-                <TextView
+                <com.github.tvbox.osc.ui.widget.FilterChip
                     android:id="@+id/decode"
+                    style="@style/AppChip"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="8dp"
-                    android:background="@drawable/bg_m3_chip_selector"
-                    android:gravity="center"
-                    android:singleLine="true"
-                    android:textColor="@color/selector_chip_text"
-                    android:paddingVertical="4dp"
-                    android:paddingHorizontal="10dp"
-                    android:drawableRight="@drawable/ic_change_20"
-                    android:drawablePadding="8dp"
+                    app:closeIcon="@drawable/ic_change_20"
+                    app:closeIconVisible="true"
+                    app:closeIconStartPadding="8dp"
                     tools:text="硬解" />
 
 
@@ -306,86 +247,56 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:layout_marginBottom="20dp">
-                <TextView
+                <com.github.tvbox.osc.ui.widget.FilterChip
                     android:id="@+id/landscape_portrait"
+                    style="@style/AppChip"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="8dp"
-                    android:background="@drawable/bg_m3_chip_selector"
-                    android:gravity="center"
-                    android:singleLine="true"
-                    android:textColor="@color/selector_chip_text"
-                    android:paddingVertical="4dp"
-                    android:paddingHorizontal="10dp"
                     android:text="横竖屏"
                     android:visibility="gone"
                     tools:visibility="visible"
                     />
 
-                <TextView
+                <com.github.tvbox.osc.ui.widget.FilterChip
                     android:id="@+id/subtitle"
+                    style="@style/AppChip"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="8dp"
-                    android:background="@drawable/bg_m3_chip_selector"
-                    android:gravity="center"
-                    android:singleLine="true"
-                    android:textColor="@color/selector_chip_text"
-                    android:paddingVertical="4dp"
-                    android:paddingHorizontal="10dp"
                     android:text="字幕" />
 
-                <TextView
+                <com.github.tvbox.osc.ui.widget.FilterChip
                     android:id="@+id/voice"
+                    style="@style/AppChip"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="8dp"
-                    android:background="@drawable/bg_m3_chip_selector"
-                    android:gravity="center"
-                    android:singleLine="true"
-                    android:textColor="@color/selector_chip_text"
-                    android:paddingVertical="4dp"
-                    android:paddingHorizontal="10dp"
                     android:text="音轨" />
 
 
-                <TextView
+                <com.github.tvbox.osc.ui.widget.FilterChip
                     android:id="@+id/replay"
+                    style="@style/AppChip"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="8dp"
-                    android:background="@drawable/bg_m3_chip_selector"
-                    android:gravity="center"
-                    android:singleLine="true"
-                    android:textColor="@color/selector_chip_text"
-                    android:paddingVertical="4dp"
-                    android:paddingHorizontal="10dp"
                     android:text="重播" />
 
-                <TextView
+                <com.github.tvbox.osc.ui.widget.FilterChip
                     android:id="@+id/refresh"
+                    style="@style/AppChip"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="8dp"
-                    android:background="@drawable/bg_m3_chip_selector"
-                    android:gravity="center"
-                    android:singleLine="true"
-                    android:textColor="@color/selector_chip_text"
-                    android:paddingVertical="4dp"
-                    android:paddingHorizontal="10dp"
                     android:text="刷新" />
 
-                <TextView
+                <com.github.tvbox.osc.ui.widget.FilterChip
                     android:id="@+id/download"
+                    style="@style/AppChip"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="8dp"
-                    android:background="@drawable/bg_m3_chip_selector"
-                    android:gravity="center"
-                    android:singleLine="true"
-                    android:textColor="@color/selector_chip_text"
-                    android:paddingVertical="4dp"
-                    android:paddingHorizontal="10dp"
                     android:text="下载"
                     android:visibility="gone"
                     tools:visibility="visible"/>

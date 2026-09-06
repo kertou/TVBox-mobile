@@ -7,7 +7,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="horizontal"
     android:paddingHorizontal="10dp"
-    android:background="@drawable/bg_m3_chip_selector">
+    android:background="@drawable/bg_m3_outlined_card">
 
     <TextView
         android:id="@+id/tvName"

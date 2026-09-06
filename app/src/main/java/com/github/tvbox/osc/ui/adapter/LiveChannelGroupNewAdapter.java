@@ -7,7 +7,6 @@ import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.BaseViewHolder;
 import com.github.tvbox.osc.R;
 import com.github.tvbox.osc.bean.LiveChannelGroup;
-import com.google.android.material.color.MaterialColors;
 
 import java.util.ArrayList;
 
@@ -31,15 +30,8 @@ public class LiveChannelGroupNewAdapter extends BaseQuickAdapter<LiveChannelGrou
         TextView tvGroupName = holder.getView(R.id.tvChannelGroupName);
         tvGroupName.setText(item.getGroupName());
         int groupIndex = item.getGroupIndex();
-        if (groupIndex == selectedGroupIndex && groupIndex != focusedGroupIndex) {
-            root.setSelected(true);
-            root.setBackground(mContext.getResources().getDrawable(R.drawable.bg_m3_chip_selector));
-            tvGroupName.setTextColor(MaterialColors.getColor(tvGroupName, com.google.android.material.R.attr.colorOnPrimary));
-        } else {
-            root.setSelected(false);
-            root.setBackground(mContext.getResources().getDrawable(R.drawable.bg_transparent));
-            tvGroupName.setTextColor(MaterialColors.getColor(tvGroupName, com.google.android.material.R.attr.colorOnSurface));
-        }
+        // 背景(bg_m3_nav_row_selector)与文字色(selector_nav_row_text)由 XML selector 随 selected 状态自动切换
+        root.setSelected(groupIndex == selectedGroupIndex && groupIndex != focusedGroupIndex);
     }
 
     public void setSelectedGroupIndex(int selectedGroupIndex) {

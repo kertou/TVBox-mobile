@@ -9,6 +9,7 @@
     android:focusableInTouchMode="false"
     android:orientation="horizontal"
     android:gravity="center"
+    android:background="@drawable/bg_m3_nav_row_selector"
     >
 
     <TextView
@@ -19,7 +20,7 @@
         android:gravity="center"
         android:marqueeRepeatLimit="marquee_forever"
         android:singleLine="true"
-        android:textColor="?attr/colorOnSurface"
+        android:textColor="@color/selector_nav_row_text"
         tools:text="10"/>
 
     <TextView
@@ -30,7 +31,7 @@
         android:marqueeRepeatLimit="marquee_forever"
         android:singleLine="true"
         android:layout_marginStart="6dp"
-        android:textColor="?attr/colorOnSurface"
+        android:textColor="@color/selector_nav_row_text"
         android:layout_marginLeft="14dp"
         tools:text="CCTV1"/>
 </LinearLayout>

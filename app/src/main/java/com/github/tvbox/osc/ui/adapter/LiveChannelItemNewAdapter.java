@@ -7,7 +7,6 @@ import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.BaseViewHolder;
 import com.github.tvbox.osc.R;
 import com.github.tvbox.osc.bean.LiveChannelItem;
-import com.google.android.material.color.MaterialColors;
 
 import java.util.ArrayList;
 
@@ -33,17 +32,8 @@ public class LiveChannelItemNewAdapter extends BaseQuickAdapter<LiveChannelItem,
         tvChannelNum.setText(String.format("%s", item.getChannelNum()));
         tvChannel.setText(item.getChannelName());
         int channelIndex = item.getChannelIndex();
-        if (channelIndex == selectedChannelIndex && channelIndex != focusedChannelIndex) {
-            root.setSelected(true);
-            root.setBackground(mContext.getResources().getDrawable(R.drawable.bg_m3_chip_selector));
-            tvChannelNum.setTextColor(MaterialColors.getColor(tvChannelNum, com.google.android.material.R.attr.colorOnPrimary));
-            tvChannel.setTextColor(MaterialColors.getColor(tvChannel, com.google.android.material.R.attr.colorOnPrimary));
-        } else{
-            root.setSelected(false);
-            root.setBackground(mContext.getResources().getDrawable(R.drawable.bg_transparent));
-            tvChannelNum.setTextColor(MaterialColors.getColor(tvChannelNum, com.google.android.material.R.attr.colorOnSurface));
-            tvChannel.setTextColor(MaterialColors.getColor(tvChannel, com.google.android.material.R.attr.colorOnSurface));
-        }
+        // 背景(bg_m3_nav_row_selector)与文字色(selector_nav_row_text)由 XML selector 随 selected 状态自动切换
+        root.setSelected(channelIndex == selectedChannelIndex && channelIndex != focusedChannelIndex);
     }
 
     public void setSelectedChannelIndex(int selectedChannelIndex) {

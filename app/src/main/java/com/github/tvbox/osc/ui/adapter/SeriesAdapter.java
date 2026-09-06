@@ -38,10 +38,10 @@ public class SeriesAdapter extends BaseQuickAdapter<VodInfo.VodSeries, BaseViewH
         boolean cached = item.url != null && cachedUrls.contains(item.url);
         tvSeries.setText(cached ? "✓ " + item.name : item.name);
 
-        if (!isGird){// 详情页横向展示时固定宽度
-            ViewGroup.LayoutParams layoutParams = tvSeries.getLayoutParams();
+        if (!isGird){// 详情页横向展示时固定宽度(设在 item 根上,FilterChip 保持内容宽并在格内居中)
+            ViewGroup.LayoutParams layoutParams = helper.itemView.getLayoutParams();
             layoutParams.width = ConvertUtils.dp2px(120);
-            tvSeries.setLayoutParams(layoutParams);
+            helper.itemView.setLayoutParams(layoutParams);
         }
     }
 

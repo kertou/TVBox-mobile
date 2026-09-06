@@ -1,18 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- M3 筛选 chip:选中态由 setSelected 驱动(背景=bg_m3_chip_selector,文字=selector_chip_text) -->
-<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- M3 筛选 chip:官方 FilterChip,选中态由 setSelected 驱动(见 ui/widget/FilterChip 的 selected→checked 映射) -->
+<com.github.tvbox.osc.ui.widget.FilterChip xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/sl"
+    style="@style/AppChip"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:layout_marginTop="8dp"
     android:layout_marginEnd="8dp"
-    android:background="@drawable/bg_m3_chip_selector"
-    android:ellipsize="end"
-    android:focusable="true"
-    android:gravity="center"
-    android:paddingHorizontal="10dp"
-    android:paddingVertical="5dp"
     android:singleLine="true"
-    android:textColor="@color/selector_chip_text"
     tools:text="中国大陆" />
