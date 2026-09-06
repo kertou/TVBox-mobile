@@ -418,23 +418,9 @@ public class FileUtils {
     //启动app清除
     public static void cleanPlayerCache() {
         String ijkCachePath = getCachePath() + "/ijkcaches/";
-        String thunderCachePath = getCachePath() + "/thunder/";
-        String jpaliCachePath = getCachePath() + "/jpali/Downloads/";
         File ijkCacheDir = new File(ijkCachePath);
-        File thunderCacheDir = new File(thunderCachePath);
-        File jpaliCacheDir = new File(jpaliCachePath);
         try {
             if (ijkCacheDir.exists()) deleteDir(ijkCacheDir);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        try {
-            if (thunderCacheDir.exists()) deleteDir(thunderCacheDir);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        try {
-            if (jpaliCacheDir.exists()) deleteDir(jpaliCacheDir);
         } catch (Exception e) {
             e.printStackTrace();
         }

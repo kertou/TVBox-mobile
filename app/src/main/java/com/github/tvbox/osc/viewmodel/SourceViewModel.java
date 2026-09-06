@@ -21,7 +21,6 @@ import com.github.tvbox.osc.event.RefreshEvent;
 import com.github.tvbox.osc.util.DefaultConfig;
 import com.github.tvbox.osc.util.HawkConfig;
 import com.github.tvbox.osc.util.LOG;
-import com.github.tvbox.osc.util.thunder.Thunder;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -841,74 +840,6 @@ public class SourceViewModel extends ViewModel {
         }
     }
 
-    public void checkThunder(AbsXml data, int index) {
-        boolean thunderParse = false;
-        if (data.movie != null && data.movie.videoList != null && data.movie.videoList.size() == 1) {
-            Movie.Video video = data.movie.videoList.get(0);
-            if (video != null && video.urlBean != null && video.urlBean.infoList != null) {
-                boolean hasThunder=false;
-                thunderLoop:
-                for (int idx=0;idx<video.urlBean.infoList.size();idx++) {
-                    Movie.Video.UrlBean.UrlInfo urlInfo = video.urlBean.infoList.get(idx);
-                    for (Movie.Video.UrlBean.UrlInfo.InfoBean infoBean : urlInfo.beanList) {
-                        if(Thunder.isSupportUrl(infoBean.url)){
-                            hasThunder=true;
-                            break thunderLoop;
-                        }
-                    }
-                }
-                if (hasThunder) {
-                    thunderParse = true;
-                    Thunder.parse(App.getInstance(), video.urlBean, new Thunder.ThunderCallback() {
-                        @Override
-                        public void status(int code, String info) {
-                            if (code >= 0) {
-                                LOG.i(info);
-                            } else {
-                                video.urlBean.infoList.get(0).beanList.get(0).name = info;
-                                detailResult.postValue(data);
-                            }
-                        }
-
-                        @Override
-                        public void list(Map<Integer, String> urlMap) {
-                            for (int key : urlMap.keySet()) {
-                                String playList=urlMap.get(key);
-                                video.urlBean.infoList.get(key).urls = playList;
-                                String[] str = playList.split("#");
-                                List<Movie.Video.UrlBean.UrlInfo.InfoBean> infoBeanList = new ArrayList<>();
-                                for (String s : str) {
-                                    if (s.contains("$")) {
-                                        String[] ss = s.split("\\$");
-
-                                        if (ss.length > 0) {
-                                            if (ss.length >= 2) {
-                                                infoBeanList.add(new Movie.Video.UrlBean.UrlInfo.InfoBean(ss[0], ss[1]));
-                                            } else {
-                                                infoBeanList.add(new Movie.Video.UrlBean.UrlInfo.InfoBean((infoBeanList.size() + 1) + "", ss[0]));
-                                            }
-                                        }
-                                    }
-                                }
-                                video.urlBean.infoList.get(key).beanList = infoBeanList;
-                            }
-                            detailResult.postValue(data);
-                        }
-
-                        @Override
-                        public void play(String url) {
-
-                        }
-                    });
-                }
-            }
-        }
-        if (!thunderParse && index==0) {
-            detailResult.postValue(data);
-        }
-    }
-
-
     private AbsXml xml(MutableLiveData<AbsXml> result, String xml, String sourceKey) {
         try {
             XStream xstream = new XStream(new DomDriver());//创建Xstram对象
@@ -928,11 +859,7 @@ public class SourceViewModel extends ViewModel {
             } else if (quickSearchResult == result) {
                 EventBus.getDefault().post(new RefreshEvent(RefreshEvent.TYPE_QUICK_SEARCH_RESULT, data));
             } else if (result != null) {
-                if (result == detailResult) {
-                    checkThunder(data,0);
-                } else {
-                    result.postValue(data);
-                }
+                result.postValue(data);
             }
             return data;
         } catch (Exception e) {
@@ -975,11 +902,7 @@ public class SourceViewModel extends ViewModel {
             } else if (quickSearchResult == result) {
                 EventBus.getDefault().post(new RefreshEvent(RefreshEvent.TYPE_QUICK_SEARCH_RESULT, data));
             } else if (result != null) {
-                if (result == detailResult) {
-                    checkThunder(data,0);
-                } else {
-                    result.postValue(data);
-                }
+                result.postValue(data);
             }
             return data;
         } catch (Exception e) {

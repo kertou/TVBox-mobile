@@ -76,8 +76,6 @@ import com.github.tvbox.osc.util.LOG;
 import com.github.tvbox.osc.util.MD5;
 import com.github.tvbox.osc.util.PlayerHelper;
 import com.github.tvbox.osc.util.VideoParseRuler;
-import com.github.tvbox.osc.util.thunder.Jianpian;
-import com.github.tvbox.osc.util.thunder.Thunder;
 import com.github.tvbox.osc.viewmodel.SourceViewModel;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.text.Cue;
@@ -1163,8 +1161,6 @@ public class PlayFragment extends BaseLazyFragment {
         }
         stopLoadWebView(true);
         stopParse();
-        Thunder.stop(true);//停止磁力下载
-        Jianpian.finish();//停止p2p下载
     }
 
     private VodInfo mVodInfo;
@@ -1261,39 +1257,23 @@ public class PlayFragment extends BaseLazyFragment {
             startLocalUrl(cachedPath);
             return;
         }
-        if (Jianpian.isJpUrl(vs.url)) {//荐片地址特殊判断
-            String jp_url = vs.url;
-            mController.showParse(false);
-            if (vs.url.startsWith("tvbox-xg:")) {
-                playUrl(Jianpian.JPUrlDec(jp_url.substring(9)), null);
-            } else {
-                playUrl(Jianpian.JPUrlDec(jp_url), null);
-            }
-            return;
-        }
-        if (Thunder.play(vs.url, new Thunder.ThunderCallback() {
-            @Override
-            public void status(int code, String info) {
-                if (code < 0) {
-                    setTip(info, false, true);
-                } else {
-                    setTip(info, true, false);
-                }
-            }
-
-            @Override
-            public void list(Map<Integer, String> urlMap) {
-            }
-
-            @Override
-            public void play(String url) {
-                playUrl(url, null);
-            }
-        })) {
-            mController.showParse(false);
+        if (isUnsupportedMediaUrl(vs.url)) {//磁力/迅雷/ed2k/ftp 直链(迅雷 SDK 已移除)
+            hideTip();
+            Toast.makeText(requireContext(), "该链接需要磁力/迅雷播放,当前版本不支持", Toast.LENGTH_SHORT).show();
             return;
         }
         sourceViewModel.getPlay(sourceKey, mVodInfo.playFlag, progressKey, vs.url, subtitleCacheKey);
+    }
+
+    /**
+     * 磁力/迅雷/ed2k/ftp 等无法直接播放的链接(迅雷 SDK 已移除)
+     */
+    private boolean isUnsupportedMediaUrl(String url) {
+        if (url == null) return false;
+        String u = url.toLowerCase();
+        return u.startsWith("magnet:") || u.startsWith("thunder") || u.startsWith("ed2k:")
+                || u.startsWith("ftp:") || u.endsWith(".torrent") || u.startsWith("tvbox-xg:")
+                || u.startsWith("tvbox-torrent:") || u.startsWith("tvbox-oth:");
     }
 
     /**
