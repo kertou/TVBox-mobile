@@ -105,10 +105,13 @@ public class CacheFragment extends BaseVbFragment<FragmentCacheBinding> {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onDownloadEvent(DownloadEvent event) {
         long now = System.currentTimeMillis();
+        boolean visible = isAdded() && getUserVisibleHint();
         if (event.type == DownloadEvent.TYPE_DONE) {
             liveProgress.remove(event.episodeId);
             markSizesDirty();
-            loadData();
+            if (visible) {
+                loadData();
+            }
             return;
         }
         if (event.type == DownloadEvent.TYPE_MERGING) {
@@ -119,7 +122,6 @@ public class CacheFragment extends BaseVbFragment<FragmentCacheBinding> {
                 liveProgress.put(event.episodeId, live);
             }
             live.merging = true;
-            return;
         }
         if (event.type == DownloadEvent.TYPE_PROGRESS) {
             DownloadAdapter.Live live = liveProgress.get(event.episodeId);
@@ -134,11 +136,24 @@ public class CacheFragment extends BaseVbFragment<FragmentCacheBinding> {
             live.segmentsDone = event.segmentsDone;
             live.segmentsTotal = event.segmentsTotal;
         }
+        // 不在本 tab 时只攒实时数据不重绑网格:隐藏期间每 400ms 主线程全量重绑
+        // 是其他 tab 切换掉帧的主要来源;切回时 setUserVisibleHint 会补一次全量加载
+        if (!visible) {
+            return;
+        }
         if (now - lastReloadTime < 400) {
             return;
         }
         lastReloadTime = now;
         loadData();
+    }
+
+    @Override
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+        super.setUserVisibleHint(isVisibleToUser);
+        if (isVisibleToUser && isAdded() && getView() != null) {
+            loadData();
+        }
     }
 
     /** 数据加载入口:实际工作投到后台单线程串行处理,计算期间又来的刷新记一个待办 */
