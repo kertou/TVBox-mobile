@@ -5,14 +5,9 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
 
-    <com.airbnb.lottie.LottieAnimationView
-        android:layout_width="30dp"
-        android:layout_height="30dp"
-        android:layout_gravity="center"
-        app:lottie_autoPlay="true"
-        android:scaleType="centerCrop"
-        app:lottie_fileName="anim_loading.json"
-        app:lottie_speed="2"
-        app:lottie_loop="true"
-        app:lottie_repeatMode="reverse"/>
+    <com.google.android.material.loadingindicator.LoadingIndicator
+        style="@style/Widget.Material3.LoadingIndicator"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center" />
 </FrameLayout>
