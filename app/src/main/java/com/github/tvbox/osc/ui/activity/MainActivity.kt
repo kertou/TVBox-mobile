@@ -10,6 +10,7 @@ import androidx.fragment.app.FragmentPagerAdapter
 import androidx.viewpager.widget.ViewPager.SimpleOnPageChangeListener
 import com.blankj.utilcode.util.ActivityUtils
 import com.blankj.utilcode.util.ToastUtils
+import com.github.tvbox.osc.base.App
 import com.github.tvbox.osc.base.BaseVbActivity
 import com.github.tvbox.osc.constant.IntentKey
 import com.github.tvbox.osc.databinding.ActivityMainBinding
@@ -32,6 +33,9 @@ class MainActivity : BaseVbActivity<ActivityMainBinding>() {
     private var exitTime = 0L
 
     override fun init() {
+
+        // 本 Activity 即启动入口, BaseActivity 的 isNormalStart 守卫在 init() 之后执行
+        App.getInstance().isNormalStart = true
 
         useCacheConfig = intent.extras?.getBoolean(IntentKey.CACHE_CONFIG_CHANGED, false)?:false
 
