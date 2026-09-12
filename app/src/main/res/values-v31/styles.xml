@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12+ 系统启动屏属性(ROM 按 targetSdk 决定是否启用, 与 bg_launch_brand 双保险) -->
+<resources>
+
+    <style name="LaunchTheme" parent="AppTheme">
+        <item name="android:windowBackground">@drawable/bg_launch_brand</item>
+        <item name="android:windowSplashScreenBackground">@color/md_background</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/app_icon</item>
+    </style>
+
+</resources>

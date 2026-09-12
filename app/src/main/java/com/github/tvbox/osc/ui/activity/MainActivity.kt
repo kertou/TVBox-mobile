@@ -1,6 +1,7 @@
 package com.github.tvbox.osc.ui.activity
 
 import android.content.Intent
+import android.os.Bundle
 import android.os.Process
 import android.view.KeyEvent
 import android.view.MenuItem
@@ -10,6 +11,7 @@ import androidx.fragment.app.FragmentPagerAdapter
 import androidx.viewpager.widget.ViewPager.SimpleOnPageChangeListener
 import com.blankj.utilcode.util.ActivityUtils
 import com.blankj.utilcode.util.ToastUtils
+import com.github.tvbox.osc.R
 import com.github.tvbox.osc.base.App
 import com.github.tvbox.osc.base.BaseVbActivity
 import com.github.tvbox.osc.constant.IntentKey
@@ -31,6 +33,13 @@ class MainActivity : BaseVbActivity<ActivityMainBinding>() {
     var fragments = listOf<Fragment>(HomeFragment(), LiveFragment(), CacheFragment(), MyFragment())
     var useCacheConfig = false
     private var exitTime = 0L
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        // 启动窗由系统按 manifest 的 LaunchTheme(品牌图标背景)绘制, 进程冷启动期间可见;
+        // 本窗口真正创建前切回标准主题, 避免图标背景透到内容后面
+        setTheme(R.style.AppTheme)
+        super.onCreate(savedInstanceState)
+    }
 
     override fun init() {
 

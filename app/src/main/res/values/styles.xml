@@ -46,6 +46,11 @@
         <item name="android:forceDarkAllowed">false</item>
     </style>
 
+    <style name="LaunchTheme" parent="AppTheme">
+        <!-- 仅用于系统绘制冷启动窗口(应用图标居中), Activity 窗口在 onCreate 里 setTheme 切回 AppTheme -->
+        <item name="android:windowBackground">@drawable/bg_launch_brand</item>
+    </style>
+
     <style name="AppTheme.NoActionBar">
         <item name="android:windowActionBar">false</item>
         <item name="android:windowNoTitle">true</item>
