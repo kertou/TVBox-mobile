@@ -76,17 +76,18 @@ public class DownloadTaskManager {
     /** App 启动时把上次异常退出的"下载中"任务重置为暂停;自检"假完成"条目;自动续跑遗留的等待队列 */
     public void recoverOnStart() {
         try {
-            List<DownloadEpisode> actives = RoomDataManger.getAllDownloadEpisodes();
-            for (DownloadEpisode t : actives) {
-                if (t.status == DownloadEpisode.STATUS_DOWNLOADING || t.status == DownloadEpisode.STATUS_RESOLVING) {
-                    t.status = DownloadEpisode.STATUS_PAUSED;
-                    t.updateTime = System.currentTimeMillis();
-                    RoomDataManger.updateDownloadEpisode(t);
-                }
-            }
-            // 自检要读文件头,放调度线程执行,完成后再决定是否续跑
+            // DB 首次打开+全表查询不便宜,全部挪调度线程,冷启动主线程不等数据库
             scheduler.execute(() -> {
                 try {
+                    List<DownloadEpisode> actives = RoomDataManger.getAllDownloadEpisodes();
+                    for (DownloadEpisode t : actives) {
+                        if (t.status == DownloadEpisode.STATUS_DOWNLOADING || t.status == DownloadEpisode.STATUS_RESOLVING) {
+                            t.status = DownloadEpisode.STATUS_PAUSED;
+                            t.updateTime = System.currentTimeMillis();
+                            RoomDataManger.updateDownloadEpisode(t);
+                        }
+                    }
+                    // 自检要读文件头,完成后再决定是否续跑
                     int fixed = sanitizeDoneEpisodes();
                     boolean hasWaiting = nextWaitingTask() != null;
                     if ((hasWaiting || fixed > 0) && !pausedAll) {

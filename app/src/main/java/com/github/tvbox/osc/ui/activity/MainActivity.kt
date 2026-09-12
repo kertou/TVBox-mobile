@@ -53,10 +53,13 @@ class MainActivity : BaseVbActivity<ActivityMainBinding>() {
                 return fragments.size
             }
         }
-        // 4 个 tab 视图全部常驻:默认 offscreenPageLimit=1 时跨页跳转(首页↔我的等)
+        // 4 个 tab 视图常驻:默认 offscreenPageLimit=1 时跨页跳转(首页↔我的等)
         // 每次销毁重建 2 个 tab 视图,BaseVbFragment.init 重跑导致切换掉帧;直播页已有
-        // BaseLazyFragment 可见性守卫(切走 pause),常驻安全
-        mBinding.vp.offscreenPageLimit = fragments.size - 1
+        // BaseLazyFragment 可见性守卫(切走 pause),常驻安全。
+        // 但首帧只用首页(+相邻直播页),4 tab 全量膨胀会拖慢冷启动白屏,
+        // 故首帧绘制完(post)再放开到全常驻——冷启动快与切 tab 不重建两头兼顾
+        mBinding.vp.offscreenPageLimit = 1
+        mBinding.vp.post { mBinding.vp.offscreenPageLimit = fragments.size - 1 }
 
         mBinding.bottomNav.setOnNavigationItemSelectedListener { menuItem: MenuItem ->
             mBinding.vp.setCurrentItem(menuItem.order, false)

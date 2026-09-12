@@ -14,6 +14,8 @@ import com.orhanobut.hawk.Hawk;
 import org.greenrobot.eventbus.EventBus;
 
 import java.io.IOException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -27,6 +29,7 @@ import tv.danmaku.ijk.media.player.IjkMediaPlayer;
 public class ControlManager {
     private static ControlManager instance;
     private RemoteServer mServer = null;
+    private static final ExecutorService START_EXECUTOR = Executors.newSingleThreadExecutor();
     public static Context mContext;
 
     private ControlManager() {
@@ -49,10 +52,19 @@ public class ControlManager {
     }
 
     public String getAddress(boolean local) {
+        // 极端情况下(服务器还没起就有播放/推送要拿地址)兜底同步起服
+        if (mServer == null) {
+            startServerInternal();
+        }
         return local ? mServer.getLoadAddress() : mServer.getServerAddress();
     }
 
+    /** 起 LocalServer 涉及端口绑定与 IJK 原生调用,放后台线程执行,不占首页首帧 */
     public void startServer() {
+        START_EXECUTOR.submit(this::startServerInternal);
+    }
+
+    private synchronized void startServerInternal() {
         if (mServer != null) {
             return;
         }

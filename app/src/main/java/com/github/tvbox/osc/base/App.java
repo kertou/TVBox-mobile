@@ -1,5 +1,7 @@
 package com.github.tvbox.osc.base;
 
+import android.os.Handler;
+import android.os.Looper;
 import android.text.TextUtils;
 
 import androidx.multidex.MultiDexApplication;
@@ -17,6 +19,7 @@ import com.github.tvbox.osc.ui.activity.MainActivity;
 import com.github.tvbox.osc.util.EpgUtil;
 import com.github.tvbox.osc.util.FileUtils;
 import com.github.tvbox.osc.util.HawkConfig;
+import com.github.tvbox.osc.util.HeavyTaskUtil;
 import com.github.tvbox.osc.util.LOG;
 import com.github.tvbox.osc.util.OkGoHelper;
 import com.github.tvbox.osc.util.PlayerHelper;
@@ -52,13 +55,10 @@ public class App extends MultiDexApplication {
         DynamicColors.applyToActivitiesIfAvailable(this);
         // OKGo
         OkGoHelper.init(); //台标获取
-        EpgUtil.init();
         // 初始化Web服务器
         ControlManager.init(this);
         //初始化数据库
         AppDataManager.init();
-        //恢复上次异常退出的缓存下载任务
-        DownloadTaskManager.get().recoverOnStart();
         LoadSir.beginBuilder()
                 .addCallback(new EmptyCallback())
                 .addCallback(new LoadingCallback())
@@ -70,11 +70,21 @@ public class App extends MultiDexApplication {
                 .setSupportDP(false)
                 .setSupportSP(false)
                 .setSupportSubunits(Subunits.MM);
-        PlayerHelper.init();
-        QuickJSLoader.init();
-        FileUtils.cleanPlayerCache();
         initCrashConfig();
         Utils.initTheme();
+        // 冷启动白屏窗口=点击图标到首帧,主线程干得越少首帧越早。
+        // IJK/QuickJS 的 so 加载、EPG 资产解析、播放器缓存清理、下载队列恢复这些重活
+        // 全部延到首帧之后(2s)再在后台线程跑——启动期并发执行会和主线程抢 CPU/磁盘,
+        // 拖慢首帧;延后则互不影响。这些任务最早的消费时机(起播/浏览源/直播 EPG)都在
+        // 用户操作之后,2s 延迟无感知。
+        new Handler(Looper.getMainLooper()).postDelayed(() ->
+                HeavyTaskUtil.getBigTaskExecutorService().submit(() -> {
+                    PlayerHelper.init();
+                    QuickJSLoader.init();
+                    EpgUtil.init();
+                    FileUtils.cleanPlayerCache();
+                    DownloadTaskManager.get().recoverOnStart();
+                }), 2000);
     }
 
     private void initParams() {
