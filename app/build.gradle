@@ -9,8 +9,8 @@ android {
         applicationId 'com.kertou.tvplayer'
         minSdk 24
         targetSdk 30
-        versionCode 38
-        versionName '3.1.0'
+        versionCode 39
+        versionName '3.1.1'
         multiDexEnabled true
         //设置room的Schema的位置
         javaCompileOptions {
