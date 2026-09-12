@@ -7,7 +7,7 @@
         android:height="96dp"
         android:gravity="center">
         <bitmap
-            android:src="@drawable/app_icon"
+            android:src="@drawable/app_icon_splash"
             android:gravity="fill" />
     </item>
 </layer-list>
