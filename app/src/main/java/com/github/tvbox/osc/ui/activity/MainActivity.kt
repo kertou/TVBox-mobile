@@ -39,7 +39,7 @@ class MainActivity : BaseVbActivity<ActivityMainBinding>() {
         // 真实窗口在 decor 生成前把背景换成纯色, 图标层不会透到内容后面。
         // 注意不能用 setTheme 切主题: 会把 DynamicColors 在 Activity 创建前套上的
         // 动态取色覆盖层一并重置, 整个应用退回静态蓝色板(已踩坑)
-        window.setBackgroundDrawableResource(R.color.md_background)
+        window.setBackgroundDrawableResource(R.color.launch_bg)
         super.onCreate(savedInstanceState)
     }
 

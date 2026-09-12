@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 仅用于系统启动屏图标(v31): 自适应图标是各 ROM 处理最标准的路径,
+     尺寸由系统按安全区规格控制; 桌面图标仍用 app_icon 不受影响。
+     foreground 用带边距版(内容约 56%), 对应自适应图标安全区比例 -->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/launch_bg" />
+    <foreground android:drawable="@drawable/app_icon_splash_padded" />
+</adaptive-icon>
