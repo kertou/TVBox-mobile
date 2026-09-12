@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!--启动窗背景: 中性色不与壁纸动态取色打架(启动发生在进程起跑前, 无法用运行时取色)-->
+    <color name="launch_bg">#FFFFFF</color>
+
 
     <!--应用的主要色调,actionBar默认使用该颜色,Toolbar导航栏的底色-->
     <color name="colorPrimary">@color/md_primary</color>

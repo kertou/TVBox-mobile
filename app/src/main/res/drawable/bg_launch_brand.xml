@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 冷启动品牌启动窗背景: 系统在应用首帧前按 manifest 主题的 windowBackground 绘制 -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:drawable="@color/md_background" />
+    <item android:drawable="@color/launch_bg" />
     <item
         android:width="96dp"
         android:height="96dp"

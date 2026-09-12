@@ -4,7 +4,7 @@
 
     <style name="LaunchTheme" parent="AppTheme">
         <item name="android:windowBackground">@drawable/bg_launch_brand</item>
-        <item name="android:windowSplashScreenBackground">@color/md_background</item>
+        <item name="android:windowSplashScreenBackground">@color/launch_bg</item>
         <item name="android:windowSplashScreenAnimatedIcon">@drawable/app_icon</item>
     </style>
 

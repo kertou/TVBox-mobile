@@ -35,9 +35,11 @@ class MainActivity : BaseVbActivity<ActivityMainBinding>() {
     private var exitTime = 0L
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // 启动窗由系统按 manifest 的 LaunchTheme(品牌图标背景)绘制, 进程冷启动期间可见;
-        // 本窗口真正创建前切回标准主题, 避免图标背景透到内容后面
-        setTheme(R.style.AppTheme)
+        // 启动窗由系统按 manifest 的 LaunchTheme(图标居中背景)绘制, 冷启动期间可见;
+        // 真实窗口在 decor 生成前把背景换成纯色, 图标层不会透到内容后面。
+        // 注意不能用 setTheme 切主题: 会把 DynamicColors 在 Activity 创建前套上的
+        // 动态取色覆盖层一并重置, 整个应用退回静态蓝色板(已踩坑)
+        window.setBackgroundDrawableResource(R.color.md_background)
         super.onCreate(savedInstanceState)
     }
 
