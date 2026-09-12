@@ -91,5 +91,4 @@ v3.1.0 起已尽量降低误报概率：
 
 - [q215613905/TVBoxOS](https://github.com/q215613905/TVBoxOS)
 - [XiaoRanLiu3119/TVBoxOS-Mobile](https://github.com/XiaoRanLiu3119/TVBoxOS-Mobile)
-- UI 设计参考（Material 3 设计语言）：[jarnedemeulemeester/findroid](https://github.com/jarnedemeulemeester/findroid)（GPL-3.0，仅借鉴设计，未使用其代码）
 - 参考项目：[takagen99/Box](https://github.com/takagen99/Box)、[FongMi/TV](https://github.com/FongMi/TV)
