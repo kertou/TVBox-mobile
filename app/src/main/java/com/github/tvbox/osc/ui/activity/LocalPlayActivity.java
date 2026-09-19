@@ -2,10 +2,18 @@ package com.github.tvbox.osc.ui.activity;
 
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.ActivityInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.view.View;
+import android.view.ViewGroup;
 
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.recyclerview.widget.GridLayoutManager;
+
+import com.blankj.utilcode.util.ConvertUtils;
 import com.blankj.utilcode.util.GsonUtils;
 import com.blankj.utilcode.util.SPUtils;
 import com.blankj.utilcode.util.ToastUtils;
@@ -23,6 +31,8 @@ import com.github.tvbox.osc.player.MyVideoView;
 import com.github.tvbox.osc.player.controller.LocalVideoController;
 import com.github.tvbox.osc.receiver.BatteryReceiver;
 import com.github.tvbox.osc.ui.dialog.AllLocalSeriesDialog;
+import com.github.tvbox.osc.ui.adapter.SeriesAdapter;
+import com.github.tvbox.osc.util.FastClickCheckUtil;
 import com.github.tvbox.osc.util.HawkConfig;
 import com.github.tvbox.osc.util.MD5;
 import com.github.tvbox.osc.util.PlayerHelper;
@@ -57,7 +67,10 @@ public class LocalPlayActivity extends BaseVbActivity<ActivityLocalPlayBinding> 
     private BasePopupView mAllSeriesRightDialog;
     /** 当前播放集对应的缓存任务(离线播放写历史/统一进度键用) */
     private DownloadEpisode mEpisode;
-    /** 全屏播放器,不做默认的底部手势条避让 */
+    private SeriesAdapter mSeriesAdapter;
+    /** 是否处于横屏沉浸全屏(控制层全屏键切换) */
+    private boolean mIsFullScreen;
+    /** 全屏播放页,底部小白条避让自行处理(沉浸时归零) */
     @Override
     protected boolean autoNavigationBarInset() {
         return false;
@@ -67,12 +80,20 @@ public class LocalPlayActivity extends BaseVbActivity<ActivityLocalPlayBinding> 
     protected void init() {
         registerReceiver(mBatteryReceiver,new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         mVideoView = mBinding.player;
-        mVideoView.startFullScreen();
+        // 竖屏嵌入式播放窗(与详情页/直播页同构),横屏全屏由控制层全屏键切换
         Bundle bundle = getIntent().getExtras();
         String videoListJson =  bundle.getString("videoList");
         mVideoList = GsonUtils.fromJson(videoListJson, new TypeToken<List<VideoInfo>>(){}.getType());
         mPosition = bundle.getInt("position", 0);
+        // 底部小白条避让:竖屏列表页需要,横屏沉浸全屏时归零(insets 变化会自动重回调)
+        ViewCompat.setOnApplyWindowInsetsListener(mBinding.getRoot(), (v, insets) -> {
+            int nav = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom;
+            int bottom = mIsFullScreen ? 0 : nav;
+            if (v.getPaddingBottom() != bottom) v.setPadding(0, 0, 0, bottom);
+            return insets;
+        });
 
+        initSeriesGrid();
         initController();
         initPlayerCfg();
         mVideoView.setVideoController(mController); //设置控制器
@@ -112,6 +133,7 @@ public class LocalPlayActivity extends BaseVbActivity<ActivityLocalPlayBinding> 
             uri = Uri.parse("file://"+file.getAbsolutePath()).toString();
         }
         mController.setTitle(videoInfo.getDisplayName());
+        mBinding.tvLocalTitle.setText(videoInfo.getDisplayName());
         mVideoView.setUrl(uri); //设置视频地址
 
         // 与在线播放(PlayFragment)统一的进度键: sourceKey+vodId+flag+集号+集名,
@@ -152,6 +174,7 @@ public class LocalPlayActivity extends BaseVbActivity<ActivityLocalPlayBinding> 
         }
 
         saveVodHistory(mEpisode);
+        refreshSeriesSelection();
     }
 
     /**
@@ -263,7 +286,7 @@ public class LocalPlayActivity extends BaseVbActivity<ActivityLocalPlayBinding> 
 
             @Override
             public void toggleFullScreen() {
-                finish();
+                setFullScreen(!mIsFullScreen);
             }
 
             @Override
@@ -272,6 +295,48 @@ public class LocalPlayActivity extends BaseVbActivity<ActivityLocalPlayBinding> 
             }
         });
 
+    }
+
+    /** 下方集数列表(与详情页选集同款 FilterChip),点击跳集 */
+    private void initSeriesGrid() {
+        mSeriesAdapter = new SeriesAdapter(true);
+        mSeriesAdapter.setOnItemClickListener((adapter, view, position) -> {
+            FastClickCheckUtil.check(view);
+            if (position == mPosition) return;
+            mPosition = position;
+            play(true);
+        });
+        mBinding.rvSeries.setLayoutManager(new GridLayoutManager(this, 4));
+        mBinding.rvSeries.setAdapter(mSeriesAdapter);
+        mSeriesAdapter.setNewData(convertLocalVideo());
+    }
+
+    /** 播放集变化后原地刷新选中态(不重建数据,保持列表滚动位置) */
+    private void refreshSeriesSelection() {
+        if (mSeriesAdapter == null || mVideoList.isEmpty()) return;
+        String currentPath = mVideoList.get(mPosition).getPath();
+        for (VodInfo.VodSeries series : mSeriesAdapter.getData()) {
+            series.selected = Objects.equals(series.url, currentPath);
+        }
+        mSeriesAdapter.notifyDataSetChanged();
+    }
+
+    /** 竖屏播放窗 ↔ 横屏沉浸全屏 */
+    private void setFullScreen(boolean full) {
+        if (mIsFullScreen == full) return;
+        mIsFullScreen = full;
+        if (full) {
+            mVideoView.startFullScreen();
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+        } else {
+            mVideoView.stopFullScreen();
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        }
+        ViewGroup.LayoutParams lp = mBinding.playerContainer.getLayoutParams();
+        lp.height = full ? ViewGroup.LayoutParams.MATCH_PARENT : ConvertUtils.dp2px(250);
+        mBinding.playerContainer.setLayoutParams(lp);
+        mBinding.tvLocalTitle.setVisibility(full ? View.GONE : View.VISIBLE);
+        mBinding.rvSeries.setVisibility(full ? View.GONE : View.VISIBLE);
     }
 
     void initPlayerCfg() {
@@ -329,6 +394,10 @@ public class LocalPlayActivity extends BaseVbActivity<ActivityLocalPlayBinding> 
 
     @Override
     public void onBackPressed() {
+        if (mIsFullScreen) {
+            setFullScreen(false);
+            return;
+        }
         if (!mVideoView.onBackPressed()) {
             super.onBackPressed();
         }

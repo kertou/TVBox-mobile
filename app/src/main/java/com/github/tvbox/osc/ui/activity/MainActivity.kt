@@ -68,9 +68,10 @@ class MainActivity : BaseVbActivity<ActivityMainBinding>() {
         // 每次销毁重建 2 个 tab 视图,BaseVbFragment.init 重跑导致切换掉帧;直播页已有
         // BaseLazyFragment 可见性守卫(切走 pause),常驻安全。
         // 但首帧只用首页(+相邻直播页),4 tab 全量膨胀会拖慢冷启动白屏,
-        // 故首帧绘制完(post)再放开到全常驻——冷启动快与切 tab 不重建两头兼顾
+        // 故首帧绘制完再延迟放开到全常驻(立刻放开会在首帧后的关键渲染期
+        // 同时膨胀缓存页+我的页两张全屏视图,冷启动后头几秒掉帧)——冷启动快与切 tab 不重建两头兼顾
         mBinding.vp.offscreenPageLimit = 1
-        mBinding.vp.post { mBinding.vp.offscreenPageLimit = fragments.size - 1 }
+        mBinding.vp.postDelayed({ mBinding.vp.offscreenPageLimit = fragments.size - 1 }, 600)
 
         mBinding.bottomNav.setOnNavigationItemSelectedListener { menuItem: MenuItem ->
             mBinding.vp.setCurrentItem(menuItem.order, false)

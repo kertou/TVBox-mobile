@@ -61,6 +61,9 @@ public class CacheFragment extends BaseVbFragment<FragmentCacheBinding> {
     private final ExecutorService loadExecutor = Executors.newSingleThreadExecutor();
     private final AtomicBoolean loadRunning = new AtomicBoolean(false);
     private final AtomicBoolean loadPending = new AtomicBoolean(false);
+    /** 结构性变化标记(任务增删/单集完成):切回本 tab 时有变化才重绑网格,
+     *  避免每次切 tab 都全量重载(掉帧的主要来源之一) */
+    private final AtomicBoolean dataDirty = new AtomicBoolean(true);
     /** "已占用"总量:进页先显示上次值,后台重算且间隔 ≥2 秒 */
     private static volatile long cachedTotalBytes = -1;
     private static volatile long lastTotalCalc = 0;
@@ -106,6 +109,10 @@ public class CacheFragment extends BaseVbFragment<FragmentCacheBinding> {
     public void onDownloadEvent(DownloadEvent event) {
         long now = System.currentTimeMillis();
         boolean visible = isAdded() && getUserVisibleHint();
+        // 任务增删/单集完成/合并 = 结构性变化,标记脏(本 tab 不可见时切回靠它补一次全量加载)
+        if (event.type != DownloadEvent.TYPE_PROGRESS) {
+            dataDirty.set(true);
+        }
         if (event.type == DownloadEvent.TYPE_DONE) {
             liveProgress.remove(event.episodeId);
             markSizesDirty();
@@ -151,8 +158,12 @@ public class CacheFragment extends BaseVbFragment<FragmentCacheBinding> {
     @Override
     public void setUserVisibleHint(boolean isVisibleToUser) {
         super.setUserVisibleHint(isVisibleToUser);
+        // 切回本 tab:仅在有结构性变化或存在下载中集数(实时字节要刷新)时才重绑,
+        // 无变化的重复切入不再全量重载
         if (isVisibleToUser && isAdded() && getView() != null) {
-            loadData();
+            if (dataDirty.compareAndSet(true, false) || !liveProgress.isEmpty()) {
+                loadData();
+            }
         }
     }
 

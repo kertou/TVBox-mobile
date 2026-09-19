@@ -1,13 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<!-- 本地播放页:与详情页/直播页同构的竖屏页(顶部黑色播放窗+下方集数列表),控制层共用 player_vod_control_view;
+     控制层全屏键进入横屏沉浸全屏,再点返回竖屏 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.activity.LocalPlayActivity">
+    android:orientation="vertical">
 
-    <com.github.tvbox.osc.player.MyVideoView
-        android:id="@+id/player"
+    <FrameLayout
+        android:id="@+id/player_container"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
-</RelativeLayout>
+        android:layout_height="250dp"
+        android:background="@color/black">
+
+        <com.github.tvbox.osc.player.MyVideoView
+            android:id="@+id/player"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/tv_local_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="8dp"
+        android:singleLine="true"
+        android:textColor="?attr/colorOnSurface"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        tools:text="第01集" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_series"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingHorizontal="12dp"
+        android:paddingBottom="16dp"
+        tools:itemCount="8"
+        tools:listitem="@layout/item_series" />
+</LinearLayout>
