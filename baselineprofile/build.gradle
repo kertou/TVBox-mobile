@@ -1,0 +1,29 @@
+apply plugin: 'com.android.test'
+apply plugin: 'org.jetbrains.kotlin.android'
+apply plugin: 'androidx.baselineprofile'
+
+android {
+    namespace 'com.github.tvbox.osc.baselineprofile'
+    compileSdk 36
+
+    defaultConfig {
+        minSdk 24
+        targetSdk 36
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+    }
+
+    // 被测应用
+    targetProjectPath ':app'
+
+    experimentalProperties["android.experimental.self-instrumenting"] = true
+
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+}
+
+dependencies {
+    implementation 'androidx.benchmark:benchmark-macro-junit4:1.4.1'
+    implementation 'androidx.test.ext:junit:1.2.1'
+    implementation 'androidx.test.uiautomator:uiautomator:2.3.0'
+}

@@ -37,6 +37,7 @@ import com.github.tvbox.osc.ui.dialog.SelectDialog
 import com.github.tvbox.osc.ui.dialog.TipDialog
 import com.github.tvbox.osc.util.DefaultConfig
 import com.github.tvbox.osc.util.HawkConfig
+import com.github.tvbox.osc.util.HeavyTaskUtil
 import com.github.tvbox.osc.viewmodel.SourceViewModel
 import com.lxj.xpopup.XPopup
 import com.orhanobut.hawk.Hawk
@@ -129,17 +130,23 @@ class HomeFragment : BaseVbFragment<FragmentHomeBinding>() {
         }
 
         showLoading()
-        when{
-            dataInitOk && jarInitOk -> {
-                //正常初始化会先加载,最终到这,此时数据有以下几种情况
-                // 1. api/jar/spider等均加载完,正常显示数据。2. 缺失spider(存疑?)/api配置有问题同样加载(最后空布局 或 只有豆瓣首页)
-                sourceViewModel?.getSort(ApiConfig.get().homeSourceBean.key)
-            }
-            dataInitOk && !jarInitOk -> {
-                loadJar()
-            }
-            else -> {
-                loadConfig()
+        // 首帧性能: 本方法在首页视图实例化(应用首帧布局)期间执行, 而 loadConfig/loadJar 首次
+        // 触碰 OkGo/OkHttp 类栈并构建请求(实测数百 ms), jar 缓存命中时 DexClassLoader 加载
+        // 也在此链路上——全部挪到后台线程执行。回调统一经 mHandler(主线程)回到本类,
+        // 缓存命中/空订阅的同步回调也只做 mHandler.post, 线程安全。
+        HeavyTaskUtil.executeNewTask {
+            when{
+                dataInitOk && jarInitOk -> {
+                    //正常初始化会先加载,最终到这,此时数据有以下几种情况
+                    // 1. api/jar/spider等均加载完,正常显示数据。2. 缺失spider(存疑?)/api配置有问题同样加载(最后空布局 或 只有豆瓣首页)
+                    sourceViewModel?.getSort(ApiConfig.get().homeSourceBean.key)
+                }
+                dataInitOk && !jarInitOk -> {
+                    loadJar()
+                }
+                else -> {
+                    loadConfig()
+                }
             }
         }
     }

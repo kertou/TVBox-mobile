@@ -5,12 +5,14 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.IntEvaluator;
 import android.animation.ObjectAnimator;
 import android.net.Uri;
+import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Base64;
 import android.view.Gravity;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
@@ -134,6 +136,42 @@ public class LiveFragment extends BaseLazyFragment {
     @Override
     protected int getLayoutResID() {
         return R.layout.fragment_live;
+    }
+
+    // ===== 直播页视图惰性化(首帧性能) =====
+    // 底部导航 4 tab 常驻时, 首页相邻的本页视图会在应用首帧被 ViewPager 实例化并参与
+    // measure/layout(fragment_live 246 行+视频区)。这里首帧只返回轻量 stub 容器,
+    // 首次切到本页(setUserVisibleHint=true)再充气完整布局, 让首帧布局只负担首页一页。
+    private boolean realViewInflated = false;
+    private FrameLayout stubContainer;
+
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @androidx.annotation.Nullable ViewGroup container, @androidx.annotation.Nullable Bundle savedInstanceState) {
+        me.jessyan.autosize.AutoSize.autoConvertDensity(getActivity(), getSizeInDp(), isBaseOnWidth());
+        if (!realViewInflated && !getUserVisibleHint()) {
+            stubContainer = new FrameLayout(requireContext());
+            isViewCreated = true;
+            return stubContainer;
+        }
+        return super.onCreateView(inflater, container, savedInstanceState);
+    }
+
+    @Override
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+        if (isVisibleToUser) {
+            ensureRealView();
+        }
+        super.setUserVisibleHint(isVisibleToUser);
+    }
+
+    /** 首次可见: 把完整布局充气进 stub 容器并让 rootView 指向它, 必须发生在基类分发 init() 之前 */
+    private void ensureRealView() {
+        if (realViewInflated || stubContainer == null || getContext() == null) {
+            return;
+        }
+        realViewInflated = true;
+        LayoutInflater.from(requireContext()).inflate(getLayoutResID(), stubContainer, true);
+        rootView = stubContainer.getChildAt(0);
     }
 
     @Override

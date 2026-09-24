@@ -1,5 +1,7 @@
 apply plugin: 'com.android.application'
 apply plugin: 'org.jetbrains.kotlin.android'
+// Baseline Profile: 由 :baselineprofile 的启动 ULP 生成, 自动嵌入 release 构建
+apply plugin: 'androidx.baselineprofile'
 
 android {
     namespace 'com.github.tvbox.osc'
@@ -62,6 +64,15 @@ android {
         release {
             signingConfig signingConfigs.config
             minifyEnabled false
+        }
+    }
+
+    baselineProfile {
+        variants {
+            release {
+                // 启动 profile 由 :baselineprofile 的冷启动 ULP 收集生成
+                from(project(':baselineprofile'))
+            }
         }
     }
 

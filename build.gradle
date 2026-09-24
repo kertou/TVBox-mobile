@@ -12,6 +12,9 @@ buildscript {
     dependencies {
         classpath "com.android.tools.build:gradle:8.13.2"
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        // Baseline Profile: 启动路径 AOT 预编译, 缩短冷启动首帧(点击图标→主界面)
+        // 注: aliyun google 镜像未收录 baselineprofile 组, 用其指向的真实实现 artifact
+        classpath "androidx.benchmark:benchmark-baseline-profile-gradle-plugin:1.4.1"
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files

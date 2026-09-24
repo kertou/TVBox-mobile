@@ -1,5 +1,6 @@
 rootProject.name = "TVBoxMobile"
 include ':app'
+include ':baselineprofile'
 include ':player'
 include ':quickjs'
 include ':TabLayout'
