@@ -2,6 +2,8 @@ package com.github.tvbox.osc.api;
 
 import android.app.Activity;
 import android.net.Uri;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.TextUtils;
 import android.util.Base64;
 
@@ -9,6 +11,7 @@ import com.github.catvod.crawler.JarLoader;
 import com.github.catvod.crawler.JsLoader;
 import com.github.catvod.crawler.Spider;
 import com.github.tvbox.osc.base.App;
+import com.github.tvbox.osc.download.PlayUrlResolver;
 import com.github.tvbox.osc.bean.LiveChannelGroup;
 import com.github.tvbox.osc.bean.IJKCode;
 import com.github.tvbox.osc.bean.LiveChannelItem;
@@ -19,6 +22,7 @@ import com.github.tvbox.osc.util.AES;
 import com.github.tvbox.osc.util.AdBlocker;
 import com.github.tvbox.osc.util.DefaultConfig;
 import com.github.tvbox.osc.util.HawkConfig;
+import com.github.tvbox.osc.util.HeavyTaskUtil;
 import com.github.tvbox.osc.util.MD5;
 import com.github.tvbox.osc.util.VideoParseRuler;
 import com.google.gson.Gson;
@@ -67,6 +71,11 @@ public class ApiConfig {
 
     private JarLoader jarLoader = new JarLoader();
     private JsLoader jsLoader = new JsLoader();
+
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
+
+    /** 无 md5 标记的 spider jar 本地缓存有效期: 期内直接用缓存免下载, 超期才重新拉取(带 md5 的走 md5 比对不受影响) */
+    private static final long JAR_CACHE_TTL_MS = 24L * 60 * 60 * 1000;
 
     private String userAgent = "okhttp/3.15";
 
@@ -128,6 +137,12 @@ public class ApiConfig {
     }
 
     public void loadConfig(boolean useCache, LoadConfigCallback callback, Activity activity) {
+        // 防御: 拉取/解析含阻塞网络与磁盘 IO, 统一保证在后台线程执行
+        // (唯一调用方 HomeFragment 自 6b10379 起已在后台任务线程派发, 此处兜底主线程直调)
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            HeavyTaskUtil.executeNewTask(() -> loadConfig(useCache, callback, activity));
+            return;
+        }
         String apiUrl = Hawk.get(HawkConfig.API_URL, "");
         if (apiUrl.isEmpty()) {
             callback.error("-1");
@@ -162,66 +177,19 @@ public class ApiConfig {
             configUrl = apiUrl;
         }
         String configKey = TempKey;
-        OkGo.<String>get(configUrl)
-                .headers("User-Agent", userAgent)
-                .headers("Accept", requestAccept)
-                .execute(new AbsCallback<String>() {
-                    @Override
-                    public void onSuccess(Response<String> response) {
-                        try {
-                            String json = response.body();
-                            parseJson(apiUrl, json);
-                            try {
-                                File cacheDir = cache.getParentFile();
-                                if (!cacheDir.exists())
-                                    cacheDir.mkdirs();
-                                if (cache.exists())
-                                    cache.delete();
-                                FileOutputStream fos = new FileOutputStream(cache);
-                                fos.write(json.getBytes("UTF-8"));
-                                fos.flush();
-                                fos.close();
-                            } catch (Throwable th) {
-                                th.printStackTrace();
-                            }
-                            callback.success();
-                        } catch (Throwable th) {
-                            th.printStackTrace();
-                            callback.error("解析配置失败");
-                        }
-                    }
-
-                    @Override
-                    public void onError(Response<String> response) {
-                        super.onError(response);
-                        if (cache.exists()) {
-                            try {
-                                parseJson(apiUrl, cache);
-                                callback.success();
-                                return;
-                            } catch (Throwable th) {
-                                th.printStackTrace();
-                            }
-                        }
-                        callback.error("拉取配置失败\n" + (response.getException() != null ? response.getException().getMessage() : ""));
-                    }
-
-                    public String convertResponse(okhttp3.Response response) throws Throwable {
-                        String result = "";
-                        if (response.body() == null) {
-                            result = "";
-                        } else {
-                            result = FindResult(response.body().string(), configKey);
-                        }
-
-                        if (apiUrl.startsWith("clan")) {
-                            result = clanContentFix(clanToAddress(apiUrl), result);
-                        }
-                        //假相對路徑
-                        result = fixContentPath(apiUrl,result);
-                        return result;
-                    }
-                });
+        // 冷启动缓存优先: 命中本地缓存先解析渲染(零网络等待, 弱网下此前出内容要串行等
+        // 下载+主线程解析), 再后台静默刷新订阅——刷新结果只写缓存文件, 新配置下次冷启动生效
+        if (!useCache && cache.exists()) {
+            try {
+                parseJson(apiUrl, cache);
+                callback.success();
+                refreshConfigQuietly(apiUrl, configUrl, configKey, cache);
+                return;
+            } catch (Throwable th) {
+                th.printStackTrace();
+            }
+        }
+        fetchAndApplyConfig(apiUrl, configUrl, configKey, cache, callback);
     }
 
 
@@ -231,15 +199,15 @@ public class ApiConfig {
         String md5 = urls.length > 1 ? urls[1].trim() : "";
         File cache = new File(App.getInstance().getFilesDir().getAbsolutePath() + "/csp.jar");
 
-        if (!md5.isEmpty() || useCache) {
-            if (cache.exists() && (useCache || MD5.getFileMd5(cache).equalsIgnoreCase(md5))) {
-                if (jarLoader.load(cache.getAbsolutePath())) {
-                    callback.success();
-                } else {
-                    callback.error("");
-                }
-                return;
+        if (cache.exists() && shouldUseCachedJar(useCache, md5, cache)) {
+            // 本方法由 HomeFragment 的后台任务线程调用, DexClassLoader(首次 dexopt 可达数百 ms)
+            // 在该线程执行, 符合 JarLoader"不要在主线程调用"的契约
+            if (jarLoader.load(cache.getAbsolutePath())) {
+                callback.success();
+            } else {
+                callback.error("");
             }
+            return;
         }
 
         boolean isJarInImg = jarUrl.startsWith("img+");
@@ -271,15 +239,19 @@ public class ApiConfig {
 
             @Override
             public void onSuccess(Response<File> response) {
-                if (response.body().exists()) {
-                    if (jarLoader.load(response.body().getAbsolutePath())) {
-                        callback.success();
-                    } else {
-                        callback.error("");
-                    }
-                } else {
+                // OkGo 回调固定回主线程; DexClassLoader 加载挪到后台线程(修复此前主线程加载)
+                File jar = response.body();
+                if (!jar.exists()) {
                     callback.error("");
+                    return;
                 }
+                HeavyTaskUtil.executeNewTask(() -> {
+                    boolean ok = jarLoader.load(jar.getAbsolutePath());
+                    postOnMain(() -> {
+                        if (ok) callback.success();
+                        else callback.error("");
+                    });
+                });
             }
 
             @Override
@@ -288,6 +260,108 @@ public class ApiConfig {
                 callback.error("");
             }
         });
+    }
+
+    /** 阻塞拉取订阅配置并应用(必须后台线程); 失败时回退本地缓存, 全部失败才报错回主线程 */
+    private void fetchAndApplyConfig(String apiUrl, String configUrl, String configKey, File cache, LoadConfigCallback callback) {
+        String json = PlayUrlResolver.fetchText(configUrl);
+        if (json != null && !json.isEmpty()) {
+            try {
+                json = readConfigBody(apiUrl, configKey, json);
+                parseJson(apiUrl, json);
+                saveConfigCache(cache, json);
+                postOnMain(callback::success);
+                return;
+            } catch (Throwable th) {
+                th.printStackTrace();
+                postOnMain(() -> callback.error("解析配置失败"));
+                return;
+            }
+        }
+        // 网络失败: 本地缓存兜底(与既有离线场景行为一致)
+        if (cache.exists()) {
+            try {
+                parseJson(apiUrl, cache);
+                postOnMain(callback::success);
+                return;
+            } catch (Throwable th) {
+                th.printStackTrace();
+            }
+        }
+        postOnMain(() -> callback.error("拉取配置失败\n网络不可用或配置为空"));
+    }
+
+    /** 冷启动缓存命中后的静默刷新: 只对比+写缓存, 不触碰本会话已加载的配置状态(新配置下次启动生效) */
+    private void refreshConfigQuietly(String apiUrl, String configUrl, String configKey, File cache) {
+        HeavyTaskUtil.executeNewTask(() -> {
+            try {
+                String json = PlayUrlResolver.fetchText(configUrl);
+                if (json == null || json.isEmpty()) return;
+                json = readConfigBody(apiUrl, configKey, json);
+                String old = readTextFile(cache);
+                if (old != null && old.trim().equals(json.trim())) return;
+                saveConfigCache(cache, json);
+                System.out.println("订阅配置有更新, 已写入本地缓存, 下次启动生效");
+            } catch (Throwable th) {
+                th.printStackTrace();
+            }
+        });
+    }
+
+    private String readConfigBody(String apiUrl, String configKey, String content) {
+        String result = content == null ? "" : content;
+        result = FindResult(result, configKey);
+        if (apiUrl.startsWith("clan")) {
+            result = clanContentFix(clanToAddress(apiUrl), result);
+        }
+        //假相對路徑
+        result = fixContentPath(apiUrl, result);
+        return result;
+    }
+
+    private boolean shouldUseCachedJar(boolean useCache, String md5, File cache) {
+        if (useCache) return true;
+        if (!md5.isEmpty()) return MD5.getFileMd5(cache).equalsIgnoreCase(md5);
+        return System.currentTimeMillis() - cache.lastModified() < JAR_CACHE_TTL_MS;
+    }
+
+    /** 先写临时文件再原子改名: 避免后台刷新写缓存与读取方并发时读到半截文件 */
+    private void saveConfigCache(File cache, String json) {
+        try {
+            File cacheDir = cache.getParentFile();
+            if (!cacheDir.exists())
+                cacheDir.mkdirs();
+            File tmp = new File(cache.getAbsolutePath() + ".tmp");
+            FileOutputStream fos = new FileOutputStream(tmp);
+            fos.write(json.getBytes("UTF-8"));
+            fos.flush();
+            fos.close();
+            if (cache.exists())
+                cache.delete();
+            tmp.renameTo(cache);
+        } catch (Throwable th) {
+            th.printStackTrace();
+        }
+    }
+
+    private String readTextFile(File f) {
+        try {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(f), "UTF-8"));
+            StringBuilder sb = new StringBuilder();
+            String s;
+            while ((s = reader.readLine()) != null) {
+                sb.append(s).append("\n");
+            }
+            reader.close();
+            return sb.toString();
+        } catch (Throwable th) {
+            return null;
+        }
+    }
+
+    private void postOnMain(Runnable r) {
+        if (Looper.myLooper() == Looper.getMainLooper()) r.run();
+        else mainHandler.post(r);
     }
 
     private void parseJson(String apiUrl, File f) throws Throwable {
